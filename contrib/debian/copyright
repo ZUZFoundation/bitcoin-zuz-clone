@@ -5,9 +5,9 @@ Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
 Source: https://github.com/zuzcoin/zuzcoin
 
 Files: *
-Copyright: 2009-2018, Zuzcoin Core Developers
+Copyright: 2009-2018, Bitcoin Core Developers
 License: Expat
-Comment: The Zuzcoin Core Developers encompasses the current developers listed on zuzcoin.org,
+Comment: The Bitcoin Core Developers encompasses the current developers listed on zuzcoin.org,
          as well as the numerous contributors to the project.
 
 Files: debian/*
