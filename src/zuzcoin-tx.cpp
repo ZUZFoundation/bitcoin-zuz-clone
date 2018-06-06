@@ -239,11 +239,16 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
     uint256 txid(uint256S(strTxid));
 
     static const unsigned int minTxOutSz = 9;
-    static const unsigned int maxVout = MAX_BLOCK_WEIGHT / (WITNESS_SCALE_FACTOR * minTxOutSz);
+    static const unsigned int maxVout = MAX_BLOCK_WEIGHT / (minTxOutSz);
 
     // extract and validate vout
     std::string strVout = vStrInputParts[1];
     int vout = atoi(strVout);
+
+#ifndef HIM_NDEBUG
+    LogPrintf("HIM : MutateTzAddInput vout : %i", vout);
+#endif
+
     if ((vout < 0) || (vout > (int)maxVout))
         throw std::runtime_error("invalid TX input vout");
 
