@@ -35,6 +35,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
+#include <boost/make_shared.hpp>
 
 std::vector<CWalletRef> vpwallets;
 /** Transaction fee set by the user */
@@ -3693,9 +3694,12 @@ void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
     }
 }
 
-void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
+void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 {
-    std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
+#ifndef HIM_NDEBUG
+    std::cout << "HIM :: CWallete GetScriptForMining " << std::endl;
+#endif
+    boost::shared_ptr<CReserveKey> rKey = boost::make_shared<CReserveKey>(this);
     CPubKey pubkey;
     if (!rKey->GetReservedKey(pubkey))
         return;
@@ -4029,6 +4033,10 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     }
 
     walletInstance->m_last_block_processed = chainActive.Tip();
+
+#ifndef HIM_NDEBUG
+            std::cout << "HIM :: Create wallet from file RegisterValidationInterface " << std::endl;
+#endif
     RegisterValidationInterface(walletInstance);
 
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)

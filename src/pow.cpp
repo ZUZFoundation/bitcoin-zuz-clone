@@ -10,6 +10,10 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
+#ifndef HIM_NDEBUG
+#include <util.h>
+#endif
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
@@ -53,10 +57,23 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+
+#ifndef HIM_NDEBUG
+    LogPrintf("HIM : nActualTimespan : %i", nActualTimespan);
+    LogPrintf("HIM : pindexLast->GetBlockTime() : %i", pindexLast->GetBlockTime());
+    LogPrintf("HIM : nFirstBlockTime : %i", nFirstBlockTime);
+    LogPrintf("HIM : params.nPowTargetTimespan : %i", params.nPowTargetTimespan);
+#endif
+
+
     if (nActualTimespan < params.nPowTargetTimespan/10)
         nActualTimespan = params.nPowTargetTimespan/10;
     if (nActualTimespan > params.nPowTargetTimespan*10)
         nActualTimespan = params.nPowTargetTimespan*10;
+
+#ifndef HIM_NDEBUG
+    LogPrintf("HIM : After nActualTimespan : %i", nActualTimespan);
+#endif
 
     // Retarget
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);

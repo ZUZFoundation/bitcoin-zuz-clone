@@ -10,6 +10,10 @@
 
 #include <functional>
 #include <memory>
+#include <boost/shared_ptr.hpp>
+#ifndef HIM_NDEBUG
+#include "iostream"
+#endif
 
 class CBlock;
 class CBlockIndex;
@@ -123,6 +127,13 @@ protected:
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
+
+    virtual void GetScriptForMining(boost::shared_ptr<CReserveScript>&) {
+#ifndef HIM_NDEBUG
+        std::cout << "HIM :: virtual void  GetScriptForMining validation interface" << std::endl;
+#endif
+    };
+    virtual void ResetRequestCount(const uint256 &hash) {};
 };
 
 struct MainSignalsInstance;
@@ -161,6 +172,8 @@ public:
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+    void BlockFound(const uint256 &hash);
+    void ScriptForMining(boost::shared_ptr<CReserveScript>& script);
 };
 
 CMainSignals& GetMainSignals();

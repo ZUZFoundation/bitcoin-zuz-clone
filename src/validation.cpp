@@ -1143,6 +1143,47 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+    if(nHeight < consensusParams.zuzPremineChainHeight)
+    {
+        return 1100 * COIN;
+    }
+    //This factor will be used to change the threashold value for next subsidy change.
+    static int thresholdChangefactor = 1;
+
+    static CAmount nSubsidy = 350 * COIN;
+    static CAmount subsidyChangeThreashold = consensusParams.zuzSubsidyChangeThreashold + consensusParams.zuzPremineChainHeight;
+
+    if(nHeight > subsidyChangeThreashold)
+    {
+        if(nHeight - 1 != consensusParams.zuzSubsidyChangeThreashold + consensusParams.zuzPremineChainHeight)
+        {
+            // All Cases when nHeight breaches the subsidyChangeThreashold other than first time.
+            nSubsidy = nSubsidy * 75 / 100;
+        }
+        else
+        {
+            //First time when nHeight breaches the subsidyChangeThreashold.
+            //The subsidy will be halved.
+            nSubsidy = nSubsidy * 50 / 100;
+        }
+
+        // This will update the threshold in a way so that we can have a smooth curve between time and mined coins.
+        subsidyChangeThreashold += 3 * consensusParams.zuzThresholdChangefactorValue * thresholdChangefactor;
+        ++thresholdChangefactor;
+    }
+
+    if(nSubsidy < (1 * COIN))
+    {
+        // Near about after 191 years and 2 months supply will be zero.
+        return 0;
+    }
+
+    return nSubsidy;
+
+
+    /*
+     * Old Logic
+
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
@@ -1152,6 +1193,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
+
+    */
 }
 
 bool IsInitialBlockDownload()

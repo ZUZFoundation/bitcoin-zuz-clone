@@ -75,6 +75,20 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+    /**
+     * This value is in no of blocks (height of chain).
+     * When chain height breaches the threshold then subsidy will be changed(decreased).
+     */
+    int64_t zuzSubsidyChangeThreashold;
+
+    /**
+     * This value is in no of blocks.
+     * this value will be used to calculate the next subsidy change threshold.
+     */
+    int zuzThresholdChangefactorValue;
+
+    int zuzPremineChainHeight;
 };
 } // namespace Consensus
 

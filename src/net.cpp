@@ -2798,6 +2798,16 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
 }
 
+CCriticalSection& CConnman::getCs_vNodes()
+{
+    return cs_vNodes;
+}
+
+std::vector<CNode *> CConnman::getVNodes() const
+{
+    return vNodes;
+}
+
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
