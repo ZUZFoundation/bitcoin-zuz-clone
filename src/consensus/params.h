@@ -89,6 +89,8 @@ struct Params {
     int zuzThresholdChangefactorValue;
 
     int zuzPremineChainHeight;
+
+    int zuzPowDGWHeight;
 };
 } // namespace Consensus
 

@@ -1145,6 +1145,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
     if(nHeight < consensusParams.zuzPremineChainHeight)
     {
+        //Premining subsidy
         return 1100 * COIN;
     }
     //This factor will be used to change the threashold value for next subsidy change.
