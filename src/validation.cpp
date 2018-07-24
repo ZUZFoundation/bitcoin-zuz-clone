@@ -1143,10 +1143,10 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    if(nHeight < consensusParams.zuzPremineChainHeight)
+    if(nHeight <= consensusParams.zuzPremineChainHeight)
     {
         //Premining subsidy
-        return 1100 * COIN;
+        return 110000 * COIN;
     }
     //This factor will be used to change the threashold value for next subsidy change.
     static int thresholdChangefactor = 1;
@@ -3239,6 +3239,29 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
+        }
+    }
+
+    if (nHeight > 0 &&
+            nHeight <= consensusParams.zuzPremineChainHeight &&
+            consensusParams.zuzPremineEnforcePubKeys)
+    {
+        if (block.vtx[0]->vout.size() != 2)
+        {
+#ifndef HIM_NDEBUG
+            std::cout << "Height : " << nHeight << "  ||  block.vtx[0]->vout.size() : " << block.vtx[0]->vout.size() << std::endl;
+#endif
+            return state.DoS(
+                100, error("%s: only one coinbase output is allowed : ",__func__),
+                REJECT_INVALID, "bad-premine-coinbase-output");
+        }
+        const CTxOut& output = block.vtx[0]->vout[0];
+        bool valid = Params().IsPremineAddressScript(output.scriptPubKey, nHeight);
+        if (!valid)
+        {
+            return state.DoS(
+                100, error("%s: not in premine pub key", __func__),
+                REJECT_INVALID, "bad-premine-coinbase-scriptpubkey");
         }
     }
 

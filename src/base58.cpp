@@ -375,3 +375,91 @@ bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
 }
+
+
+bool CBitcoinAddress::Set(const CKeyID& id)
+{
+    return Set(id, Params());
+}
+
+bool CBitcoinAddress::Set(const CScriptID& id)
+{
+    return Set(id, Params());
+}
+
+//bool CBitcoinAddress::Set(const CTxDestination& dest)
+//{
+//    return Set(dest, Params());
+//}
+
+
+bool CBitcoinAddress::Set(const CKeyID& id, const CChainParams &params)
+{
+    SetData(params.Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
+    return true;
+}
+
+bool CBitcoinAddress::Set(const CScriptID& id, const CChainParams &params)
+{
+    SetData(params.Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
+    return true;
+}
+
+/*bool CBitcoinAddress::Set(const CTxDestination& dest, const CChainParams &params)
+{
+    return boost::apply_visitor(ZUZ::CBitcoinAddressVisitor(this, params), dest);
+}*/
+
+bool CBitcoinAddress::IsValid() const
+{
+    return IsValid(Params());
+}
+
+bool CBitcoinAddress::IsValid(const CChainParams& params) const
+{
+    bool fCorrectSize = vchData.size() == 20;
+    bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
+                         vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+    return fCorrectSize && fKnownVersion;
+}
+
+CTxDestination CBitcoinAddress::Get() const
+{
+    return Get(Params());
+}
+
+CTxDestination CBitcoinAddress::Get(const CChainParams &params) const
+{
+    if (!IsValid(params))
+        return CNoDestination();
+    uint160 id;
+    memcpy(&id, vchData.data(), 20);
+    if (vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+        return CKeyID(id);
+    else if (vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS))
+        return CScriptID(id);
+    else
+        return CNoDestination();
+}
+
+bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
+{
+    return GetKeyID(keyID, Params());
+}
+
+bool CBitcoinAddress::GetKeyID(CKeyID& keyID, const CChainParams &params) const
+{
+    if (!IsValid(params) || vchVersion != params.Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+        return false;
+    uint160 id;
+    memcpy(&id, vchData.data(), 20);
+    keyID = CKeyID(id);
+    return true;
+}
+
+bool CBitcoinAddress::IsScript() const
+{
+    return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+}
+
+

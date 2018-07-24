@@ -161,7 +161,25 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+    
+    if( chainActive.Tip()->nHeight <= chainparams.GetConsensus().zuzPremineChainHeight &&
+            chainparams.GetConsensus().zuzPremineEnforcePubKeys)
+    {
+//#ifndef HIM_NDEBUG
+//        std::cout << " HIM : coinbaseTx.vout[0].scriptPubKey = chainparams.zuzMultiSigScript() height : " << chainActive.Tip()->nHeight << std::endl;
+
+//#endif
+        coinbaseTx.vout[0].scriptPubKey = chainparams.zuzMultiSigScript();
+    }
+    else
+    {
+//#ifndef HIM_NDEBUG
+//        std::cout << " HIM : coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn height : " << chainActive.Tip()->nHeight << std::endl;
+//#endif
+
+            coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+    }
+
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
@@ -539,7 +557,8 @@ void static ZuzcoinMiner(const CChainParams& chainparams)
     boost::shared_ptr<CReserveScript> coinbaseScript;
     GetMainSignals().ScriptForMining(coinbaseScript);
 
-    try {
+    try 
+    {
         // Throw an error if no script was provided.  This can happen
         // due to some internal error but also if the keypool is empty.
         // In the latter case, already the pointer is NULL.
@@ -553,18 +572,32 @@ void static ZuzcoinMiner(const CChainParams& chainparams)
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
         }
 
-        while (true) {
-            if (true) {
+        while (true)
+        {
+            if (true)
+            {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
-                do {
+                do
+                {
                     bool fvNodesEmpty;
                     {
                         LOCK(connman.getCs_vNodes());
                         fvNodesEmpty = connman.getVNodes().empty();
                     }
 #ifndef HIM_NDEBUG
-            std::cout << "HIM :: chainActive.Tip()->nHeight : " << chainActive.Tip()->nHeight << std::endl;
+                    struct tm t;
+                    time_t time = chainActive.Tip()->nTime;
+                    localtime_r(&time, &t);
+                    printf("%04d/%02d/%02d-%02d:%02d:%02d  ",
+                                  t.tm_year + 1900,
+                                  t.tm_mon + 1,
+                                  t.tm_mday,
+                                  t.tm_hour,
+                                  t.tm_min,
+                                  t.tm_sec);
+
+                    std::cout << "  HIM :: chainActive.Tip()->nHeight : " << chainActive.Tip()->nHeight << " [ " << fvNodesEmpty << "   " << IsInitialBlockDownload() << "  ] " <<  std::endl;
 #endif
                     if (!fvNodesEmpty && !IsInitialBlockDownload())
                         break;

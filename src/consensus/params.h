@@ -91,6 +91,8 @@ struct Params {
     int zuzPremineChainHeight;
 
     int zuzPowDGWHeight;
+
+    bool zuzPremineEnforcePubKeys;
 };
 } // namespace Consensus
 

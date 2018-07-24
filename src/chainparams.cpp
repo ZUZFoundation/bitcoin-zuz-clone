@@ -14,6 +14,7 @@
 
 #include <chainparamsseeds.h>
 #include <arith_uint256.h>
+#include <base58.h>
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -60,6 +61,85 @@ void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64
     consensus.vDeployments[d].nTimeout = nTimeout;
 }
 
+CScript CChainParams::zuzMultiSigScript(uint32_t lockTime) const
+{
+//#ifndef HIM_NDEBUG
+//    std::cout << " HIM : zuzMultiSigScript " << std::endl;
+//#endif
+    assert(zuzPreminePubkeys.size() == 1);
+    CScript redeemScript;
+
+    CBitcoinAddress address(zuzPreminePubkeys.at(0));
+    assert(address.IsValid());
+    assert(address.IsScript());
+
+    CScriptID scriptID = boost::get<CScriptID>(address.Get());
+
+//#ifndef HIM_NDEBUG
+//    std::cout << " HIM : zuzMultiSigScript scriptID : " << scriptID.GetHex() << std::endl;
+//#endif
+
+    redeemScript = CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
+
+
+
+    /** multisig
+    //Not using for now--------------------------------------------------
+    if (lockTime > 0)
+    {
+        redeemScript << lockTime << OP_CHECKLOCKTIMEVERIFY << OP_DROP;
+    }
+    //------------------------------------------------------------------
+
+    redeemScript << 1; // minimum number of valid sigatures require.
+
+    for (const std::string& pubkey : zuzPreminePubkeys)
+    {
+        redeemScript << ToByteVector(ParseHex(pubkey));
+    }
+
+    redeemScript << 1 << OP_CHECKMULTISIG; // Total number of signatures provided.
+    **/
+
+    return redeemScript;
+}
+
+bool CChainParams::IsPremineAddressScript(const CScript& scriptPubKey, int height) const
+{
+
+//#ifndef HIM_NDEBUG
+//    std::cout << " HIM : IsPremineAddressScript height : " << height << std::endl;
+//#endif
+
+    assert(height <= consensus.zuzPremineChainHeight);
+
+    for (const std::string& addr : zuzPreminePubkeys)
+    {
+
+         CBitcoinAddress address(addr.c_str());
+         assert(address.IsValid());
+         assert(address.IsScript());
+
+         CScriptID scriptID = boost::get<CScriptID>(address.Get());
+
+         CScript script = CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
+
+
+//#ifndef HIM_NDEBUG
+//         std::cout << " HIM : IsPremineAddressScript scriptID : " << scriptID.GetHex() << std::endl;
+
+//#endif
+
+         if (script == scriptPubKey)
+             return true;
+    }
+
+    // CScript redeemScript = zuzMultiSigScript();
+
+    return false;
+
+}
+
 /**
  * Main network
  */
@@ -77,8 +157,11 @@ public:
         strNetworkID = "main";
         consensus.zuzSubsidyChangeThreashold = 50000; // Block height when subsidy will be changed first time.
         consensus.zuzThresholdChangefactorValue = 100000;
-        consensus.zuzPremineChainHeight = 720;
-        consensus.zuzPowDGWHeight = 30;
+        consensus.zuzPremineChainHeight = 1000;
+        consensus.zuzPowDGWHeight = 400;
+        consensus.zuzPremineEnforcePubKeys = true;
+        zuzPreminePubkeys =
+        {"MJ2UNWH1jHwabJPSnq9gdZ9RHDNCgJTDLn"};
 
         consensus.BIP16Height = 173805; // 00000000000000ce80a7e057163a4db1d5ad7b20fb6f598c9597b9665c8fb0d4 - April 1, 2012
         consensus.BIP34Height = 227931;
@@ -188,10 +271,10 @@ public:
         // vSeeds.emplace_back("seed.zuzcoin.jonasschnelli.ch"); // Jonas Schnelli, only supports x1, x5, x9, and xd
         // vSeeds.emplace_back("seed.btc.petertodd.org"); // Peter Todd, only supports x1, x5, x9, and xd
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
-        //base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,40); // Prefix : H
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
-        // base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,50); // Prefix : M
+        //base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,40); // Prefix : H
+        //base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,50); // Prefix : M
 
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
@@ -232,8 +315,9 @@ public:
         strNetworkID = "test";
         consensus.zuzSubsidyChangeThreashold = 50000; // Block height when subsidy will be changed first time.
         consensus.zuzThresholdChangefactorValue = 100000;
-        consensus.zuzPremineChainHeight = 10000;
-        consensus.zuzPowDGWHeight = 10;
+        consensus.zuzPremineChainHeight = 0;
+        consensus.zuzPowDGWHeight = 20;
+        consensus.zuzPremineEnforcePubKeys = false;
 
         consensus.BIP16Height = 514; // 00000000040b4e986385315e14bee30ad876d8b47f748025b26683116d21aa65
         consensus.BIP34Height = 21111;
@@ -275,7 +359,7 @@ public:
         nDefaultPort = 14848;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1528110103, 23369582, 0x1e007fff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1528110103, 38573647, 0x1d0f0000, 1, 50 * COIN);
 
         if (false && genesis.GetHash() != consensus.hashGenesisBlock)
         {
@@ -323,7 +407,7 @@ public:
 
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000639ae616129221f533fbd57a96c33c616dc4143e5934f59e569bd386fc"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000000e98794953fc94a61e3dca0fc75867f7827d79be79acda1cf983a86698"));
         assert(genesis.hashMerkleRoot == uint256S("0x3885fb409fe83cb0257fc642f3f3cc7c2678f960c118478e3231dd352fc86039"));
 
         vFixedSeeds.clear();
@@ -376,6 +460,7 @@ public:
         consensus.zuzThresholdChangefactorValue = 100;
         consensus.zuzPremineChainHeight = 10;
         consensus.zuzPowDGWHeight = 0;
+        consensus.zuzPremineEnforcePubKeys = false;
 
         consensus.BIP16Height = 0; // always enforce P2SH BIP16 on regtest
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
