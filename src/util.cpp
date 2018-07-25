@@ -895,6 +895,7 @@ void RenameThread(const char* name)
 
 void SetupEnvironment()
 {
+<<<<<<< HEAD
 #ifdef HAVE_MALLOPT_ARENA_MAX
     // glibc-specific: On 32-bit systems set the number of arenas to 1.
     // By default, since glibc 2.10, the C library will create up to two heap
@@ -905,6 +906,8 @@ void SetupEnvironment()
         mallopt(M_ARENA_MAX, 1);
     }
 #endif
+=======
+>>>>>>> elements/alpha
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
     // may be invalid, in which case the "C" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
@@ -917,6 +920,7 @@ void SetupEnvironment()
     // The path locale is lazy initialized and to avoid deinitialization errors
     // in multithreading environments, it is set explicitly by the main thread.
     // A dummy locale is used to extract the internal default locale, used by
+<<<<<<< HEAD
     // fs::path, which is then used to explicitly imbue the path.
     std::locale loc = fs::path::imbue(std::locale::classic());
     fs::path::imbue(loc);
@@ -932,6 +936,11 @@ bool SetupNetworking()
         return false;
 #endif
     return true;
+=======
+    // boost::filesystem::path, which is then used to explicitly imbue the path.
+    std::locale loc = boost::filesystem::path::imbue(std::locale::classic());
+    boost::filesystem::path::imbue(loc);
+>>>>>>> elements/alpha
 }
 
 void SetThreadPriority(int nPriority)

@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fa.ts
         <source>Right-click to edit address or label</source>
         <translation>برای تغییر آدرس و یا برچسب کلیک راست کنید</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fa.ts
         <source>Create a new address</source>
         <translation>ایجاد آدرس جدید</translation>
     </message>
@@ -1858,6 +1861,21 @@
         <translation>شبکه مشخص شده غیرقابل شناسایی در onlynet: '%s'</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fa.ts
+=======
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>آدرس قابل اتصال- شناسایی نیست %s</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>آدرس خارجی قابل اتصال- شناسایی نیست %s</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان وجه اشتباه برای paytxfee=&lt;میزان وجه&gt;: %s</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fa.ts
         <source>Insufficient funds</source>
         <translation>بود جه نا کافی </translation>
     </message>

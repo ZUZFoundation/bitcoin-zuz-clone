@@ -415,6 +415,7 @@ void openDebugLogfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
+<<<<<<< HEAD
 bool openZuzcoinConf()
 {
     boost::filesystem::path pathConfig = GetConfigFile(BITCOIN_CONF_FILENAME);
@@ -431,6 +432,8 @@ bool openZuzcoinConf()
     return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 }
 
+=======
+>>>>>>> elements/alpha
 void SubstituteFonts(const QString& language)
 {
 #if defined(Q_OS_MAC)
@@ -457,7 +460,11 @@ void SubstituteFonts(const QString& language)
             /* 10.10 or later system */
             if (language == "zh_CN" || language == "zh_TW" || language == "zh_HK") // traditional or simplified Chinese
               QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Heiti SC");
+<<<<<<< HEAD
             else if (language == "ja") // Japanese
+=======
+            else if (language == "ja") // Japanesee
+>>>>>>> elements/alpha
               QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Songti SC");
             else
               QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Lucida Grande");

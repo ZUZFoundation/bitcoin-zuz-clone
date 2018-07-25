@@ -1,9 +1,17 @@
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
 <TS language="es_ES" version="2.1">
+=======
+<TS language="es" version="2.1">
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <translation>Haz clic derecho para editar la dirección o etiqueta</translation>
+=======
+        <translation>Haz-clic para editar la dirección o etiqueta</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Create a new address</source>
@@ -43,11 +51,19 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <translation>Seleccione la dirección a la que enviar monedas</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
         <translation>Seleccione la dirección de la que recibir monedas</translation>
+=======
+        <translation>Elije la dirección para enviar monedas a</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Elije la dirección para recibir monedas con</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -62,6 +78,7 @@
         <translation>Recibiendo direcciones</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>These are your Zuzcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Estas son sus direcciones Zuzcoin para enviar pagos. Verifique siempre la cantidad y la dirección de recibimiento antes de enviar monedas.</translation>
     </message>
@@ -72,6 +89,14 @@
     <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copiar Dirección</translation>
+=======
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son tus direcciones Bitcoin para enviar los pagos. Comprueba siempre la cantidad y la dirección receptora antes de enviar las monedas.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Estas son tus direcciones de Bitcoin para recibir los pagos. Se recomienda utilizar una nueva dirección de recepción para cada transacción.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -87,6 +112,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <translation>Archivo separado de coma (*.csv)</translation>
     </message>
     <message>
@@ -98,6 +124,15 @@
         <translation>Había un error intentando guardar la lista de direcciones en %1. Por favor inténtelo de nuevo.</translation>
     </message>
 </context>
+=======
+        <translation>Archivos separados por coma (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Fallo al exportar</translation>
+    </message>
+    </context>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -160,8 +195,13 @@
         <translation>Cambiar frase clave</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
         <translation>Introduzca la vieja frase clave y la nueva flase clave para el monedero.</translation>
+=======
+        <source>Enter the old and new passphrase to the wallet.</source>
+        <translation>Introduce la antigua y la nueva contraseña a el monedero.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -173,7 +213,19 @@
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <translation>¿Seguro que desea encriptar su monedero?</translation>
+=======
+        <translation>¿Estás seguro que deseas cifrar tu monedero ?</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>IMPORTANTE: Cualquier copia de seguridad que haya realizado previamente de su archivo de monedero debe reemplazarse con el nuevo archivo de monedero cifrado. Por razones de seguridad, las copias de seguridad previas del archivo de monedero no cifradas serán inservibles en cuanto comience a usar el nuevo monedero cifrado.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Aviso: ¡La tecla de Mayúsculas está activada!</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -1310,6 +1362,14 @@
         <translation>Solicitud de pago de %1 es demasiado grande (%2 bytes, permitidos %3 bytes).</translation>
     </message>
     <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>La petición de pago %1 es demasiado grande (%2 bytes, permitidos %3 bytes).</translation>
+    </message>
+    <message>
+        <source>Payment request DoS protection</source>
+        <translation> Solicitud pago de protección DoS</translation>
+    </message>
+    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Fallo al comunicar con %1: %2</translation>
     </message>
@@ -1955,6 +2015,7 @@
     <message>
         <source>Choose...</source>
         <translation>Elija...</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
     </message>
     <message>
         <source>collapse fee-settings</source>
@@ -1967,6 +2028,44 @@
     <message>
         <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Si la tarifa de aduana se establece en 1000 satoshis y la transacción está a sólo 250 bytes, entonces "por kilobyte" sólo paga 250 satoshis de cuota, mientras que "el mínimo total" pagaría 1.000 satoshis. Para las transacciones más grandes que un kilobyte ambos pagan por kilobyte</translation>
+=======
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>Colapsar ajustes de cuota</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimizar</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Si la tarifa de aduana se establece en 1000 satoshis y la transacción está a disponible a solo  250 bytes, entonces "por kilobyte" sólo paga 250 satoshis de cuota, mientras que "por lo menos" paga 1.000 satoshis. Para las transacciones más grandes que un kilobyte ambos pagan por kilobyte.</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>por kilobyte</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Si la tarifa de aduana se establece en 1000 satoshis y la transacción está a sólo 250 bytes, entonces "por kilobyte" sólo paga 250 satoshis de cuota, mientras que "el mínimo total" pagaría 1.000 satoshis. Para las transacciones más grandes que un kilobyte ambos pagan por kilobyte</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>total por lo menos</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Pagando solamente la cuota mínima es correcto, siempre y cuando haya menos volumen de transacciones que el espacio en los bloques. Pero tenga en cuenta que esto puede terminar en una transacción nunca confirmada, una vez que haya más demanda para transacciones Bitcoin que la red pueda procesar.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(leer la sugerencia)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>Recomendado:</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Hide</source>
@@ -1989,8 +2088,17 @@
         <translation>Personalizado:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation>(Tarifa inteligente no inicializado aún. Esto generalmente lleva a pocos bloques...)</translation>
+=======
+        <source>Send as zero-fee transaction if possible</source>
+        <translation>Enviar transacción, si es posible, sin comisión</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(confirmación puede tardar más tiempo)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2953,12 +3061,17 @@
         <translation>Zuzcoin Core</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>The %s developers</source>
         <translation>Los %s desarrolladores</translation>
     </message>
     <message>
         <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
         <translation>Una comision (en %s/kB) que sera usada cuando las estimacion de comision no disponga de suficientes datos (predeterminado: %s)</translation>
+=======
+        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
+        <translation>Vincular a la dirección dada y escuchar siempre en ella. Utilice la notación [host]:port para IPv6</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
@@ -2973,6 +3086,7 @@
         <translation>No se puede bloquear el directorio %s. %s ya se está ejecutando.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Borrar todas las transacciones del monedero y sólo recuperar aquellas partes de la cadena de bloques por medio de -rescan on startup.</translation>
     </message>
@@ -2981,6 +3095,8 @@
         <translation>Error leyendo %s!. Todas las claves se han leido correctamente, pero los datos de transacciones o la libreta de direcciones pueden faltar o ser incorrectos.</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Ejecutar comando cuando una transacción del monedero cambia (%s en cmd se remplazará por TxID)</translation>
     </message>
@@ -3297,6 +3413,7 @@
         <translation>Si el pago de comisión no está establecido, incluir la cuota suficiente para que las transacciones comiencen la confirmación en una media de n bloques ( por defecto :%u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Cantidad no válida para -maxtxfee=&lt;amount&gt;: '%s' (debe ser por lo menos la cuota de comisión mínima de %s para prevenir transacciones atascadas)</translation>
     </message>
@@ -3311,26 +3428,120 @@
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Monto de transacción muy pequeña luego de la deducción por comisión</translation>
+=======
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Si el pago de comisión no está establecido, incluir la cuota suficiente para que las transacciones comiencen la confirmación en una media de n bloques ( por defecto :%u)</translation>
+    </message>
+    <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>El tamaño máximo de los datos en las operaciones de transporte de datos que transmitimos y el mio (default: %u)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation>Consulta de direcciones pares mediante búsqueda de DNS, si bajo en direcciones (por defecto: 1 a menos que - conectar)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Se requiere alta prioridad para retransmitir transacciones gratis o de baja comisión (por defecto:%u)</translation>
+    </message>
+    <message>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation>Establecer tamaño máximo de las transacciones de alta prioridad/baja comisión en bytes (predeterminado: %d)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
+        <translation>Ajuste el número de hilos para la generación de moneda si está habilitado  (-1 = all cores, default: %d)</translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Este producto incluye software desarrollado por el OpenSSL Project para su uso en OpenSSL Toolkit &lt;https://www.openssl.org/&gt;, software de cifrado escrito por Eric Young y software UPnP escrito por Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>Para utilizar bitcoind, o la -opción servidor a bitcoin-qt, debes establecer una rpcpassword en el fichero de configuración:
+%s
+Se recomienda utilizar la siguiente contraseña aleatoria:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(no es necesario que recuerdes esta contraseña)
+El nombre de usuario y contraseña NO DEBEN ser la misma.
+Si no existe el archivo, crearlo con los permisos de archivos de propietarios de -sólo lectura-.
+También se recomienda establecer una notificación de alerta para ser notificado de problemas;
+por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
+</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Advertencia: ¡-maxtxfee se establece muy alta! Esta gran tarifa podría ser pagada en una sola transacción .</translation>
+    </message>
+    <message>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Aviso: ¡Comprueba la fecha y hora de tu ordenador y verifica si es correcta! Si no es correcta Bitcoin Core no funcionará adecuadamente.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>A los equipos en lista blanca no se les pueden prohibir los ataques DoS y sus transacciones siempre son retransmitidas, incluso si ya están en el mempool, es útil por ejemplo para un gateway.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Necesitas reconstruir la base de datos utilizando -reindex para volver al modo sin recorte. Esto volverá a descargar toda la cadena de bloques</translation>
+=======
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Aceptar solicitudes públicas en FERIADOS (por defecto: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>No se puede resolver -whitebind address: '%s'</translation>
+    </message>
+    <message>
+        <source>Connect through SOCKS5 proxy</source>
+        <translation>Conectar usando SOCKS5 proxy</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>(default: %u)</source>
         <translation>(por defecto: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Accept public REST requests (default: %u)</source>
         <translation>Aceptar solicitudes públicas en FERIADOS (por defecto: %u)</translation>
     </message>
     <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Automáticamente crea el servicio Tor oculto (por defecto: %d)</translation>
+=======
+        <source>Could not parse -rpcbind value %s as network address</source>
+        <translation>No se pudo analizar -rpcbind valor%s como dirección de red</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
+        <translation>Error al cargar wallet.dat: El monedero requiere una versión más reciente de Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Error al leer la base de datos, cerrando.</translation>
+    </message>
+    <message>
+        <source>Error: Unsupported argument -tor found, use -onion.</source>
+        <translation>Error: Argumento encontrado -tor no soportado, utilice -onion</translation>
+    </message>
+    <message>
+        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
+        <translation>Cuota (in BTC/kB) para añadir a las transacciones que envíes (por defecto: %s)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3341,8 +3552,17 @@
         <translation>Error al leer la base de datos, cerrando.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Imports blocks from external blk000??.dat file on startup</source>
         <translation>Importa los bloques desde un archivo externo blk000?.dat</translation>
+=======
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Monto inválido para -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidad inválida para -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Information</source>
@@ -3369,12 +3589,28 @@
         <translation>Opciones de nodos de retransmisión:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
+=======
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>Opciones SSL de RPC: (véase la wiki de Bitcoin para las instrucciones de instalación de SSL)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
         <source>RPC server options:</source>
         <translation>Opciones de servidor RPC:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Reduciendo -maxconnections de %d a %d, debido a limitaciones del sistema.</translation>
+=======
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>Soporte RPC para conexiones HTTP persistentes (por defecto: %d)</translation>
+    </message>
+    <message>
+        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
+        <translation>Ignorar 1 de cada &lt;n&gt; mensajes de red al azar</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
@@ -3383,6 +3619,10 @@
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Enviar información de trazas/depuración a la consola en lugar de al archivo debug.log</translation>
+    </message>
+    <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>Mandar transacciones como comisión-cero si es posible (por defecto: %u)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3421,6 +3661,10 @@
         <translation>Operación demasiado grande para la política de tasas</translation>
     </message>
     <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Operación demasiado grande para la política de tasas</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation>Transacción demasiado grande, intenta dividirla en varias.</translation>
     </message>
@@ -3446,8 +3690,17 @@
         <translation>Advertencia: nuevas reglas desconocidas activadas (versionbit %i)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Whether to operate in a blocks only mode (default: %u)</source>
         <translation>Si se debe o no operar en un modo de solo bloques (predeterminado: %u)</translation>
+=======
+        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Advertencia: Argumento no soportado -benchmark ignored, use -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Aviso: Argumento no sportado -debugnet anticuado, utilice -debug=net.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3491,8 +3744,17 @@
         <translation>Las comisiones (en %s/kB) menores que esto son consideradas de cero comision para la creacion de transacciones (predeterminado: %s)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
         <translation>Fuerza la retransmisión de transacciones desde nodos en la lista blanca incluso si violan la política de retransmisiones local (predeterminado: %d)</translation>
+=======
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</translation>
+    </message>
+    <message>
+        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
+        <translation>Volcar la actividad de la base de datos de memoria al registro en disco cada &lt;n&gt; megabytes (predeterminado: %u)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
@@ -3597,6 +3859,21 @@
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Relay non-P2SH multisig (default: %u)</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
+=======
+    </message>
+    <message>
+        <source>Run a thread to flush wallet periodically (default: %u)</source>
+        <translation>Ejecutar un hilo para limpiar de la memoria el monedero periódicamente (predeterminado:  %u)</translation>
+    </message>
+    <message>
+        <source>Server certificate file (default: %s)</source>
+        <translation>Archivo de certificado del servidor (por defecto: %s)</translation>
+    </message>
+    <message>
+        <source>Server private key (default: %s)</source>
+        <translation>Llave privada del servidor (por defecto: %s)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -3651,10 +3928,13 @@
         <translation>La transacción debe tener al menos un beneficiario</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_ES.ts
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>La red especificada en -onlynet '%s' es desconocida</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es.ts
         <source>Insufficient funds</source>
         <translation>Fondos insuficientes</translation>
     </message>

@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hr.ts
         <source>Right-click to edit address or label</source>
         <translation>Desni klik za uređivanje adresa i oznaka</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hr.ts
         <source>Create a new address</source>
         <translation>Dodajte novu adresu</translation>
     </message>
@@ -1707,7 +1710,31 @@
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hr.ts
         <translation>Dozvoli DNS upite za -addnode, -seednode i -connect</translation>
+=======
+        <translation>Dozvoli DNS upite za dodavanje nodova i povezivanje</translation>
+    </message>
+    <message>
+        <source>Loading addresses...</source>
+        <translation>Učitavanje adresa...</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation>Greška kod učitavanja wallet.dat: Novčanik pokvaren</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat</source>
+        <translation>Greška kod učitavanja wallet.dat</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Nevaljala -proxy adresa: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevaljali iznos za opciju -paytxfee=&lt;amount&gt;: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hr.ts
     </message>
     <message>
         <source>Insufficient funds</source>

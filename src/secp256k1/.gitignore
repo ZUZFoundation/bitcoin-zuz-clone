@@ -6,7 +6,10 @@ bench_schnorr_verify
 bench_recover
 bench_internal
 tests
+<<<<<<< HEAD
 exhaustive_tests
+=======
+>>>>>>> elements/alpha
 gen_context
 *.exe
 *.so
@@ -32,6 +35,7 @@ libtool
 src/libsecp256k1-config.h
 src/libsecp256k1-config.h.in
 src/ecmult_static_context.h
+<<<<<<< HEAD
 build-aux/config.guess
 build-aux/config.sub
 build-aux/depcomp
@@ -45,5 +49,12 @@ build-aux/m4/ltversion.m4
 build-aux/missing
 build-aux/compile
 build-aux/test-driver
+=======
+m4/libtool.m4
+m4/ltoptions.m4
+m4/ltsugar.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
+>>>>>>> elements/alpha
 src/stamp-h1
 libsecp256k1.pc

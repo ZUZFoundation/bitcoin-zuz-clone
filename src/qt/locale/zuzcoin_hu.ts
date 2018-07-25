@@ -840,6 +840,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Üdvözlünk a %1 -ban.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation>Mivel ez a program első indulása, megváltoztathatja, hogy a %1 hova mentse az adatokat.</translation>
     </message>
@@ -856,6 +857,8 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Ha a tárolt blokk lánc méretének korlátozását (megnyesését) választotta, akkor is le kell tölteni és feldolgozni az eddig keletkezett összes adatot, de utána ezek törlésre kerülnek, hogy ne foglaljunk sok helyet a merevlemezén.</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Use the default data directory</source>
         <translation>Az alapértelmezett adat könyvtár használata</translation>
     </message>
@@ -864,6 +867,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Saját adatkönyvtár használata:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Zuzcoin</source>
         <translation>Zuzcoin</translation>
     </message>
@@ -882,6 +886,14 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>The wallet will also be stored in this directory.</source>
         <translation>Ebben a könyvtárban lesz a pénztárca is.</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Hiba: A megadott "%1" adatkönyvtár nem hozható létre. </translation>
+=======
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -967,7 +979,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Select payment request file to open</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <translation>Válassza ki a megnyitni kívánt fizetési kérelem fájlt</translation>
+=======
+        <translation>Fizetés kérelmi fájl kiválasztása</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
     </message>
 </context>
 <context>
@@ -997,8 +1013,25 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>MB</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Number of script &amp;verification threads</source>
         <translation>A szkript &amp;igazolási szálak száma</translation>
+=======
+        <source>Accept connections from outside</source>
+        <translation>Külső kapcsolatok elfogadása</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Bejövő kapcsolatok engedélyezése</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>A proxy IP címe (pl.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Reset all client options to default.</source>
+        <translation>Minden kliensbeállítás alapértelmezettre állítása.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1177,6 +1210,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>A változtatások aktiválásahoz újra kell indítani a klienst.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Client will be shut down. Do you want to proceed?</source>
         <translation>A kliens le fog állni. Szeretné folytatni?</translation>
     </message>
@@ -1201,6 +1235,8 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Ehhez a változtatáshoz újra kellene indítani a klienst.</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>The supplied proxy address is invalid.</source>
         <translation>A megadott proxy cím nem érvényes.</translation>
     </message>
@@ -1256,10 +1292,13 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Aktuális egyenleged</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Your current balance in watch-only addresses</source>
         <translation>A csak megfigyelt címeinek az egyenlege</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Spendable:</source>
         <translation>Elkölthető:</translation>
     </message>
@@ -1268,6 +1307,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>A legutóbbi tranzakciók</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Unconfirmed transactions to watch-only addresses</source>
         <translation>A csak megfigyelt címek hitelesítetlen tranzakciói</translation>
     </message>
@@ -1278,6 +1318,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>A csak megfigyelt címek jelenlegi teljes egyenlege</translation>
+=======
+        <source>out of sync</source>
+        <translation>Nincs szinkronban.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
     </message>
 </context>
 <context>
@@ -1366,6 +1410,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
 <context>
     <name>PeerTableModel</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
@@ -1388,6 +1433,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Received</source>
         <translation>Fogadott</translation>
+=======
+        <source>Ping Time</source>
+        <translation>Ping idő</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
     </message>
 </context>
 <context>
@@ -1397,10 +1446,13 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Összeg</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Enter a Zuzcoin address (e.g. %1)</source>
         <translation>Ad meg egy Zuzcoin címet (pl: %1)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>%1 d</source>
         <translation>%1 n</translation>
     </message>
@@ -1417,8 +1469,13 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>%1 mp</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>None</source>
         <translation>Semmi</translation>
+=======
+        <source>NETWORK</source>
+        <translation>HÁLÓZAT</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
     </message>
     <message>
         <source>N/A</source>
@@ -1534,12 +1591,17 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Általános</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Using BerkeleyDB version</source>
         <translation>Használt BerkeleyDB verzió</translation>
     </message>
     <message>
         <source>Datadir</source>
         <translation>Adatkönyvtár</translation>
+=======
+        <source>Using OpenSSL version</source>
+        <translation>Használt OpenSSL verzió</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
     </message>
     <message>
         <source>Startup time</source>
@@ -1594,6 +1656,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>&amp;Peerek</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Banned peers</source>
         <translation>Kitiltott felek</translation>
     </message>
@@ -1610,10 +1673,13 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Irány</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Version</source>
         <translation>Verzió</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Starting Block</source>
         <translation>Kezdő Blokk</translation>
     </message>
@@ -1642,10 +1708,13 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Betűméret növelése</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Services</source>
         <translation>Szolgáltatások</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>Connection Time</source>
         <translation>Csatlakozás ideje</translation>
     </message>
@@ -1658,10 +1727,13 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Legutóbbi fogadás</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Ping Time</source>
         <translation>Ping idő</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>The duration of a currently outstanding ping.</source>
         <translation>A jelenlegi kiváló ping időtartama.</translation>
     </message>
@@ -1678,6 +1750,8 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Idő Eltolódás</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Last block time</source>
         <translation>Utolsó blokk ideje</translation>
     </message>
@@ -2919,10 +2993,13 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Zuzcoin Core</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>The %s developers</source>
         <translation>A %s fejlesztők</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Parancs, amit akkor hajt végre, amikor egy tárca-tranzakció megváltozik  (%s a parancsban lecserélődik a blokk TxID-re)</translation>
     </message>
@@ -3125,6 +3202,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Hálózati szálak indítása...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_hu.ts
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation>Ez a minimum tranzakciós díj, amelyet tranzakciónként kifizet.</translation>
     </message>
@@ -3145,6 +3223,8 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Ismeretlen hálózat lett megadva -onlynet: '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_hu.ts
         <source>Insufficient funds</source>
         <translation>Nincs elég zuzcoinod.</translation>
     </message>

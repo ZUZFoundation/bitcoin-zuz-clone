@@ -3,7 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <translation>Valitse hiiren oikealla painikkeella muokataksesi osoitetta tai nimikettä</translation>
+=======
+        <translation>Klikkaa hiiren oikealla painikkeella muokataksesi osoitetta tai nimikettä</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Create a new address</source>
@@ -24,6 +28,13 @@
     <message>
         <source>C&amp;lose</source>
         <translation>S&amp;ulje</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
+=======
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopioi Osoite</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -47,7 +58,11 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <translation>Valitse osoite kolikoiden vastaanottamiseen</translation>
+=======
+        <translation>Valitse osoite johon vastaanotetaan kolikoita</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -66,12 +81,21 @@
         <translation>Nämä ovat Zuzcoin-osoitteesi maksujen lähettämistä varten. Tarkista aina määrä ja vastaanotto-osoite ennen kolikoiden lähettämistä.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>These are your Zuzcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Tässä ovat Zuzcoin vastaanotto-osoitteesi. On suositeltavaa käyttää uutta vastaanotto-osoitetta jokaista lähetystä varten.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopioi osoite</translation>
+=======
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Nämä ovat sinun Bitcoin osoitteita maksujen lähetykseen. Tarkista aina summa ja vastaanottajan osoite ennenkuin lähetät kolikkoja.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Nämä ovat sinun Bitcoin-osoitteesi suoritusten vastaanottamiseen. Suositellaan että annat uuden osoitteen kullekin transaktiolle.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -130,6 +154,7 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Toista uusi tunnuslause</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
     </message>
     <message>
         <source>Show password</source>
@@ -138,6 +163,8 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Kirjoita uusi salauslause lompakolle.&lt;br/&gt;Käytä salauslausetta jossa on joko&lt;b&gt;kymmenen tai useampi satunnainen merkki&lt;/b&gt;, tai&lt;b&gt;vähintään kahdeksan sanaa&lt;/b&gt;</translation>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -472,6 +499,10 @@
     <message>
         <source>Up to date</source>
         <translation>Rahansiirtohistoria on ajan tasalla</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>Käsitelty %n lohko rahansiirtohistoriasta.</numerusform><numerusform>Käsitelty %n lohkoa rahansiirtohistoriasta.</numerusform></translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Zuzcoin command-line options</source>
@@ -894,7 +925,15 @@
         <source>Error</source>
         <translation>Virhe</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n Gt vapaata tilaa käytettävissä</numerusform><numerusform>%n Gt vapaata tilaa käytettävissä</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(%n Gt tarvittavasta tilasta)</numerusform><numerusform>(%n Gt tarvittavasta tilasta)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1080,6 +1119,7 @@
         <translation>Portin uudelleenohjaus &amp;UPnP:llä</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Accept connections from outside.</source>
         <translation>Hyväksy yhteysiä ulkopuolelta</translation>
     </message>
@@ -1090,6 +1130,10 @@
     <message>
         <source>Connect to the Zuzcoin network through a SOCKS5 proxy.</source>
         <translation>Yhdistä Zuzcoin-verkkoon SOCKS5-välityspalvelimen kautta.</translation>
+=======
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Yhdistä Bitcoin-verkkoon SOCKS5-välityspalvelimen kautta.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1281,6 +1325,8 @@
     <message>
         <source>Spendable:</source>
         <translation>Käytettävissä:</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
+=======
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1297,6 +1343,44 @@
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>Nykyinen tase seurantaosoitetteissa</translation>
+    </message>
+    <message>
+        <source>out of sync</source>
+        <translation>Ei ajan tasalla</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Viimeisimmät rahansiirrot</translation>
+    </message>
+    <message>
+        <source>Unconfirmed transactions to watch-only addresses</source>
+        <translation>Vahvistamattomat rahansiirrot vain katseltaviin osoitteisiin</translation>
+    </message>
+    <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation>Louhittu, ei vielä kypsynyt saldo vain katseltavissa osoitteissa</translation>
+    </message>
+    <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Nykyinen tase seurantaosoitetteissa</translation>
+=======
+        <source>Payment request network doesn't match client network.</source>
+        <translation>Maksypyyntö verkossa ei täsmää asiakasohjelman verkkoon.</translation>
+    </message>
+    <message>
+        <source>Payment request has expired.</source>
+        <translation>Maksupyyntö on vanhentunut.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Maksupyyntöä ei ole alustettu.</translation>
+    </message>
+    <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>Maksupyyntö %1 on liian pieni (huomioidaan tomuna).</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
 </context>
 <context>
@@ -1366,8 +1450,13 @@
         <translation>Maksupalautus %1:sta</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
         <translation>Maksupyyntö %1 on liian suuri (%2 tavua, sallittu %3 tavua).</translation>
+=======
+        <source>Payment request DoS protection</source>
+        <translation>Maksupyynnön DoS-suojaus</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -1397,6 +1486,7 @@
         <translation>Käyttöliittymä</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Node/Service</source>
         <translation>Noodi/Palvelu</translation>
     </message>
@@ -1416,6 +1506,15 @@
         <source>Received</source>
         <translation>Vastaanotetut</translation>
     </message>
+=======
+        <source>Address/Hostname</source>
+        <translation>Osoite/Isäntänimi</translation>
+    </message>
+    <message>
+        <source>Ping Time</source>
+        <translation>Vasteaika</translation>
+    </message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
 </context>
 <context>
     <name>QObject</name>
@@ -1424,8 +1523,13 @@
         <translation>Määrä</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Enter a Zuzcoin address (e.g. %1)</source>
         <translation>Syötä Zuzcoin-osoite (esim. %1)</translation>
+=======
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Syötä Bitcoin-osoite (esim. %1)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>%1 d</source>
@@ -1444,6 +1548,17 @@
         <translation>%1 s</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
+=======
+        <source>NETWORK</source>
+        <translation>VERKKO</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>TUNNISTAMATON</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>None</source>
         <translation>Ei yhtään</translation>
     </message>
@@ -1549,6 +1664,10 @@
         <translation>Data-hakemisto</translation>
     </message>
     <message>
+        <source>Using BerkeleyDB version</source>
+        <translation>Käyttää BerkeleyDB-versiota</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Käynnistysaika</translation>
     </message>
@@ -1601,18 +1720,24 @@
         <translation>&amp;Vertaiset</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Banned peers</source>
         <translation>Estetyt vertaiset</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>Select a peer to view detailed information.</source>
         <translation>Valitse vertainen eriteltyjä tietoja varten.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Whitelisted</source>
         <translation>Sallittu</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>Direction</source>
         <translation>Suunta</translation>
     </message>
@@ -1637,6 +1762,7 @@
         <translation>Käyttöliittymä</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Avaa %1 -debug-loki tämänhetkisestä data-hakemistosta. Tämä voi viedä muutaman sekunnin suurille lokitiedostoille.</translation>
     </message>
@@ -1651,6 +1777,18 @@
     <message>
         <source>Services</source>
         <translation>Palvelut</translation>
+=======
+        <source>Services</source>
+        <translation>Palvelut</translation>
+    </message>
+    <message>
+        <source>Starting Height</source>
+        <translation>Aloituskorkeus</translation>
+    </message>
+    <message>
+        <source>Sync Height</source>
+        <translation>Synkronointikorkeus</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Ban Score</source>
@@ -1669,6 +1807,7 @@
         <translation>Viimeisin vastaanotettu</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Ping Time</source>
         <translation>Vasteaika</translation>
     </message>
@@ -1687,6 +1826,18 @@
     <message>
         <source>Time Offset</source>
         <translation>Ajan poikkeama</translation>
+=======
+        <source>Bytes Sent</source>
+        <translation>Tavua lähetetty</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>Tavua vastaanotettu</translation>
+    </message>
+    <message>
+        <source>Ping Time</source>
+        <translation>Vasteaika</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Last block time</source>
@@ -1801,9 +1952,32 @@
         <translation>Ei</translation>
     </message>
     <message>
+        <source>via %1</source>
+        <translation>%1 kautta</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>ei koskaan</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>Sisääntuleva</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>Ulosmenevä</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>Tuntematon</translation>
     </message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
+=======
+    <message>
+        <source>Fetching...</source>
+        <translation>Hankitaan...</translation>
+    </message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -2037,6 +2211,7 @@
         <translation>Valitse...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>Fallbackfeen käyttö voi johtaa useita tunteja, päiviä (tai loputtomiin) kestävän siirron lähettämiseen. Harkitse palkkion valitsemista itse tai odota kunnes koko ketju on vahvistettu.</translation>
     </message>
@@ -2045,10 +2220,13 @@
         <translation>Varoitus: Kulujen arviointi ei ole juuri nyt mahdollista.</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>collapse fee-settings</source>
         <translation>pudota kulujen asetukset</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>per kilobyte</source>
         <translation>per kilotavu</translation>
     </message>
@@ -2059,6 +2237,18 @@
     <message>
         <source>Hide</source>
         <translation>Piilota</translation>
+=======
+        <source>Minimize</source>
+        <translation>Pienennä</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>per kilotavu</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>yhteensä ainakin</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2073,8 +2263,29 @@
         <translation>Muokattu:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation>(Älykästä rahansiirtokulua ei ole vielä alustettu. Tähän kuluu yleensä aikaa muutaman lohkon verran...)</translation>
+=======
+        <source>Confirmation time:</source>
+        <translation>Vahvistusaika:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normaali</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>nopea</translation>
+    </message>
+    <message>
+        <source>Send as zero-fee transaction if possible</source>
+        <translation>Lähetä siirtokuluttomana jos mahdollista</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(vahvistaminen voi viedä kauemmin)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2201,8 +2412,17 @@
         <translation>Siirto hylättiin seuraavasta syystä: %1</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>%1:tä ja korkeampaa siirtokulua pidetään mielettömän korkeana.</translation>
+=======
+        <source>Pay only the minimum fee of %1</source>
+        <translation>Maksa vain vähimmäiskulu %1</translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>Varoitus: Virheellinen Bitcoin osoite</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -2256,8 +2476,13 @@
         <translation>Tämä on normaali maksu.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>The Zuzcoin address to send the payment to</source>
         <translation>Zuzcoin-osoite johon maksu lähetetään</translation>
+=======
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>Bitcoin-osoite johon maksu lähetetään</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Alt+A</source>
@@ -2357,6 +2582,10 @@
         <translation>Zuzcoin-osoite jolla viesti allekirjoitetaan</translation>
     </message>
     <message>
+        <source>The Bitcoin address to sign the message with</source>
+        <translation>Bitcoin-osoite jolla viesti allekirjoitetaan</translation>
+    </message>
+    <message>
         <source>Choose previously used address</source>
         <translation>Valitse aikaisemmin käytetty osoite</translation>
     </message>
@@ -2409,12 +2638,21 @@
         <translation>Syötä vastaanottajan osoite, viesti ja allekirjoitus (varmista että kopioit rivinvaihdot, välilyönnit, sarkaimet yms. täsmälleen) alle vahvistaaksesi viestin. Varo lukemasta allekirjoitukseen enempää kuin mitä viestissä itsessään on välttääksesi man-in-the-middle -hyökkäyksiltä. Huomaa, että tämä todentaa ainoastaan allekirjoittavan vastaanottajan osoitteen, tämä ei voi todentaa minkään tapahtuman lähettäjää!</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>The Zuzcoin address the message was signed with</source>
         <translation>Zuzcoin-osoite jolla viesti on allekirjoitettu</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Zuzcoin address</source>
         <translation>Tarkista viestin allekirjoitus varmistaaksesi, että se allekirjoitettiin tietyllä Zuzcoin-osoitteella</translation>
+=======
+        <source>The Bitcoin address the message was signed with</source>
+        <translation>Bitcoin-osoite jolla viesti on allekirjoitettu</translation>
+    </message>
+    <message>
+        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <translation>Tarkista viestin allekirjoitus varmistaaksesi, että se allekirjoitettiin tietyllä Bitcoin-osoitteella</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2592,6 +2830,14 @@
     <message>
         <source>Total credit</source>
         <translation>Krediitti yhteensä</translation>
+    </message>
+    <message>
+        <source>Total debit</source>
+        <translation>Yhteensä debit</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Yhteensä credit</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -2875,6 +3121,29 @@
         <translation>Vie rahansiirtohistoria</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
+=======
+        <source>Watch-only</source>
+        <translation>Vain katseltava</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Vienti epäonnistui</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>Rahansiirron historian tallentamisessa tapahtui virhe paikkaan %1.</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Vienti onnistui</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Rahansiirron historia tallennettiin onnistuneesti paikkaan %1.</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>Comma separated file (*.csv)</source>
         <translation>Pilkuilla erotettu tiedosto (*.csv)</translation>
     </message>
@@ -3086,6 +3355,7 @@
         <translation>Zuzcoin-ydin</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>The %s developers</source>
         <translation>%s kehittäjät</translation>
     </message>
@@ -3098,6 +3368,8 @@
         <translation>Hyväksy valkolistatuilta vertaisilta vastaanotetut, välitetyt siirrot silloinkin, kun siirtojen välitys ei ole käytössä (oletus: %d)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Kytkeydy annettuun osoitteeseen ja pidä linja aina auki. Käytä [host]:portin merkintätapaa IPv6:lle.</translation>
     </message>
@@ -3106,6 +3378,7 @@
         <translation>Ei voida lukita data-hakemistoa %s. %s on luultavasti jo käynnissä.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Poista kaikki lompakon rahasiirrot ja palauta vain määrätyt osat lohkoketjusta -rescan -valitsimella käynnistyksen yhteydessä.</translation>
     </message>
@@ -3114,6 +3387,8 @@
         <translation>Virhe luettaessa %s! Avaimet luetttiin oikein, mutta rahansiirtotiedot tai osoitekirjan sisältö saattavat olla puutteellisia tai vääriä.</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Suorita käsky kun lompakossa rahansiirto muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
     </message>
@@ -3406,6 +3681,10 @@
         <translation>Käytä testiketjua</translation>
     </message>
     <message>
+        <source>Use UPnP to map the listening port (default: %u)</source>
+        <translation>Käytä UPnP:ta kuuntelevan portin kartoittamiseen (oletus: %u)</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>Varmistetaan lohkoja...</translation>
     </message>
@@ -3486,6 +3765,10 @@
         <translation>Luo Tor-salattu palvelu automaattisesti (oletus: %d)</translation>
     </message>
     <message>
+        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
+        <translation>Aseta kolikoiden luomiseen tarkoitettujen säikeiden lukumäärä (-1 = kaikki ytimet, oletus: %d)</translation>
+    </message>
+    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Yhdistä SOCKS5 proxin kautta</translation>
     </message>
@@ -3526,8 +3809,13 @@
         <translation>Pidä enimmillään &lt;n&gt; yhdistämiskelvotonta rahansiirtoa muistissa (oletus: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Pitää määritellä portti argumentilla -whitebind: '%s'</translation>
+=======
+        <source>Node relay options:</source>
+        <translation>Välityssolmukohdan asetukset:</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Node relay options:</source>
@@ -3562,14 +3850,18 @@
         <translation>Siirron vahvistus epäonnistui</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Rahansiirron määrä on liian pieni kattaakseen maksukulun</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>This is experimental software.</source>
         <translation>Tämä on ohjelmistoa kokeelliseen käyttöön.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Tor control port password (default: empty)</source>
         <translation>Tor-hallintaportin salasana (oletus: tyhjä)</translation>
     </message>
@@ -3578,6 +3870,8 @@
         <translation>Tor-hallintaportti jota käytetään jos onion-kuuntelu on käytössä (oletus: %s)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>Transaction amount too small</source>
         <translation>Siirtosumma liian pieni</translation>
     </message>
@@ -3666,6 +3960,7 @@
         <translation>Kuinka läpikäyvä lohkojen -checkblocks -todennus on (0-4, oletus: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
         <translation>Kuinka monta sekuntia huonosti käyttäytyviä vertaisia estetään yhdistämästä (oletus: %u)</translation>
     </message>
@@ -3700,6 +3995,74 @@
     <message>
         <source>(default: %s)</source>
         <translation>(oletus: %s)</translation>
+=======
+        <source>(default: %s)</source>
+        <translation>(oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Acceptable ciphers (default: %s)</source>
+        <translation>Hyväksyttävät salaukset (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat</source>
+        <translation>Virhe ladattaessa wallet.dat-tiedostoa</translation>
+    </message>
+    <message>
+        <source>Force safe mode (default: %u)</source>
+        <translation>Pakota yhteensopivuustila (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Generate coins (default: %u)</source>
+        <translation>Luo kolikoita (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
+        <translation>Kuinka monta lohkoa tarkistetaan käynnistyksessä (oletus: %u, 0 = kaikki)</translation>
+    </message>
+    <message>
+        <source>Include IP addresses in debug output (default: %u)</source>
+        <translation>Sisällytä IP-osoitteet virheenkorjauslokissa (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Virheellinen proxy-osoite '%s'</translation>
+    </message>
+    <message>
+        <source>Relay non-P2SH multisig (default: %u)</source>
+        <translation>Välitä ei-P2SH-multisig (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Server certificate file (default: %s)</source>
+        <translation>Palvelimen sertifikaattitiedosto (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Server private key (default: %s)</source>
+        <translation>Palvelimen private key (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
+        <translation>Aseta avainaltaan kooksi &lt;n&gt; (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>Aseta pienin mahdollinen lohkokoko tavuina (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads to service RPC calls (default: %d)</source>
+        <translation>Aseta RPC-kutsujen palvelemiseen tarkoitettujen säikeiden lukumäärä (oletus: %d)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Määritä asetustiedosto (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>Määritä pid-tiedosto (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>Tuntematon verkko -onlynet parametrina: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
     </message>
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
@@ -3714,6 +4077,7 @@
         <translation>Virhe ladattaessa lompakkoa %s. -wallet -tiedostonimi esiintyy useaan kertaan.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_fi.ts
         <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
         <translation>Virhe ladattaessa lompakkoa %s. -wallet tiedostonimi sisältää virheellisiä merkkejä.</translation>
     </message>
@@ -3826,6 +4190,8 @@
         <translation>Tuntematon verkko -onlynet parametrina: '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_fi.ts
         <source>Insufficient funds</source>
         <translation>Lompakon saldo ei riitä</translation>
     </message>

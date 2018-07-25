@@ -3,7 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <translation>Pravým tlačítkem myši můžeš upravit označení adresy</translation>
+=======
+        <translation>Pravým tlačítkem myši začneš upravovat označení adresy</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Create a new address</source>
@@ -445,6 +449,18 @@
         <source>Indexing blocks on disk...</source>
         <translation>Vytvářím index bloků na disku...</translation>
     </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n hodinu</numerusform><numerusform>%n hodiny</numerusform><numerusform>%n hodin</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n den</numerusform><numerusform>%n dny</numerusform><numerusform>%n dnů</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n týden</numerusform><numerusform>%n týdny</numerusform><numerusform>%n týdnů</numerusform></translation>
+    </message>
     <message>
         <source>Processing blocks on disk...</source>
         <translation>Zpracovávám bloky na disku...</translation>
@@ -452,6 +468,10 @@
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Zpracován %n blok transakční historie.</numerusform><numerusform>Zpracovány %n bloky transakční historie.</numerusform><numerusform>Zpracováno %n bloků transakční historie.</numerusform><numerusform>Zpracováno %n bloků transakční historie.</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n rok</numerusform><numerusform>%n roky</numerusform><numerusform>%n roků</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -480,6 +500,10 @@
     <message>
         <source>Up to date</source>
         <translation>Aktuální</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>Zpracován %n blok transakční historie.</numerusform><numerusform>Zpracovány %n bloky transakční historie.</numerusform><numerusform>Zpracováno %n bloků transakční historie.</numerusform></translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Zuzcoin command-line options</source>
@@ -904,6 +928,7 @@
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <translation><numerusform>%n GB volného místa</numerusform><numerusform>%n GB volného místa</numerusform><numerusform>%n GB volného místa</numerusform><numerusform>%n GB volného místa</numerusform></translation>
     </message>
     <message numerus="yes">
@@ -960,6 +985,13 @@
     <message>
         <source>Unknown. Syncing Headers (%1)...</source>
         <translation>Neznámý. Synchronizuji záhlaví bloků (%1)…</translation>
+=======
+        <translation><numerusform>%n GB volného místa</numerusform><numerusform>%n GB volného místa</numerusform><numerusform>%n GB volného místa</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(z potřebného %n GB)</numerusform><numerusform>(z potřebných %n GB)</numerusform><numerusform>(z potřebných %n GB)</numerusform></translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
 </context>
 <context>
@@ -1100,12 +1132,17 @@
         <translation>Namapovat port přes &amp;UPnP</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Accept connections from outside.</source>
         <translation>Přijímat spojení z venku.</translation>
     </message>
     <message>
         <source>Connect to the Zuzcoin network through a SOCKS5 proxy.</source>
         <translation>Připojí se do zuzcoinové sítě přes SOCKS5 proxy.</translation>
+=======
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Připojí se do Bitcoinové sítě přes SOCKS5 proxy.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1382,6 +1419,13 @@
         <translation>Platební požadavek %1 je moc velký (%2 bajtů, povoleno %3 bajtů).</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
+=======
+        <source>Payment request DoS protection</source>
+        <translation>DoS ochrana platebního požadavku</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
         <source>Error communicating with %1: %2</source>
         <translation>Chyba při komunikaci s %1: %2</translation>
     </message>
@@ -2065,6 +2109,7 @@
         <translation>Zvol...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>Použití nouzového poplatku („fallbackfee“) může vyústit v transakci, které bude trvat hodiny nebo dny (případně věčnost), než bude potvrzena. Zvaž proto ruční nastavení poplatku, případně počkej, až se ti kompletně zvaliduje bločenka.</translation>
     </message>
@@ -2075,6 +2120,18 @@
     <message>
         <source>collapse fee-settings</source>
         <translation>sbal nastavení poplatků</translation>
+=======
+        <source>collapse fee-settings</source>
+        <translation>sbal nastavení poplatků</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Skryj</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Pokud je vlastní poplatek nastavený na 1000 satoshi a transakce má pouze 250 bajtů, tak „za kilobajt“ zaplatí poplatek jen 250 satoshi, zatímco „přinejmenším“ zaplatí 1000 satoshi. Pro transakce větší než kilobajt obě možnosti platí za kilobajt.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2085,12 +2142,21 @@
         <translation>Pokud je vlastní poplatek nastavený na 1000 satoshi a transakce má pouze 250 bajtů, tak „za kilobajt“ zaplatí poplatek jen 250 satoshi, zatímco „přinejmenším“ zaplatí 1000 satoshi. Pro transakce větší než kilobajt obě možnosti platí za kilobajt.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Hide</source>
         <translation>Skryj</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for zuzcoin transactions than the network can process.</source>
         <translation>Platit jen minimální poplatek je v pořádku, pokud je zrovna méně transakcí než místa v blocích. Ale počítej s tím, že to také může skončit transakcí, která nikdy nebude potvrzena, pokud je větší poptávka po zuzcoinových transakcích, než síť zvládne zpracovat.</translation>
+=======
+        <source>total at least</source>
+        <translation>přinejmenším</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Platit jen minimální poplatek je v pořádku, pokud je zrovna méně transakcí než místa v blocích. Ale počítej s tím, že to také může skončit transakcí, která nikdy nebude potvrzena, pokud je větší poptávka po bitcoinových transakcích, než síť zvládne zpracovat.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2109,6 +2175,29 @@
         <translation>(Inteligentní poplatek ještě není inicializovaný. Obvykle mu to tak pár bloků trvá...)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
+=======
+        <source>Confirmation time:</source>
+        <translation>Rychlost potvrzení:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normální</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>rychlá</translation>
+    </message>
+    <message>
+        <source>Send as zero-fee transaction if possible</source>
+        <translation>Pošli transakci pokud možno bez poplatku</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(potvrzení může trvat déle)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
         <source>Send to multiple recipients at once</source>
         <translation>Pošli více příjemcům naráz</translation>
     </message>
@@ -2229,8 +2318,25 @@
         <translation>Transakce byla zamítnuta s tímto odůvodněním: %1</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Poplatek vyšší než %1 je považován za absurdně vysoký.</translation>
+=======
+        <source>A fee higher than %1 is considered an insanely high fee.</source>
+        <translation>Poplatek vyšší než %1 je považován za absurdně vysoký.</translation>
+    </message>
+    <message>
+        <source>Pay only the minimum fee of %1</source>
+        <translation>Zaplatit pouze minimální poplatek %1</translation>
+    </message>
+    <message>
+        <source>Estimated to begin confirmation within %1 block(s).</source>
+        <translation>Potvrzování by podle odhadu mělo začít během %1 bloků.</translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>Upozornění: Neplatná Bitcoinová adresa</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -2615,7 +2721,11 @@
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <translation><numerusform>dozraje po %n bloku</numerusform><numerusform>dozraje po %n blocích</numerusform><numerusform>dozraje po %n blocích</numerusform><numerusform>dozraje po %n blocích</numerusform></translation>
+=======
+        <translation><numerusform>dozraje po %n bloku</numerusform><numerusform>dozraje po %n blocích</numerusform><numerusform>dozraje po %n blocích</numerusform></translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>not accepted</source>
@@ -2812,8 +2922,13 @@
         <translation>Zda tato transakce zahrnuje i některou sledovanou adresu.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>Uživatelsky určený účel transakce.</translation>
+=======
+        <source>Destination address of transaction.</source>
+        <translation>Cílová adresa transakce.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2919,6 +3034,29 @@
         <translation>Exportuj transakční historii</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
+=======
+        <source>Watch-only</source>
+        <translation>Sledovaná</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportování selhalo</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>Při ukládání transakční historie do %1 se přihodila nějaká chyba.</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Úspěšně vyexportováno</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Transakční historie byla v pořádku uložena do %1.</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
         <source>Comma separated file (*.csv)</source>
         <translation>Formát CSV (*.csv)</translation>
     </message>
@@ -3134,6 +3272,7 @@
         <translation>Zuzcoin Core</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>The %s developers</source>
         <translation>Vývojáři %s</translation>
     </message>
@@ -3146,6 +3285,8 @@
         <translation>Přijímat přeposílané transakce obdržené od vždy vítaných protějšků, i když transakce nepřeposíláme (výchozí: %d)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Poslouchat na zadané adrese. Pro zápis IPv6 adresy použij notaci [adresa]:port</translation>
     </message>
@@ -3154,6 +3295,7 @@
         <translation>Nedaří se mi získat zámek na datový adresář %s. %s pravděpodobně už jednou běží.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Smazat všechny transakce peněženky a při startu obnovit pouze relevantní části bločenky pomocí -rescan</translation>
     </message>
@@ -3164,6 +3306,14 @@
     <message>
         <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
         <translation>Vyloučit ladicí informace dané kategorie. Dá se zkombinovat s -debug=1, aby se zaznamenávaly ladicí informace všech kategorií kromě jedné nebo několika zvolených.</translation>
+=======
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Šířen pod softwarovou licencí MIT, viz přiložený soubor COPYING nebo &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation>Přepnout do módu testování regresí, který používá speciální řetězec, ve kterém mohou být bloky okamžitě vyřešeny.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -3262,8 +3412,17 @@
         <translation>%s je poškozen, jeho záchrana se nezdařila</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool musí být alespoň %d MB</translation>
+=======
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Umístit na bílou listinu protějšky připojující se z dané podsítě či IP adresy. Lze zadat i vícekrát.</translation>
+    </message>
+    <message>
+        <source>(default: 1)</source>
+        <translation>(výchozí: 1)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -3370,10 +3529,17 @@
         <translation>Chyba při otevírání databáze bloků</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occured, see debug.log for details</source>
+        <translation>Chyba: Stala se fatální vnitřní chyba. detaily viz v debug.log</translation>
+    </message>
+    <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
+=======
         <source>Error: Disk space is low!</source>
         <translation>Problém: Na disku je málo místa!</translation>
     </message>
     <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Nepodařilo se naslouchat na žádném portu. Použij -listen=0, pokud to byl tvůj záměr.</translation>
     </message>
@@ -3424,6 +3590,13 @@
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Připojovat se pouze k uzlům v &lt;net&gt; síti (ipv4, ipv6 nebo onion)</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
+=======
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <translation>Znovu vytvořit index řetězce bloků z aktuálních blk000??.dat souborů</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -3470,8 +3643,17 @@
         <translation>Zdrojový kód je dostupný na %s.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Transaction fee and change calculation failed</source>
         <translation>Selhal výpočet transakčního poplatku a drobných</translation>
+=======
+        <source>Use UPnP to map the listening port (default: %u)</source>
+        <translation>Použít UPnP k namapování naslouchacího portu (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Verifying blocks...</source>
+        <translation>Ověřuji bloky... </translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
@@ -3534,6 +3716,10 @@
         <translation>Obsadit zadanou adresu a vždy vítat protějšky, které se na ni připojí. Pro zápis IPv6 adresy použij notaci [adresa]:port</translation>
     </message>
     <message>
+        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:%u)</source>
+        <translation>Kontinuálně omezovat bezpoplatkové transakce na &lt;n&gt;*1000 bajtů za minutu (výchozí: %u)</translation>
+    </message>
+    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Vytvářet nové soubory s výchozími systémovými právy namísto umask 077 (uplatní se, pouze pokud je vypnutá funkce peněženky)</translation>
     </message>
@@ -3558,16 +3744,38 @@
         <translation>Pokud paytxfee není nastaveno, platit dostatečný poplatek na to, aby začaly být transakce potvrzovány v průměru během n bloků (výchozí: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Neplatná částka pro -maxtxfee=&lt;amount&gt;: '%s' (musí být alespoň jako poplatek minrelay %s, aby transakce nezůstávaly trčet)</translation>
+=======
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Pokud paytxfee není nastaveno, platit dostatečný poplatek na to, aby byly transakce potvrzeny v průměru během n bloků (výchozí: %u)</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximální velikost dat v transakcích nesoucích data, se kterou jsme ochotni je ještě přeposílat a těžit (výchozí: %u)</translation>
     </message>
     <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation>Při nedostatku adres získat další protějšky z DNS (výchozí: 1, pokud není použito -connect)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
+    </message>
+    <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>Maximální velikost dat v transakcích nesoucích data, se kterou jsme ochotni je ještě přeposílat a těžit (výchozí: %u)</translation>
+    </message>
+    <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Použít náhodné údaje pro každé proxy spojení. To umožní izolovat nesouvisející datové toky v Toru (výchozí: %u)</translation>
+=======
+        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
+        <translation>Nastavení počtu vláken pro těžení, je-li zapnuté (-1 = všechna jádra, výchozí: %d)</translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v OpenSSL Toolkitu &lt;https://www.openssl.org/&gt; a kryptografický program od Erika Younga a program UPnP od Thomase Bernarda.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -3598,8 +3806,17 @@
         <translation>Připojit se přes SOCKS5 proxy</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
         <translation>Chyba při načítání %s: nemůžeš vypnout HD u existující HD peněženky</translation>
+=======
+        <source>Error reading from database, shutting down.</source>
+        <translation>Chyba při čtení z databáze, ukončuji se.</translation>
+    </message>
+    <message>
+        <source>Error: Unsupported argument -tor found, use -onion.</source>
+        <translation>Chyba: Argument -tor již není podporovaný, použij -onion.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3646,6 +3863,13 @@
         <translation>Možnosti přeposílání:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
+=======
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>Možnosti SSL pro RPC: (viz instrukce nastavení SSL na Bitcoin Wiki)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
         <source>RPC server options:</source>
         <translation>Možnosti RPC serveru:</translation>
     </message>
@@ -3660,6 +3884,10 @@
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Posílat stopovací/ladicí informace do konzole místo do souboru debug.log</translation>
+    </message>
+    <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>Posílat transakce pokud možno bez poplatků (výchozí: %u)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3692,6 +3920,10 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Částka v transakci je příliš malá</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Transakce je na poplatkovou politiku příliš velká</translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
@@ -3778,6 +4010,7 @@
         <translation>Chyba při načítání %s: nemůžeš zapnout HD u existující ne-HD peněženky</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
         <translation>Chyba při načítání peněženky %s. Parametr -wallet smí uvádět pouze název souboru (nikoli cestu k němu).</translation>
     </message>
@@ -3900,6 +4133,170 @@
     <message>
         <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Čekat na spojení na &lt;portu&gt; (výchozí: %u nebo testnet: %u)</translation>
+=======
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = ukládat transakční metadata, např. majitele účtu a informace o platebním požadavku, 2 = mazat transakční metadata)</translation>
+    </message>
+    <message>
+        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
+        <translation>Promítnout databázovou aktivitu z paměťového prostoru do záznamu na disku každých &lt;n&gt; megabajtů (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
+        <translation>Jak moc důkladná má být verifikace bloků -checkblocks (0-4, výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+        <translation>Zaznamenávat během těžení bloků prioritu transakce a poplatek za kB (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
+        <translation>Spravovat úplný index transakcí, který je využíván rpc voláním getrawtransaction (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
+        <translation>Doba ve vteřinách, po kterou se nebudou moci zlobivé protějšky znovu připojit (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
+        <translation>Tisknout ladicí informace (výchozí: %u, zadání &lt;category&gt; je volitelné)</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
+        <translation>Použít samostatnou SOCKS5 proxy ke spojení s protějšky přes skryté služby v Toru (výchozí: %s)</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(výchozí: %s)</translation>
+    </message>
+    <message>
+        <source>Acceptable ciphers (default: %s)</source>
+        <translation>Akceptovatelné šifry (výchozí: %s)</translation>
+    </message>
+    <message>
+        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
+        <translation>Vždy získávat adresy dalších protějšků přes DNS (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Disable safemode, override a real safe mode event (default: %u)</source>
+        <translation>Vypnout bezpečný režim (safemode), překrýt skutečnou událost bezpečného režimu (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat</source>
+        <translation>Chyba při načítání wallet.dat</translation>
+    </message>
+    <message>
+        <source>Force safe mode (default: %u)</source>
+        <translation>Vynutit bezpečný mód (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Generate coins (default: %u)</source>
+        <translation>Těžit (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
+        <translation>Kolik bloků při startu zkontrolovat (výchozí: %u, 0 = všechny)</translation>
+    </message>
+    <message>
+        <source>Include IP addresses in debug output (default: %u)</source>
+        <translation>Zaznamenávat do ladicích výstupů i IP adresy (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Neplatná -proxy adresa: '%s'</translation>
+    </message>
+    <message>
+        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
+        <translation>Omezit velikost vyrovnávací paměti pro podpisy na &lt;n&gt; položek (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Čekat na JSON-RPC spojení na &lt;portu&gt; (výchozí: %u nebo testnet: %u)</translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Čekat na spojení na &lt;portu&gt; (výchozí: %u nebo testnet: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Povolit nejvýše &lt;n&gt; protějšků (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Maximální velikost přijímacího bufferu pro každé spojení, &lt;n&gt;*1000 bajtů (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Maximální velikost odesílacího bufferu pro každé spojení, &lt;n&gt;*1000 bajtů (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
+        <translation>Uznávat pouze řetězec bloků, který odpovídá vnitřním kontrolním bodům (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>Připojit před ladicí výstup časové razítko (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Relay and mine data carrier transactions (default: %u)</source>
+        <translation>Přeposílat a těžit transakce nesoucí data (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Relay non-P2SH multisig (default: %u)</source>
+        <translation>Přeposílat ne-P2SH multisig (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Run a thread to flush wallet periodically (default: %u)</source>
+        <translation>Spustit vlákno pročišťující periodicky peněženku (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Server certificate file (default: %s)</source>
+        <translation>Soubor se serverovým certifikátem (výchozí: %s)</translation>
+    </message>
+    <message>
+        <source>Server private key (default: %s)</source>
+        <translation>Soubor se serverovým soukromým klíčem (výchozí: %s)</translation>
+    </message>
+    <message>
+        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
+        <translation>Nastavit zásobník klíčů na velikost &lt;n&gt; (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>Nastavit minimální velikost bloku v bajtech (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads to service RPC calls (default: %d)</source>
+        <translation>Nastavení počtu vláken pro servisní RPC volání (výchozí: %d)</translation>
+    </message>
+    <message>
+        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
+        <translation>Nastavit příznak DB_PRIVATE v databázovém prostředí peněženky (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Konfigurační soubor (výchozí: %s)</translation>
+    </message>
+    <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>Zadej časový limit spojení v milivteřinách (minimum: 1, výchozí: %d)</translation>
+    </message>
+    <message>
+        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
+        <translation>Utrácet i ještě nepotvrzené drobné při posílání transakcí (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Stop running after importing blocks from disk (default: %u)</source>
+        <translation>Ukončit se po importu bloků z disku (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
+        <translation>Práh pro odpojování zlobivých protějšků (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>V -onlynet byla uvedena neznámá síť: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
@@ -3914,6 +4311,7 @@
         <translation>Maximální velikost přijímacího bufferu pro každé spojení, &lt;n&gt;*1000 bajtů (výchozí: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_cs.ts
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
         <translation>Maximální velikost odesílacího bufferu pro každé spojení, &lt;n&gt;*1000 bajtů (výchozí: %u)</translation>
     </message>
@@ -3990,6 +4388,8 @@
         <translation>V -onlynet byla uvedena neznámá síť: '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_cs.ts
         <source>Insufficient funds</source>
         <translation>Nedostatek prostředků</translation>
     </message>

@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [] {}"));
     BOOST_CHECK_THROW(CallRPC("createrawtransaction [] {} extra"), std::runtime_error);
 
+<<<<<<< HEAD
     BOOST_CHECK_THROW(CallRPC("decoderawtransaction"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("decoderawtransaction null"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("decoderawtransaction DEADBEEF"), std::runtime_error);
@@ -104,8 +105,22 @@ BOOST_AUTO_TEST_CASE(rpc_togglenetwork)
     r = CallRPC("getnetworkinfo");
     netState = find_value(r.get_obj(), "networkactive").get_bool();
     BOOST_CHECK_EQUAL(netState, true);
-}
+=======
+    BOOST_CHECK_THROW(CallRPC("decoderawtransaction"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("decoderawtransaction null"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("decoderawtransaction DEADBEEF"), runtime_error);
 
+    BOOST_CHECK_THROW(CallRPC("signrawtransaction"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("signrawtransaction null"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("signrawtransaction ff00"), runtime_error);
+
+    // Only check failure cases for sendrawtransaction, there's no network to send to...
+    BOOST_CHECK_THROW(CallRPC("sendrawtransaction"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("sendrawtransaction null"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("sendrawtransaction DEADBEEF"), runtime_error);
+>>>>>>> elements/alpha
+}
+/*
 BOOST_AUTO_TEST_CASE(rpc_rawsign)
 {
     UniValue r;
@@ -124,6 +139,7 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
     r = CallRPC(std::string("signrawtransaction ")+notsigned+" "+prevout+" "+"["+privkey1+","+privkey2+"]");
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == true);
 }
+<<<<<<< HEAD
 
 BOOST_AUTO_TEST_CASE(rpc_createraw_op_return)
 {
@@ -143,6 +159,9 @@ BOOST_AUTO_TEST_CASE(rpc_createraw_op_return)
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"data\":\"010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081\"}"));
 }
 
+=======
+*/
+>>>>>>> elements/alpha
 BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
 {
     BOOST_CHECK(ValueFromAmount(0LL).write() == "0.00000000");
@@ -219,6 +238,27 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
 }
 
 BOOST_AUTO_TEST_CASE(json_parse_errors)
+<<<<<<< HEAD
+=======
+{
+    Value value;
+    // Valid
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0"), value), true);
+    // Valid, with trailing whitespace
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0 "), value), true);
+    // Invalid, initial garbage
+    BOOST_CHECK_EQUAL(read_string(std::string("[1.0"), value), false);
+    BOOST_CHECK_EQUAL(read_string(std::string("a1.0"), value), false);
+    // Invalid, trailing garbage
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0sds"), value), false);
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0]"), value), false);
+    // BTC addresses should fail parsing
+    BOOST_CHECK_EQUAL(read_string(std::string("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), value), false);
+    BOOST_CHECK_EQUAL(read_string(std::string("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), value), false);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
+>>>>>>> elements/alpha
 {
     // Valid
     BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0").get_real(), 1.0);

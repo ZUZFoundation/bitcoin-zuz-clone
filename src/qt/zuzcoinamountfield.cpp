@@ -166,25 +166,41 @@ protected:
 
     StepEnabled stepEnabled() const
     {
+<<<<<<< HEAD:src/qt/zuzcoinamountfield.cpp
         if (isReadOnly()) // Disable steps when AmountSpinBox is read-only
             return StepNone;
         if (text().isEmpty()) // Allow step-up with empty field
             return StepUpEnabled;
 
         StepEnabled rv = 0;
+=======
+        StepEnabled rv = 0;
+        if (isReadOnly()) // Disable steps when AmountSpinBox is read-only
+            return StepNone;
+        if(text().isEmpty()) // Allow step-up with empty field
+            return StepUpEnabled;
+>>>>>>> elements/alpha:src/qt/bitcoinamountfield.cpp
         bool valid = false;
         CAmount val = value(&valid);
         if(valid)
         {
             if(val > 0)
                 rv |= StepDownEnabled;
+<<<<<<< HEAD:src/qt/zuzcoinamountfield.cpp
             if(val < ZuzcoinUnits::maxMoney())
+=======
+            if(val < BitcoinUnits::maxMoney())
+>>>>>>> elements/alpha:src/qt/bitcoinamountfield.cpp
                 rv |= StepUpEnabled;
         }
         return rv;
     }
 
+<<<<<<< HEAD:src/qt/zuzcoinamountfield.cpp
 Q_SIGNALS:
+=======
+signals:
+>>>>>>> elements/alpha:src/qt/bitcoinamountfield.cpp
     void valueChanged();
 };
 

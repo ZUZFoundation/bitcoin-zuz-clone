@@ -55,6 +55,12 @@
    </item>
    <item>
     <widget class="QLabel" name="sizeWarningLabel">
+<<<<<<< HEAD
+=======
+     <property name="text">
+      <string>Bitcoin Core will download and store a copy of the Bitcoin blockchain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</string>
+     </property>
+>>>>>>> elements/alpha
      <property name="wordWrap">
       <bool>true</bool>
      </property>

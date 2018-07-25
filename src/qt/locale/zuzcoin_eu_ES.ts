@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eu_ES.ts
         <source>Right-click to edit address or label</source>
         <translation>Klikatu eskuinean helbidea edo etiketa aldatzeko</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eu_ES.ts
         <source>Create a new address</source>
         <translation>Sortu helbide berria</translation>
     </message>

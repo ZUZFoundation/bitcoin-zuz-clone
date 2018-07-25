@@ -5,10 +5,17 @@
 
 #include <chainparamsbase.h>
 
+<<<<<<< HEAD
 #include <tinyformat.h>
 #include <util.h>
+=======
+#include "script/script.h"
+#include "util.h"
+#include "utilstrencodings.h"
+>>>>>>> elements/alpha
 
 #include <assert.h>
+#include <stdio.h>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
@@ -32,7 +39,13 @@ class CBaseMainParams : public CBaseChainParams
 public:
     CBaseMainParams()
     {
+<<<<<<< HEAD
         nRPCPort = 4847;
+=======
+        networkID = CBaseChainParams::MAIN;
+        nRPCPort = 8332;
+        strDataDir = "alphamain";
+>>>>>>> elements/alpha
     }
 };
 
@@ -44,8 +57,14 @@ class CBaseTestNetParams : public CBaseChainParams
 public:
     CBaseTestNetParams()
     {
+<<<<<<< HEAD
         nRPCPort = 14847;
         strDataDir = "testnet3";
+=======
+        networkID = CBaseChainParams::TESTNET;
+        nRPCPort = 4241;
+        strDataDir = "alphatestnet3";
+>>>>>>> elements/alpha
     }
 };
 
@@ -57,8 +76,13 @@ class CBaseRegTestParams : public CBaseChainParams
 public:
     CBaseRegTestParams()
     {
+<<<<<<< HEAD
         nRPCPort = 18443;
         strDataDir = "regtest";
+=======
+        networkID = CBaseChainParams::REGTEST;
+        strDataDir = "alpharegtest";
+>>>>>>> elements/alpha
     }
 };
 
@@ -89,8 +113,13 @@ void SelectBaseParams(const std::string& chain)
 
 std::string ChainNameFromCommandLine()
 {
+<<<<<<< HEAD
     bool fRegTest = gArgs.GetBoolArg("-regtest", false);
     bool fTestNet = gArgs.GetBoolArg("-testnet", false);
+=======
+    bool fRegTest = GetBoolArg("-regtest", false);
+    bool fTestNet = GetBoolArg("-testnet", true);
+>>>>>>> elements/alpha
 
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
@@ -100,3 +129,35 @@ std::string ChainNameFromCommandLine()
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
 }
+<<<<<<< HEAD
+=======
+
+CScript ScriptDestinationFromCommandLine()
+{
+    std::string sd = GetArg("-genesisscriptdestination", "");
+    if (!sd.empty()) {
+        if (IsHex(sd)) {
+            std::vector<unsigned char> sd_raw(ParseHex(sd));
+            return CScript(sd_raw.begin(), sd_raw.end());
+        } else {
+            fprintf(stderr, "Warning: Genesis script destination was not valid hex, ignoring it.\n");
+        }
+    }
+    return CScript();
+}
+
+bool SelectBaseParamsFromCommandLine()
+{
+    CBaseChainParams::Network network = NetworkIdFromCommandLine();
+    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
+        return false;
+
+    SelectBaseParams(network);
+    return true;
+}
+
+bool AreBaseParamsConfigured()
+{
+    return pCurrentBaseParams != NULL;
+}
+>>>>>>> elements/alpha

@@ -55,6 +55,7 @@ public:
     bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock) override
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
+<<<<<<< HEAD
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
                 map_[it->first] = it->second.coin;
@@ -62,6 +63,12 @@ public:
                     // Randomly delete empty entries on write.
                     map_.erase(it->first);
                 }
+=======
+            map_[it->first.first] = it->second.coins;
+            if (it->second.coins.IsPruned() && insecure_rand() % 3 == 0) {
+                // Randomly delete empty entries on write.
+                map_.erase(it->first.first);
+>>>>>>> elements/alpha
             }
             mapCoins.erase(it++);
         }

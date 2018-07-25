@@ -16,6 +16,7 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
+<<<<<<< HEAD
             VALUE "CompanyName",        "Zuzcoin"
             VALUE "FileDescription",    "zuzcoind (Zuzcoin node with a JSON-RPC server)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
@@ -24,6 +25,16 @@ BEGIN
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "zuzcoind.exe"
             VALUE "ProductName",        "zuzcoind"
+=======
+            VALUE "CompanyName",        "Bitcoin"
+            VALUE "FileDescription",    "alphad (OSS daemon/client for Elements Alpha)"
+            VALUE "FileVersion",        VER_FILEVERSION_STR
+            VALUE "InternalName",       "alphad"
+            VALUE "LegalCopyright",     COPYRIGHT_STR
+            VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
+            VALUE "OriginalFilename",   "alphad.exe"
+            VALUE "ProductName",        "Alphad"
+>>>>>>> elements/alpha
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

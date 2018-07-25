@@ -9,24 +9,42 @@
 #include <serialize.h>
 #include <streams.h>
 
+<<<<<<< HEAD
 int CAddrInfo::GetTriedBucket(const uint256& nKey) const
 {
     uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetHash().GetCheapHash();
     uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetHash().GetCheapHash();
+=======
+using namespace std;
+
+int CAddrInfo::GetTriedBucket(const uint256& nKey) const
+{
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetHash().GetLow64();
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetHash().GetLow64();
+>>>>>>> elements/alpha
     return hash2 % ADDRMAN_TRIED_BUCKET_COUNT;
 }
 
 int CAddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src) const
 {
     std::vector<unsigned char> vchSourceGroupKey = src.GetGroup();
+<<<<<<< HEAD
     uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << vchSourceGroupKey).GetHash().GetCheapHash();
     uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP)).GetHash().GetCheapHash();
+=======
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << vchSourceGroupKey).GetHash().GetLow64();
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP)).GetHash().GetLow64();
+>>>>>>> elements/alpha
     return hash2 % ADDRMAN_NEW_BUCKET_COUNT;
 }
 
 int CAddrInfo::GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const
 {
+<<<<<<< HEAD
     uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? 'N' : 'K') << nBucket << GetKey()).GetHash().GetCheapHash();
+=======
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? 'N' : 'K') << nBucket << GetKey()).GetHash().GetLow64();
+>>>>>>> elements/alpha
     return hash1 % ADDRMAN_BUCKET_SIZE;
 }
 
@@ -53,14 +71,29 @@ bool CAddrInfo::IsTerrible(int64_t nNow) const
 double CAddrInfo::GetChance(int64_t nNow) const
 {
     double fChance = 1.0;
+<<<<<<< HEAD
     int64_t nSinceLastTry = std::max<int64_t>(nNow - nLastTry, 0);
+=======
+
+    int64_t nSinceLastSeen = nNow - nTime;
+    int64_t nSinceLastTry = nNow - nLastTry;
+
+    if (nSinceLastSeen < 0)
+        nSinceLastSeen = 0;
+    if (nSinceLastTry < 0)
+        nSinceLastTry = 0;
+>>>>>>> elements/alpha
 
     // deprioritize very recent attempts away
     if (nSinceLastTry < 60 * 10)
         fChance *= 0.01;
 
     // deprioritize 66% after each failed attempt, but at most 1/28th to avoid the search taking forever or overly penalizing outages.
+<<<<<<< HEAD
     fChance *= pow(0.66, std::min(nAttempts, 8));
+=======
+    fChance *= pow(0.66, min(nAttempts, 8));
+>>>>>>> elements/alpha
 
     return fChance;
 }
@@ -217,7 +250,11 @@ void CAddrMan::Good_(const CService& addr, int64_t nTime)
         return;
 
     // find a bucket it is in now
+<<<<<<< HEAD
     int nRnd = RandomInt(ADDRMAN_NEW_BUCKET_COUNT);
+=======
+    int nRnd = GetRandInt(ADDRMAN_NEW_BUCKET_COUNT);
+>>>>>>> elements/alpha
     int nUBucket = -1;
     for (unsigned int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
         int nB = (n + nRnd) % ADDRMAN_NEW_BUCKET_COUNT;
@@ -334,11 +371,16 @@ void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
     }
 }
 
+<<<<<<< HEAD
 CAddrInfo CAddrMan::Select_(bool newOnly)
+=======
+CAddress CAddrMan::Select_()
+>>>>>>> elements/alpha
 {
     if (size() == 0)
         return CAddrInfo();
 
+<<<<<<< HEAD
     if (newOnly && nNew == 0)
         return CAddrInfo();
 
@@ -353,11 +395,27 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             while (vvTried[nKBucket][nKBucketPos] == -1) {
                 nKBucket = (nKBucket + insecure_rand.randbits(ADDRMAN_TRIED_BUCKET_COUNT_LOG2)) % ADDRMAN_TRIED_BUCKET_COUNT;
                 nKBucketPos = (nKBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
+=======
+    // Use a 50% chance for choosing between tried and new table entries.
+    if (nTried > 0 && (nNew == 0 || GetRandInt(2) == 0)) {
+        // use a tried node
+        double fChanceFactor = 1.0;
+        while (1) {
+            int nKBucket = GetRandInt(ADDRMAN_TRIED_BUCKET_COUNT);
+            int nKBucketPos = GetRandInt(ADDRMAN_BUCKET_SIZE);
+            while (vvTried[nKBucket][nKBucketPos] == -1) {
+                nKBucket = (nKBucket + insecure_rand()) % ADDRMAN_TRIED_BUCKET_COUNT;
+                nKBucketPos = (nKBucketPos + insecure_rand()) % ADDRMAN_BUCKET_SIZE;
+>>>>>>> elements/alpha
             }
             int nId = vvTried[nKBucket][nKBucketPos];
             assert(mapInfo.count(nId) == 1);
             CAddrInfo& info = mapInfo[nId];
+<<<<<<< HEAD
             if (RandomInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+=======
+            if (GetRandInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+>>>>>>> elements/alpha
                 return info;
             fChanceFactor *= 1.2;
         }
@@ -365,16 +423,28 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
         // use a new node
         double fChanceFactor = 1.0;
         while (1) {
+<<<<<<< HEAD
             int nUBucket = RandomInt(ADDRMAN_NEW_BUCKET_COUNT);
             int nUBucketPos = RandomInt(ADDRMAN_BUCKET_SIZE);
             while (vvNew[nUBucket][nUBucketPos] == -1) {
                 nUBucket = (nUBucket + insecure_rand.randbits(ADDRMAN_NEW_BUCKET_COUNT_LOG2)) % ADDRMAN_NEW_BUCKET_COUNT;
                 nUBucketPos = (nUBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
+=======
+            int nUBucket = GetRandInt(ADDRMAN_NEW_BUCKET_COUNT);
+            int nUBucketPos = GetRandInt(ADDRMAN_BUCKET_SIZE);
+            while (vvNew[nUBucket][nUBucketPos] == -1) {
+                nUBucket = (nUBucket + insecure_rand()) % ADDRMAN_NEW_BUCKET_COUNT;
+                nUBucketPos = (nUBucketPos + insecure_rand()) % ADDRMAN_BUCKET_SIZE;
+>>>>>>> elements/alpha
             }
             int nId = vvNew[nUBucket][nUBucketPos];
             assert(mapInfo.count(nId) == 1);
             CAddrInfo& info = mapInfo[nId];
+<<<<<<< HEAD
             if (RandomInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+=======
+            if (GetRandInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+>>>>>>> elements/alpha
                 return info;
             fChanceFactor *= 1.2;
         }

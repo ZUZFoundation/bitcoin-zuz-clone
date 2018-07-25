@@ -6,6 +6,7 @@
 #include <pubkey.h>
 
 #include <secp256k1.h>
+<<<<<<< HEAD
 #include <secp256k1_recovery.h>
 
 namespace
@@ -165,10 +166,18 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     }
     return 1;
 }
+=======
+#include <secp256k1_rangeproof.h>
+#include <secp256k1_schnorr.h>
+#include <secp256k1_recovery.h>
+
+secp256k1_context* secp256k1_bitcoin_verify_context = NULL;
+>>>>>>> elements/alpha
 
 bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
     if (!IsValid())
         return false;
+<<<<<<< HEAD
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_signature sig;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
@@ -181,6 +190,16 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
      * not historically been enforced in Zuzcoin, so normalize them first. */
     secp256k1_ecdsa_signature_normalize(secp256k1_context_verify, &sig, &sig);
     return secp256k1_ecdsa_verify(secp256k1_context_verify, &sig, hash.begin(), &pubkey);
+=======
+    if (vchSig.size() != 64)
+        return false;
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_bitcoin_verify_context, &pubkey, begin(), size()))
+        return false;
+    if (secp256k1_schnorr_verify(secp256k1_bitcoin_verify_context, &vchSig[0], (const unsigned char*)&hash, &pubkey) != 1)
+        return false;
+    return true;
+>>>>>>> elements/alpha
 }
 
 bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
@@ -190,6 +209,7 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     bool fComp = ((vchSig[0] - 27) & 4) != 0;
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_recoverable_signature sig;
+<<<<<<< HEAD
     if (!secp256k1_ecdsa_recoverable_signature_parse_compact(secp256k1_context_verify, &sig, &vchSig[1], recid)) {
         return false;
     }
@@ -199,6 +219,17 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     unsigned char pub[PUBLIC_KEY_SIZE];
     size_t publen = PUBLIC_KEY_SIZE;
     secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, fComp ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+=======
+    if (!secp256k1_ecdsa_recoverable_signature_parse_compact(secp256k1_bitcoin_verify_context, &sig, &vchSig[1], recid)) {
+        return false;
+    }
+    if (!secp256k1_ecdsa_recover(secp256k1_bitcoin_verify_context, &pubkey, &sig, hash.begin())) {
+        return false;
+    }
+    unsigned char pub[65];
+    size_t publen = 65;
+    secp256k1_ec_pubkey_serialize(secp256k1_bitcoin_verify_context, pub, &publen, &pubkey, fComp ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+>>>>>>> elements/alpha
     Set(pub, pub + publen);
     return true;
 }
@@ -207,19 +238,34 @@ bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
     secp256k1_pubkey pubkey;
+<<<<<<< HEAD
     return secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size());
+=======
+    if (!secp256k1_ec_pubkey_parse(secp256k1_bitcoin_verify_context, &pubkey, begin(), size()))
+        return false;
+    return true;
+>>>>>>> elements/alpha
 }
 
 bool CPubKey::Decompress() {
     if (!IsValid())
         return false;
     secp256k1_pubkey pubkey;
+<<<<<<< HEAD
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
         return false;
     }
     unsigned char pub[PUBLIC_KEY_SIZE];
     size_t publen = PUBLIC_KEY_SIZE;
     secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+=======
+    if (!secp256k1_ec_pubkey_parse(secp256k1_bitcoin_verify_context, &pubkey, &(*this)[0], size())) {
+        return false;
+    }
+    unsigned char pub[65];
+    size_t publen = 0;
+    secp256k1_ec_pubkey_serialize(secp256k1_bitcoin_verify_context, pub, &publen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+>>>>>>> elements/alpha
     Set(pub, pub + publen);
     return true;
 }
@@ -230,6 +276,7 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     assert(size() == COMPRESSED_PUBLIC_KEY_SIZE);
     unsigned char out[64];
     BIP32Hash(cc, nChild, *begin(), begin()+1, out);
+<<<<<<< HEAD
     memcpy(ccChild.begin(), out+32, 32);
     secp256k1_pubkey pubkey;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
@@ -241,6 +288,19 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     unsigned char pub[COMPRESSED_PUBLIC_KEY_SIZE];
     size_t publen = COMPRESSED_PUBLIC_KEY_SIZE;
     secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
+=======
+    memcpy(ccChild, out+32, 32);
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_bitcoin_verify_context, &pubkey, &(*this)[0], size())) {
+        return false;
+    }
+    if (!secp256k1_ec_pubkey_tweak_add(secp256k1_bitcoin_verify_context, &pubkey, out)) {
+        return false;
+    }
+    unsigned char pub[33];
+    size_t publen = 0;
+    secp256k1_ec_pubkey_serialize(secp256k1_bitcoin_verify_context, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
+>>>>>>> elements/alpha
     pubkeyChild.Set(pub, pub + publen);
     return true;
 }
@@ -298,5 +358,25 @@ ECCVerifyHandle::~ECCVerifyHandle()
         assert(secp256k1_context_verify != nullptr);
         secp256k1_context_destroy(secp256k1_context_verify);
         secp256k1_context_verify = nullptr;
+    }
+}
+
+void ECC_Verify_Start() {
+    assert(secp256k1_bitcoin_verify_context == NULL);
+
+    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
+    assert(ctx != NULL);
+    secp256k1_pedersen_context_initialize(ctx);
+    secp256k1_rangeproof_context_initialize(ctx);
+
+    secp256k1_bitcoin_verify_context = ctx;
+}
+
+void ECC_Verify_Stop() {
+    secp256k1_context *ctx = secp256k1_bitcoin_verify_context;
+    secp256k1_bitcoin_verify_context = NULL;
+
+    if (ctx) {
+        secp256k1_context_destroy(ctx);
     }
 }

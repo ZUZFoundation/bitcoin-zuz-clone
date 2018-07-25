@@ -17,6 +17,7 @@ $(call fetch_file,$(package),$($(package)_clang_download_path),$($(package)_clan
 endef
 
 define $(package)_extract_cmds
+<<<<<<< HEAD
   mkdir -p $($(package)_extract_dir) && \
   echo "$($(package)_sha256_hash)  $($(package)_source)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_clang_sha256_hash)  $($(package)_source_dir)/$($(package)_clang_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
@@ -35,6 +36,15 @@ $(package)_config_opts=--target=$(host) --disable-lto-support
 $(package)_ldflags+=-Wl,-rpath=\\$$$$$$$$\$$$$$$$$ORIGIN/../lib
 $(package)_cc=$($(package)_extract_dir)/toolchain/bin/clang
 $(package)_cxx=$($(package)_extract_dir)/toolchain/bin/clang++
+=======
+  tar --strip-components=1 -xf $($(package)_source_dir)/$($(package)_toolchain4_file_name) && \
+  ln -sf $($(package)_source) cctools2odcctools/$($(package)_file_name) && \
+  ln -sf $($(package)_source_dir)/$($(package)_ld64_file_name) cctools2odcctools/$($(package)_ld64_file_name) && \
+  ln -sf $($(package)_source_dir)/$($(package)_dyld_file_name) cctools2odcctools/$($(package)_dyld_file_name) && \
+  tar xf $($(package)_source_dir)/$($(package)_clang_file_name) && \
+  mkdir -p $(SDK_PATH) sdks &&\
+  cd sdks; ln -sf $(OSX_SDK) MacOSX$(OSX_SDK_VERSION).sdk
+>>>>>>> elements/alpha
 endef
 
 define $(package)_preprocess_cmds

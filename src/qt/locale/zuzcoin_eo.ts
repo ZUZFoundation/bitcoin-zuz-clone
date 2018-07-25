@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eo.ts
         <source>Right-click to edit address or label</source>
         <translation>Dekstre-klaku por redakti adreson aŭ etikedon</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eo.ts
         <source>Create a new address</source>
         <translation>Krei novan adreson</translation>
     </message>
@@ -93,11 +96,15 @@
         <source>Exporting Failed</source>
         <translation>ekspotado malsukcesinta</translation>
     </message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eo.ts
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <translation>Okazis eraron dum konservo de adreslisto al %1. Bonvolu provi denove.</translation>
     </message>
 </context>
+=======
+    </context>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eo.ts
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -266,6 +273,17 @@
         <translation>Malfermi &amp;URI-on...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eo.ts
+=======
+        <source>Bitcoin Core client</source>
+        <translation>kliento de bitmon-kerno</translation>
+    </message>
+    <message>
+        <source>Importing blocks from disk...</source>
+        <translation>Importado de blokoj el disko...</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eo.ts
         <source>Reindexing blocks on disk...</source>
         <translation>Reindeksado de blokoj sur disko...</translation>
     </message>
@@ -365,6 +383,37 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;Komandliniaj agordaĵoj</translation>
     </message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eo.ts
+=======
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n aktiva konekto al la bitmona reto</numerusform><numerusform>%n aktivaj konektoj al la bitmona reto</numerusform></translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>Neniu fonto de blokoj trovebla...</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n horo</numerusform><numerusform>%n horoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n tago</numerusform><numerusform>%n tagoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n semajno</numerusform><numerusform>%n semajnoj</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 kaj %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n jaro</numerusform><numerusform>%n jaroj</numerusform></translation>
+    </message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eo.ts
     <message>
         <source>%1 behind</source>
         <translation>mankas %1</translation>
@@ -1783,6 +1832,10 @@
         <translation>Montri detalojn de transakcio</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>ekspotado malsukcesinta</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Perkome disigita dosiero (*.csv)</translation>
     </message>
@@ -1890,8 +1943,17 @@
         <translation>Ruli fone kiel demono kaj akcepti komandojn</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eo.ts
         <source>Zuzcoin Core</source>
         <translation>Kerno de Bitmono</translation>
+=======
+        <source>Use the test network</source>
+        <translation>Uzi la test-reton</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Akcepti konektojn el ekstere (defaŭlte: 1 se ne estas -proxy nek -connect)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eo.ts
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -2000,6 +2062,13 @@
     <message>
         <source>This is experimental software.</source>
         <translation>ĝi estas eksperimenta programo</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eo.ts
+=======
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation>Transakcia sumo tro malgranda</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eo.ts
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2038,6 +2107,21 @@
         <translation>Nekonata reto specifita en -onlynet: '%s'</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_eo.ts
+=======
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Ne eblas trovi la adreson -bind: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Ne eblas trovi la adreson -externalip: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevalida sumo por -paytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_eo.ts
         <source>Insufficient funds</source>
         <translation>Nesufiĉa mono</translation>
     </message>

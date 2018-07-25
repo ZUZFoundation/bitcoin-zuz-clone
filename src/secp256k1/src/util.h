@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Copyright (c) 2013-2015 Pieter Wuille, Gregory Maxwell             *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -57,10 +57,14 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 #endif
 
 /* Like assert(), but when VERIFY is defined, and side-effect safe. */
+<<<<<<< HEAD
 #if defined(COVERAGE)
 #define VERIFY_CHECK(check)
 #define VERIFY_SETUP(stmt)
 #elif defined(VERIFY)
+=======
+#ifdef VERIFY
+>>>>>>> elements/alpha
 #define VERIFY_CHECK CHECK
 #define VERIFY_SETUP(stmt) do { stmt; } while(0)
 #else
@@ -76,6 +80,36 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
     return ret;
 }
 
+<<<<<<< HEAD
+=======
+/* Extract the sign of an int64, take the abs and return a uint64, constant time. */
+SECP256K1_INLINE static int secp256k1_sign_and_abs64(uint64_t *out, int64_t in) {
+    uint64_t mask0, mask1;
+    int ret;
+    ret = in < 0;
+    mask0 = ret + ~((uint64_t)0);
+    mask1 = ~mask0;
+    *out = (uint64_t)in;
+    *out = (*out & mask0) | ((~*out + 1) & mask1);
+    return ret;
+}
+
+SECP256K1_INLINE static int secp256k1_clz64_var(uint64_t x) {
+    int ret;
+    if (!x) {
+        return 64;
+    }
+# if defined(HAVE_BUILTIN_CLZLL)
+    ret = __builtin_clzll(x);
+# else
+    /*FIXME: debruijn fallback. */
+    for (ret = 0; ((x & (1ULL << 63)) == 0); x <<= 1, ret++);
+# endif
+    return ret;
+
+}
+
+>>>>>>> elements/alpha
 /* Macro for restrict, when available and not in a VERIFY build. */
 #if defined(SECP256K1_BUILD) && defined(VERIFY)
 # define SECP256K1_RESTRICT
@@ -108,6 +142,11 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
 #  define SECP256K1_GNUC_EXT
 # endif
 SECP256K1_GNUC_EXT typedef unsigned __int128 uint128_t;
+<<<<<<< HEAD
+=======
+#endif
+
+>>>>>>> elements/alpha
 #endif
 
 #endif /* SECP256K1_UTIL_H */

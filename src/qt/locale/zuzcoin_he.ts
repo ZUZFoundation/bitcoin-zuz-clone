@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_he.ts
         <source>Right-click to edit address or label</source>
         <translation>לחץ מקש ימני כדי לערוך כתובת או תווית</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_he.ts
         <source>Create a new address</source>
         <translation>יצירת כתובת חדשה</translation>
     </message>
@@ -2974,10 +2977,13 @@
         <translation>ליבת ביטקוין</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_he.ts
         <source>The %s developers</source>
         <translation>ה %s מפתחים</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_he.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>להתאגד לכתובת נתונה להאזין לה תמיד. יש להשתמש בצורה ‎[host]:port עבור IPv6.</translation>
     </message>
@@ -2986,6 +2992,13 @@
         <translation>מחיקת כל העברות הארנק ולשחזר רק את החלקים המסוימים בשרשרת המקטעים באמצעות ‎-rescan עם ההפעלה</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_he.ts
+=======
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation>כניסה למצב בדיקת נסיגה, שמשתמש בשרשרת מיוחדת בה ניתן לפתור את המקטעים במהירות.</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_he.ts
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>ביצוע פקודה כאשר העברה בארנק משתנה (%s ב־cmd יוחלף ב־TxID)</translation>
     </message>
@@ -3182,6 +3195,13 @@
         <translation>אפשרויות ממסר מפרק:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_he.ts
+=======
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>אפשרויות RPC SSL: (נא לעיין בוויקי של ביטקוין לקבלת הנחיות על הגדרת SSL)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_he.ts
         <source>RPC server options:</source>
         <translation>הגדרות שרת RPC</translation>
     </message>
@@ -3326,6 +3346,7 @@
         <translation>סכומי ההעברה לא יכולים להיות שליליים</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_he.ts
         <source>Transaction must have at least one recipient</source>
         <translation>להעברה חייב להיות לפחות נמען אחד</translation>
     </message>
@@ -3334,6 +3355,8 @@
         <translation>רשת לא ידועה צוינה דרך ‎-onlynet:‏ '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_he.ts
         <source>Insufficient funds</source>
         <translation>אין מספיק כספים</translation>
     </message>

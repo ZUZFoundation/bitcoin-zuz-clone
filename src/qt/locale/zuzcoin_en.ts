@@ -309,12 +309,20 @@
         <translation>Sign &amp;message...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+430"/>
+=======
+        <location line="+340"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Synchronizing with network...</source>
         <translation>Synchronizing with network...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-508"/>
+=======
+        <location line="-408"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -409,8 +417,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+360"/>
         <source>Click to disable network activity.</source>
+=======
+        <location line="+173"/>
+        <source>Bitcoin Core client</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -424,9 +437,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+27"/>
         <source>Syncing Headers (%1%)...</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="-406"/>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Send coins to a Bitcoin address</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+37"/>
@@ -464,12 +483,21 @@
         <translation>&amp;Verify message...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+517"/>
         <source>Zuzcoin</source>
         <translation>Zuzcoin</translation>
     </message>
     <message>
         <location line="-743"/>
+=======
+        <location line="+438"/>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <location line="-639"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -509,7 +537,11 @@
         <translation>Verify messages to ensure they were signed with specified Zuzcoin addresses</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+58"/>
+=======
+        <location line="+49"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -529,8 +561,23 @@
         <translation>Tabs toolbar</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-158"/>
         <source>Request payments (generates QR codes and zuzcoin: URIs)</source>
+=======
+        <location line="-298"/>
+        <source>Bitcoin Core</source>
+        <translation type="unfinished">Bitcoin Core</translation>
+    </message>
+    <message>
+        <location line="+155"/>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>&amp;About Bitcoin Core</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -553,6 +600,14 @@
         <source>&amp;Command-line options</source>
         <translation type="unfinished"></translation>
     </message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
+=======
+    <message>
+        <location line="+2"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation type="unfinished"></translation>
+    </message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     <message numerus="yes">
         <location line="+357"/>
         <source>%n active connection(s) to Zuzcoin network</source>
@@ -849,8 +904,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+325"/>
         <source>(%1 locked)</source>
+=======
+        <location line="+351"/>
+        <source>highest</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1671,10 +1731,14 @@
 <context>
     <name>PaymentServer</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location filename="../paymentserver.cpp" line="+326"/>
         <location line="+214"/>
         <location line="+42"/>
         <location line="+111"/>
+=======
+        <location filename="../paymentserver.cpp" line="+422"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <location line="+14"/>
         <location line="+18"/>
         <source>Payment request error</source>
@@ -1698,8 +1762,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+12"/>
         <source>Invalid payment address %1</source>
+=======
+        <location line="+91"/>
+        <location line="+9"/>
+        <location line="+32"/>
+        <source>Payment request rejected</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1728,6 +1799,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-153"/>
         <source>Payment request network doesn&apos;t match client network.</source>
         <translation type="unfinished"></translation>
@@ -1735,6 +1807,20 @@
     <message>
         <location line="+9"/>
         <source>Payment request expired.</source>
+=======
+        <location line="-260"/>
+        <location line="+226"/>
+        <location line="+34"/>
+        <location line="+109"/>
+        <location line="+14"/>
+        <location line="+18"/>
+        <source>Payment request error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-400"/>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1759,8 +1845,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+55"/>
         <source>Refund from %1</source>
+=======
+        <location line="+111"/>
+        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1769,7 +1860,21 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+9"/>
+=======
+        <location line="+43"/>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Payment request DoS protection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Error communicating with %1: %2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1830,17 +1935,30 @@
 <context>
     <name>QObject</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location filename="../zuzcoinunits.cpp" line="+185"/>
+=======
+        <location filename="../bitcoinunits.cpp" line="+194"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Amount</source>
         <translation type="unfinished">Amount</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location filename="../guiutil.cpp" line="+130"/>
         <source>Enter a Zuzcoin address (e.g. %1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+760"/>
+=======
+        <location filename="../guiutil.cpp" line="+109"/>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+714"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>%1 d</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2623,7 +2741,11 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location filename="../sendcoinsdialog.cpp" line="+578"/>
+=======
+        <location filename="../sendcoinsdialog.cpp" line="+533"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -2809,7 +2931,24 @@
         <translation>S&amp;end</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location filename="../sendcoinsdialog.cpp" line="-494"/>
+=======
+        <location filename="../sendcoinsdialog.cpp" line="-221"/>
+        <source>Confirm send coins</source>
+        <translation>Confirm send coins</translation>
+    </message>
+    <message>
+        <location line="-77"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <source>%1 to %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-193"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Copy quantity</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2844,8 +2983,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+76"/>
         <source>%1 (%2 blocks)</source>
+=======
+        <location line="+245"/>
+        <source>Total Amount %1 (= %2)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2960,6 +3104,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+3"/>
         <source>Confirm custom change address</source>
         <translation type="unfinished"></translation>
@@ -2967,6 +3112,15 @@
     <message>
         <location line="+0"/>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+=======
+        <location line="-688"/>
+        <source>Copy dust</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+222"/>
+        <source>Are you sure you want to send?</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4025,34 +4179,60 @@
 <context>
     <name>zuzcoin-core</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location filename="../zuzcoinstrings.cpp" line="+349"/>
+=======
+        <location filename="../bitcoinstrings.cpp" line="+244"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+33"/>
+=======
+        <location line="+30"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Specify data directory</source>
         <translation>Specify data directory</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-99"/>
+=======
+        <location line="-89"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+102"/>
+=======
+        <location line="+92"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Specify your own public address</source>
         <translation>Specify your own public address</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-116"/>
+=======
+        <location line="-108"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-207"/>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="+89"/>
+        <source>Run in the background as a daemon and accept commands</source>
+        <translation>Run in the background as a daemon and accept commands</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+44"/>
@@ -4060,6 +4240,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+36"/>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation type="unfinished"></translation>
@@ -4073,6 +4254,16 @@
         <location line="+18"/>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="-124"/>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
+    </message>
+    <message>
+        <location line="-148"/>
+        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
+        <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+149"/>
@@ -4091,6 +4282,7 @@
     </message>
     <message>
         <location line="+11"/>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Run in the background as a daemon and accept commands</translation>
     </message>
@@ -4103,6 +4295,10 @@
         <location line="-395"/>
         <source>Zuzcoin Core</source>
         <translation type="unfinished">Zuzcoin Core</translation>
+=======
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+1"/>
@@ -4110,6 +4306,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+7"/>
         <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
         <translation type="unfinished"></translation>
@@ -4123,6 +4320,26 @@
         <location line="+3"/>
         <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="+28"/>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+7"/>
@@ -4160,6 +4377,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+7"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
@@ -4298,6 +4516,11 @@
         <location line="+4"/>
         <source>Append comment to the user agent string</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="+8"/>
+        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
+        <translation>Attempt to recover private keys from a corrupt wallet.dat</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+1"/>
@@ -4420,12 +4643,25 @@
         <translation>Error opening block database</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+5"/>
+=======
+        <location line="+3"/>
+        <source>Error: A fatal internal error occured, see debug.log for details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Error: Disk space is low!</source>
         <translation>Error: Disk space is low!</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+1"/>
+=======
+        <location line="+2"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
     </message>
@@ -4455,6 +4691,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+1"/>
         <source>Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
@@ -4486,6 +4723,9 @@
     </message>
     <message>
         <location line="+7"/>
+=======
+        <location line="+20"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Not enough file descriptors available.</source>
         <translation>Not enough file descriptors available.</translation>
     </message>
@@ -4495,9 +4735,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+4"/>
         <source>Print this help message and exit</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="+9"/>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <translation>Rebuild block chain index from current blk000??.dat files</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+1"/>
@@ -4550,6 +4796,7 @@
         <translation>Specify wallet file (within data directory)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+4"/>
         <source>The source code is available from %s.</source>
         <translation type="unfinished"></translation>
@@ -4562,6 +4809,15 @@
     <message>
         <location line="+6"/>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+=======
+        <location line="-90"/>
+        <source>Imports blocks from external blk000??.dat file</source>
+        <translation>Imports blocks from external blk000??.dat file</translation>
+    </message>
+    <message>
+        <location line="-200"/>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4600,8 +4856,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+1"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
+=======
+        <location line="+2"/>
+        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn&apos;t possible anymore, only SOCKS5 proxies are supported.</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4625,8 +4886,28 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-395"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+=======
+        <location line="+8"/>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4635,8 +4916,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+17"/>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
+=======
+        <location line="+3"/>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4660,8 +4951,33 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+14"/>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+=======
+        <location line="+4"/>
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4670,8 +4986,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+10"/>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+=======
+        <location line="+8"/>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4705,6 +5031,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+5"/>
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation type="unfinished"></translation>
@@ -4712,6 +5039,20 @@
     <message>
         <location line="+6"/>
         <source>Connect through SOCKS5 proxy</source>
+=======
+        <location line="+2"/>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Error: Unsupported argument -tor found, use -onion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4730,9 +5071,20 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+9"/>
         <source>Imports blocks from external blk000??.dat file on startup</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="+4"/>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+3"/>
@@ -4750,17 +5102,25 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+4"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
+=======
+        <location line="+2"/>
+        <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4775,8 +5135,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+11"/>
         <source>RPC server options:</source>
+=======
+        <location line="+7"/>
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>RPC server options:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4835,6 +5210,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+4"/>
         <source>Tor control port password (default: empty)</source>
         <translation type="unfinished"></translation>
@@ -4846,11 +5222,19 @@
     </message>
     <message>
         <location line="+1"/>
+=======
+        <location line="+3"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Transaction amount too small</source>
         <translation>Transaction amount too small</translation>
     </message>
     <message>
         <location line="+5"/>
+        <source>Transaction too large for fee policy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction too large for fee policy</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4920,19 +5304,43 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-80"/>
+=======
+        <location line="+1"/>
+        <source>wallet.dat corrupt, salvage failed</source>
+        <translation>wallet.dat corrupt, salvage failed</translation>
+    </message>
+    <message>
+        <location line="-63"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Password for JSON-RPC connections</source>
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-261"/>
+=======
+        <location line="-184"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+183"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
+=======
+        <location line="+229"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation>Upgrade wallet to latest format</translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <source>Rescan the block chain for missing wallet transactions</source>
+        <translation>Rescan the block chain for missing wallet transactions</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="-258"/>
@@ -4945,6 +5353,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+22"/>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation type="unfinished"></translation>
@@ -4967,6 +5376,30 @@
     <message>
         <location line="+2"/>
         <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
+=======
+        <location line="-106"/>
+        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
+        <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Loading addresses...</source>
+        <translation>Loading addresses...</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation>Error loading wallet.dat: Wallet corrupted</translation>
+    </message>
+    <message>
+        <location line="-188"/>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4975,6 +5408,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+3"/>
         <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
         <translation type="unfinished"></translation>
@@ -4982,6 +5416,10 @@
     <message>
         <location line="+3"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
+=======
+        <location line="+11"/>
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4990,7 +5428,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+13"/>
+=======
+        <location line="+9"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5000,6 +5442,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+37"/>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
         <translation type="unfinished"></translation>
@@ -5012,6 +5455,20 @@
     <message>
         <location line="+3"/>
         <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+=======
+        <location line="+38"/>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>(default: %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Acceptable ciphers (default: %s)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5070,8 +5527,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+9"/>
         <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
+=======
+        <location line="+8"/>
+        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5115,6 +5577,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+14"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation type="unfinished"></translation>
@@ -5122,6 +5585,10 @@
     <message>
         <location line="+1"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+=======
+        <location line="+7"/>
+        <source>Relay and mine data carrier transactions (default: %u)</source>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5215,9 +5682,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+1"/>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
         <translation type="unfinished"></translation>
+=======
+        <location line="-110"/>
+        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
+        <translation>Cannot resolve -bind address: &apos;%s&apos;</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
     </message>
     <message>
         <location line="+1"/>
@@ -5225,6 +5698,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+4"/>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished"></translation>
@@ -5246,36 +5720,74 @@
     </message>
     <message>
         <location line="-85"/>
+=======
+        <location line="+47"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Insufficient funds</source>
         <translation>Insufficient funds</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Loading block index...</source>
         <translation>Loading block index...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+1"/>
+=======
+        <location line="-61"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>Add a node to connect to and attempt to keep the connection open</translation>
+    </message>
+    <message>
+        <location line="+62"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Loading wallet...</source>
         <translation>Loading wallet...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-61"/>
+=======
+        <location line="-57"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Cannot downgrade wallet</source>
         <translation>Cannot downgrade wallet</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+87"/>
+=======
+        <location line="+4"/>
+        <source>Cannot write default address</source>
+        <translation>Cannot write default address</translation>
+    </message>
+    <message>
+        <location line="+74"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Rescanning...</source>
         <translation>Rescanning...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="-75"/>
+=======
+        <location line="-61"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Done loading</source>
         <translation>Done loading</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_en.ts
         <location line="+20"/>
+=======
+        <location line="+9"/>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_en.ts
         <source>Error</source>
         <translation>Error</translation>
     </message>

@@ -48,6 +48,7 @@
  *   8.3.1.
  */
 
+<<<<<<< HEAD
 #ifndef SECP256K1_CONTRIB_LAX_DER_PARSING_H
 #define SECP256K1_CONTRIB_LAX_DER_PARSING_H
 
@@ -56,6 +57,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+=======
+#ifndef _SECP256K1_CONTRIB_LAX_DER_PARSING_H_
+#define _SECP256K1_CONTRIB_LAX_DER_PARSING_H_
+
+#include <secp256k1.h>
+
+# ifdef __cplusplus
+extern "C" {
+# endif
+>>>>>>> elements/alpha
 
 /** Parse a signature in "lax DER" format
  *
@@ -68,7 +79,11 @@ extern "C" {
  *  This function will accept any valid DER encoded signature, even if the
  *  encoded numbers are out of range. In addition, it will accept signatures
  *  which violate the DER spec in various ways. Its purpose is to allow
+<<<<<<< HEAD
  *  validation of the Zuzcoin blockchain, which includes non-DER signatures
+=======
+ *  validation of the Bitcoin blockchain, which includes non-DER signatures
+>>>>>>> elements/alpha
  *  from before the network rules were updated to enforce DER. Note that
  *  the set of supported violations is a strict subset of what OpenSSL will
  *  accept.
@@ -88,4 +103,8 @@ int ecdsa_signature_parse_der_lax(
 }
 #endif
 
+<<<<<<< HEAD
 #endif /* SECP256K1_CONTRIB_LAX_DER_PARSING_H */
+=======
+#endif
+>>>>>>> elements/alpha

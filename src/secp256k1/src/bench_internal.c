@@ -181,12 +181,20 @@ void bench_field_inverse_var(void* arg) {
     }
 }
 
+<<<<<<< HEAD
 void bench_field_sqrt(void* arg) {
+=======
+void bench_field_sqrt_var(void* arg) {
+>>>>>>> elements/alpha
     int i;
     bench_inv_t *data = (bench_inv_t*)arg;
 
     for (i = 0; i < 20000; i++) {
+<<<<<<< HEAD
         secp256k1_fe_sqrt(&data->fe_x, &data->fe_x);
+=======
+        secp256k1_fe_sqrt_var(&data->fe_x, &data->fe_x);
+>>>>>>> elements/alpha
         secp256k1_fe_add(&data->fe_x, &data->fe_y);
     }
 }
@@ -227,6 +235,7 @@ void bench_group_add_affine_var(void* arg) {
     }
 }
 
+<<<<<<< HEAD
 void bench_group_jacobi_var(void* arg) {
     int i;
     bench_inv_t *data = (bench_inv_t*)arg;
@@ -236,6 +245,8 @@ void bench_group_jacobi_var(void* arg) {
     }
 }
 
+=======
+>>>>>>> elements/alpha
 void bench_ecmult_wnaf(void* arg) {
     int i;
     bench_inv_t *data = (bench_inv_t*)arg;
@@ -308,6 +319,7 @@ void bench_context_sign(void* arg) {
     }
 }
 
+<<<<<<< HEAD
 #ifndef USE_NUM_NONE
 void bench_num_jacobi(void* arg) {
     int i;
@@ -323,6 +335,8 @@ void bench_num_jacobi(void* arg) {
     }
 }
 #endif
+=======
+>>>>>>> elements/alpha
 
 int have_flag(int argc, char** argv, char *flag) {
     char** argm = argv + argc;
@@ -357,13 +371,20 @@ int main(int argc, char **argv) {
     if (have_flag(argc, argv, "field") || have_flag(argc, argv, "mul")) run_benchmark("field_mul", bench_field_mul, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "field") || have_flag(argc, argv, "inverse")) run_benchmark("field_inverse", bench_field_inverse, bench_setup, NULL, &data, 10, 20000);
     if (have_flag(argc, argv, "field") || have_flag(argc, argv, "inverse")) run_benchmark("field_inverse_var", bench_field_inverse_var, bench_setup, NULL, &data, 10, 20000);
+<<<<<<< HEAD
     if (have_flag(argc, argv, "field") || have_flag(argc, argv, "sqrt")) run_benchmark("field_sqrt", bench_field_sqrt, bench_setup, NULL, &data, 10, 20000);
+=======
+    if (have_flag(argc, argv, "field") || have_flag(argc, argv, "sqrt")) run_benchmark("field_sqrt_var", bench_field_sqrt_var, bench_setup, NULL, &data, 10, 20000);
+>>>>>>> elements/alpha
 
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "double")) run_benchmark("group_double_var", bench_group_double_var, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_var", bench_group_add_var, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine", bench_group_add_affine, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine_var", bench_group_add_affine_var, bench_setup, NULL, &data, 10, 200000);
+<<<<<<< HEAD
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "jacobi")) run_benchmark("group_jacobi_var", bench_group_jacobi_var, bench_setup, NULL, &data, 10, 20000);
+=======
+>>>>>>> elements/alpha
 
     if (have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("wnaf_const", bench_wnaf_const, bench_setup, NULL, &data, 10, 20000);
     if (have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("ecmult_wnaf", bench_ecmult_wnaf, bench_setup, NULL, &data, 10, 20000);
@@ -375,8 +396,11 @@ int main(int argc, char **argv) {
     if (have_flag(argc, argv, "context") || have_flag(argc, argv, "verify")) run_benchmark("context_verify", bench_context_verify, bench_setup, NULL, &data, 10, 20);
     if (have_flag(argc, argv, "context") || have_flag(argc, argv, "sign")) run_benchmark("context_sign", bench_context_sign, bench_setup, NULL, &data, 10, 200);
 
+<<<<<<< HEAD
 #ifndef USE_NUM_NONE
     if (have_flag(argc, argv, "num") || have_flag(argc, argv, "jacobi")) run_benchmark("num_jacobi", bench_num_jacobi, bench_setup, NULL, &data, 10, 200000);
 #endif
+=======
+>>>>>>> elements/alpha
     return 0;
 }

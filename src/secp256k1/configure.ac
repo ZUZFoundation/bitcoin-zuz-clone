@@ -20,7 +20,11 @@ AC_PATH_TOOL(STRIP, strip)
 AX_PROG_CC_FOR_BUILD
 
 if test "x$CFLAGS" = "x"; then
+<<<<<<< HEAD
   CFLAGS="-g"
+=======
+  CFLAGS="-O3 -g"
+>>>>>>> elements/alpha
 fi
 
 AM_PROG_CC_C_O
@@ -29,7 +33,10 @@ AC_PROG_CC_C89
 if test x"$ac_cv_prog_cc_c89" = x"no"; then
   AC_MSG_ERROR([c89 compiler support required])
 fi
+<<<<<<< HEAD
 AM_PROG_AS
+=======
+>>>>>>> elements/alpha
 
 case $host_os in
   *darwin*)
@@ -88,32 +95,41 @@ AC_ARG_ENABLE(benchmark,
     AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is no)]),
     [use_benchmark=$enableval],
     [use_benchmark=no])
+<<<<<<< HEAD
 
 AC_ARG_ENABLE(coverage,
     AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis]),
     [enable_coverage=$enableval],
     [enable_coverage=no])
+=======
+>>>>>>> elements/alpha
 
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
     [use_tests=$enableval],
     [use_tests=yes])
 
+<<<<<<< HEAD
 AC_ARG_ENABLE(openssl_tests,
     AS_HELP_STRING([--enable-openssl-tests],[enable OpenSSL tests, if OpenSSL is available (default is auto)]),
     [enable_openssl_tests=$enableval],
     [enable_openssl_tests=auto])
 
+=======
+>>>>>>> elements/alpha
 AC_ARG_ENABLE(experimental,
     AS_HELP_STRING([--enable-experimental],[allow experimental configure options (default is no)]),
     [use_experimental=$enableval],
     [use_experimental=no])
 
+<<<<<<< HEAD
 AC_ARG_ENABLE(exhaustive_tests,
     AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests (default is yes)]),
     [use_exhaustive_tests=$enableval],
     [use_exhaustive_tests=yes])
 
+=======
+>>>>>>> elements/alpha
 AC_ARG_ENABLE(endomorphism,
     AS_HELP_STRING([--enable-endomorphism],[enable endomorphism (default is no)]),
     [use_endomorphism=$enableval],
@@ -122,22 +138,41 @@ AC_ARG_ENABLE(endomorphism,
 AC_ARG_ENABLE(ecmult_static_precomputation,
     AS_HELP_STRING([--enable-ecmult-static-precomputation],[enable precomputed ecmult table for signing (default is yes)]),
     [use_ecmult_static_precomputation=$enableval],
+<<<<<<< HEAD
     [use_ecmult_static_precomputation=auto])
+=======
+    [use_ecmult_static_precomputation=yes])
+>>>>>>> elements/alpha
 
 AC_ARG_ENABLE(module_ecdh,
     AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation (experimental)]),
     [enable_module_ecdh=$enableval],
     [enable_module_ecdh=no])
 
+<<<<<<< HEAD
+=======
+AC_ARG_ENABLE(module_schnorr,
+    AS_HELP_STRING([--enable-module-schnorr],[enable Schnorr signature module (experimental)]),
+    [enable_module_schnorr=$enableval],
+    [enable_module_schnorr=no])
+
+>>>>>>> elements/alpha
 AC_ARG_ENABLE(module_recovery,
     AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module (default is no)]),
     [enable_module_recovery=$enableval],
     [enable_module_recovery=no])
 
+<<<<<<< HEAD
 AC_ARG_ENABLE(jni,
     AS_HELP_STRING([--enable-jni],[enable libsecp256k1_jni (default is auto)]),
     [use_jni=$enableval],
     [use_jni=auto])
+=======
+AC_ARG_ENABLE(module_rangeproof,
+    AS_HELP_STRING([--enable-module-rangeproof],[enable Pedersen / zero-knowledge range proofs module (default is no)]),
+    [enable_module_rangeproof=$enableval],
+    [enable_module_rangeproof=no])
+>>>>>>> elements/alpha
 
 AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
 [Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
@@ -148,8 +183,13 @@ AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|no|auto],
 AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
 [Specify scalar implementation. Default is auto])],[req_scalar=$withval], [req_scalar=auto])
 
+<<<<<<< HEAD
 AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto]
 [Specify assembly optimizations to use. Default is auto (experimental: arm)])],[req_asm=$withval], [req_asm=auto])
+=======
+AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|no|auto]
+[Specify assembly optimizations to use. Default is auto])],[req_asm=$withval], [req_asm=auto])
+>>>>>>> elements/alpha
 
 AC_CHECK_TYPES([__int128])
 
@@ -159,6 +199,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
     [ AC_MSG_RESULT([no])
     ])
 
+<<<<<<< HEAD
 if test x"$enable_coverage" = x"yes"; then
     AC_DEFINE(COVERAGE, 1, [Define this symbol to compile out all VERIFY code])
     CFLAGS="$CFLAGS -O0 --coverage"
@@ -194,15 +235,30 @@ if test x"$use_ecmult_static_precomputation" != x"no"; then
 else
   set_precomp=no
 fi
+=======
+AC_MSG_CHECKING([for  __builtin_clzll])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() { __builtin_clzll(1);}]])],
+    [ AC_MSG_RESULT([yes]);AC_DEFINE(HAVE_BUILTIN_CLZLL,1,[Define this symbol if  __builtin_clzll is available]) ],
+    [ AC_MSG_RESULT([no])
+    ])
+
+>>>>>>> elements/alpha
 
 if test x"$req_asm" = x"auto"; then
   SECP_64BIT_ASM_CHECK
   if test x"$has_64bit_asm" = x"yes"; then
     set_asm=x86_64
+<<<<<<< HEAD
   fi
   if test x"$set_asm" = x; then
     set_asm=no
   fi
+=======
+  fi
+  if test x"$set_asm" = x; then
+    set_asm=no
+  fi
+>>>>>>> elements/alpha
 else
   set_asm=$req_asm
   case $set_asm in
@@ -212,8 +268,11 @@ else
       AC_MSG_ERROR([x86_64 assembly optimization requested but not available])
     fi
     ;;
+<<<<<<< HEAD
   arm)
     ;;
+=======
+>>>>>>> elements/alpha
   no)
     ;;
   *)
@@ -306,15 +365,21 @@ else
 fi
 
 # select assembly optimization
+<<<<<<< HEAD
 use_external_asm=no
 
+=======
+>>>>>>> elements/alpha
 case $set_asm in
 x86_64)
   AC_DEFINE(USE_ASM_X86_64, 1, [Define this symbol to enable x86_64 assembly optimizations])
   ;;
+<<<<<<< HEAD
 arm)
   use_external_asm=yes
   ;;
+=======
+>>>>>>> elements/alpha
 no)
   ;;
 *)
@@ -369,6 +434,7 @@ esac
 if test x"$use_tests" = x"yes"; then
   SECP_OPENSSL_CHECK
   if test x"$has_openssl_ec" = x"yes"; then
+<<<<<<< HEAD
     if test x"$enable_openssl_tests" != x"no"; then
       AC_DEFINE(ENABLE_OPENSSL_TESTS, 1, [Define this symbol if OpenSSL EC functions are available])
       SECP_TEST_INCLUDES="$SSL_CFLAGS $CRYPTO_CFLAGS"
@@ -390,6 +456,17 @@ else
     AC_MSG_ERROR([OpenSSL tests requested but tests are not enabled])
   fi
 fi
+=======
+    AC_DEFINE(ENABLE_OPENSSL_TESTS, 1, [Define this symbol if OpenSSL EC functions are available])
+    SECP_TEST_INCLUDES="$SSL_CFLAGS $CRYPTO_CFLAGS"
+    SECP_TEST_LIBS="$CRYPTO_LIBS"
+
+    case $host in
+    *mingw*)
+      SECP_TEST_LIBS="$SECP_TEST_LIBS -lgdi32"
+      ;;
+    esac
+>>>>>>> elements/alpha
 
 if test x"$use_jni" != x"no"; then
   AX_JNI_INCLUDE_DIR
@@ -423,7 +500,11 @@ if test x"$use_endomorphism" = x"yes"; then
   AC_DEFINE(USE_ENDOMORPHISM, 1, [Define this symbol to use endomorphism optimization])
 fi
 
+<<<<<<< HEAD
 if test x"$set_precomp" = x"yes"; then
+=======
+if test x"$use_ecmult_static_precomputation" = x"yes"; then
+>>>>>>> elements/alpha
   AC_DEFINE(USE_ECMULT_STATIC_PRECOMPUTATION, 1, [Define this symbol to use a statically generated ecmult table])
 fi
 
@@ -431,10 +512,18 @@ if test x"$enable_module_ecdh" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_ECDH, 1, [Define this symbol to enable the ECDH module])
 fi
 
+<<<<<<< HEAD
+=======
+if test x"$enable_module_schnorr" = x"yes"; then
+  AC_DEFINE(ENABLE_MODULE_SCHNORR, 1, [Define this symbol to enable the Schnorr signature module])
+fi
+
+>>>>>>> elements/alpha
 if test x"$enable_module_recovery" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_RECOVERY, 1, [Define this symbol to enable the ECDSA pubkey recovery module])
 fi
 
+<<<<<<< HEAD
 AC_C_BIGENDIAN()
 
 if test x"$use_external_asm" = x"yes"; then
@@ -442,21 +531,34 @@ if test x"$use_external_asm" = x"yes"; then
 fi
 
 AC_MSG_NOTICE([Using static precomputation: $set_precomp])
+=======
+if test x"$enable_module_rangeproof" = x"yes"; then
+  AC_DEFINE(ENABLE_MODULE_RANGEPROOF, 1, [Define this symbol to enable the Pedersen / zero knowledge range proof module])
+fi
+
+AC_C_BIGENDIAN()
+
+>>>>>>> elements/alpha
 AC_MSG_NOTICE([Using assembly optimizations: $set_asm])
 AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 AC_MSG_NOTICE([Using scalar implementation: $set_scalar])
 AC_MSG_NOTICE([Using endomorphism optimizations: $use_endomorphism])
+<<<<<<< HEAD
 AC_MSG_NOTICE([Building for coverage analysis: $enable_coverage])
 AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
 AC_MSG_NOTICE([Building ECDSA pubkey recovery module: $enable_module_recovery])
 AC_MSG_NOTICE([Using jni: $use_jni])
+=======
+AC_MSG_NOTICE([Building ECDSA pubkey recovery module: $enable_module_recovery])
+>>>>>>> elements/alpha
 
 if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
   AC_MSG_NOTICE([WARNING: experimental build])
   AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
   AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
+<<<<<<< HEAD
   AC_MSG_NOTICE([******])
 else
   if test x"$enable_module_ecdh" = x"yes"; then
@@ -464,6 +566,20 @@ else
   fi
   if test x"$set_asm" = x"arm"; then
     AC_MSG_ERROR([ARM assembly optimization is experimental. Use --enable-experimental to allow.])
+=======
+  AC_MSG_NOTICE([Building Schnorr signatures module: $enable_module_schnorr])
+  AC_MSG_NOTICE([Building range proof module: $enable_module_rangeproof])
+  AC_MSG_NOTICE([******])
+else
+  if test x"$enable_module_schnorr" = x"yes"; then
+    AC_MSG_ERROR([Schnorr signature module is experimental. Use --enable-experimental to allow.])
+  fi
+  if test x"$enable_module_ecdh" = x"yes"; then
+    AC_MSG_ERROR([ECDH module is experimental. Use --enable-experimental to allow.])
+  fi
+  if test x"$enable_module_rangeproof" = x"yes"; then
+    AC_MSG_ERROR([Range proof module is experimental. Use --enable-experimental to allow.])
+>>>>>>> elements/alpha
   fi
 fi
 
@@ -474,6 +590,7 @@ AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
+<<<<<<< HEAD
 AM_CONDITIONAL([ENABLE_COVERAGE], [test x"$enable_coverage" = x"yes"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_EXHAUSTIVE_TESTS], [test x"$use_exhaustive_tests" != x"no"])
@@ -484,6 +601,15 @@ AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"ye
 AM_CONDITIONAL([USE_JNI], [test x"$use_jni" == x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$use_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm"])
+=======
+AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
+AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
+AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$use_ecmult_static_precomputation" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_SCHNORR], [test x"$enable_module_schnorr" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_RANGEPROOF], [test x"$enable_module_rangeproof" = x"yes"])
+>>>>>>> elements/alpha
 
 dnl make sure nothing new is exported so that we don't break the cache
 PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"

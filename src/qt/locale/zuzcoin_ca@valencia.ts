@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ca@valencia.ts
         <source>Right-click to edit address or label</source>
         <translation>Feu clic dret per a editar l'adreça o l'etiqueta</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ca@valencia.ts
         <source>Create a new address</source>
         <translation>Crea una nova adreça</translation>
     </message>
@@ -2538,10 +2541,13 @@
         <translation>Executa en segon pla com a programa dimoni i accepta ordes</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ca@valencia.ts
         <source>Zuzcoin Core</source>
         <translation>Zuzcoin Core</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ca@valencia.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Vincula a una adreça específica i sempre escolta-hi. Utilitza la notació [host]:port per IPv6</translation>
     </message>
@@ -2550,6 +2556,13 @@
         <translation>Elimina totes les transaccions del moneder i només recupera aquelles de la cadena de blocs a través de -rescan a l'inici</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ca@valencia.ts
+=======
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation>Entra en el mode de proves de regressió, que utilitza una cadena especial en què els blocs poden resoldre's al moment.</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ca@valencia.ts
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Executa una orde quan una transacció del moneder canvie (%s en cmd es canvia per TxID)</translation>
     </message>
@@ -2750,10 +2763,13 @@
         <translation>S'ha especificat una màscara de xarxa no vàlida a -whitelist: «%s»</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ca@valencia.ts
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation>Manté com a màxim &lt;n&gt; transaccions no connectables en memòria (per defecte: %u)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ca@valencia.ts
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Cal especificar un port amb -whitebind: «%s»</translation>
     </message>
@@ -2762,6 +2778,13 @@
         <translation>Opcions de transmissió del node:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ca@valencia.ts
+=======
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>Opcions RPC SSL: (veieu el wiki del Bitcoin per a instruccions de configuració de l'SSL)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ca@valencia.ts
         <source>RPC server options:</source>
         <translation>Opcions del servidor RPC:</translation>
     </message>
@@ -2898,6 +2921,7 @@
         <translation>Memòria intermèdia màxima d'enviament per connexió, &lt;n&gt;*1000 bytes (per defecte: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ca@valencia.ts
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Posa davant de l'eixida de depuració una marca horària (per defecte: %u)</translation>
     </message>
@@ -2942,6 +2966,8 @@
         <translation>Xarxa desconeguda especificada a -onlynet: '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ca@valencia.ts
         <source>Insufficient funds</source>
         <translation>Balanç insuficient</translation>
     </message>

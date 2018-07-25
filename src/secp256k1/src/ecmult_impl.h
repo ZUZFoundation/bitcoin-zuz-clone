@@ -44,6 +44,12 @@
 /** The number of entries a table with precomputed multiples needs to have. */
 #define ECMULT_TABLE_SIZE(w) (1 << ((w)-2))
 
+<<<<<<< HEAD
+=======
+/** The number of entries a table with precomputed multiples needs to have. */
+#define ECMULT_TABLE_SIZE(w) (1 << ((w)-2))
+
+>>>>>>> elements/alpha
 /** Fill a table 'prej' with precomputed odd multiples of a. Prej will contain
  *  the values [1*a,3*a,...,(2*n-1)*a], so it space for n values. zr[0] will
  *  contain prej[0].z / a.z. The other zr[i] values = prej[i].z / prej[i-1].z.
@@ -118,7 +124,11 @@ static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge
     /* Compute the odd multiples in Jacobian form. */
     secp256k1_ecmult_odd_multiples_table(n, prej, zr, a);
     /* Convert them in batch to affine coordinates. */
+<<<<<<< HEAD
     secp256k1_ge_set_table_gej_var(prea, prej, zr, n);
+=======
+    secp256k1_ge_set_table_gej_var(n, prea, prej, zr);
+>>>>>>> elements/alpha
     /* Convert them to compact storage form. */
     for (i = 0; i < n; i++) {
         secp256k1_ge_to_storage(&pre[i], &prea[i]);

@@ -128,6 +128,13 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
     return HexStr(ssTx.begin(), ssTx.end());
 }
 
+string EncodeHexBlock(const CBlock& block)
+{
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    ssBlock << block;
+    return HexStr(ssBlock.begin(), ssBlock.end());
+}
+
 void ScriptPubKeyToUniv(const CScript& scriptPubKey,
                         UniValue& out, bool fIncludeHex)
 {
@@ -195,7 +202,16 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 
         UniValue out(UniValue::VOBJ);
 
+<<<<<<< HEAD
         out.pushKV("value", ValueFromAmount(txout.nValue));
+=======
+        if (txout.nValue.IsAmount())
+        {
+            UniValue outValue(UniValue::VNUM, FormatMoney(txout.nValue.GetAmount()));
+            out.pushKV("value", outValue);
+        }
+        // TODO: Non-Amount values
+>>>>>>> elements/alpha
         out.pushKV("n", (int64_t)i);
 
         UniValue o(UniValue::VOBJ);

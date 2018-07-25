@@ -3,7 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <translation>Клікніть правою кнопкою для редагування адреси або мітки</translation>
+=======
+        <translation>Клік правою кнопкою для редагування адреси або мітки</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>Create a new address</source>
@@ -1372,8 +1376,13 @@
         <translation>Відшкодування з %1</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
         <translation>Запит платежу %1 занадто великий (%2 байт, дозволено %3 байт).</translation>
+=======
+        <source>Payment request DoS protection</source>
+        <translation>Оплата потребує захисту DoS</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -2116,7 +2125,31 @@
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <translation>(Розумну оплату ще не ініціалізовано. Це, зазвичай, триває кілька блоків...)</translation>
+=======
+        <translation>(Розумна оплата ще не ініціалізована. Це звичайно займає кілька блоків...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Час підтвердження:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>звичайний</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>швидкий</translation>
+    </message>
+    <message>
+        <source>Send as zero-fee transaction if possible</source>
+        <translation>Надіслати транзакцію без сплати комісії, якщо це можливо</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(підтвердження може зайняти більше часу)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -3168,6 +3201,7 @@
         <translation>Zuzcoin Core</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>The %s developers</source>
         <translation>Розробники %s</translation>
     </message>
@@ -3184,6 +3218,8 @@
         <translation>Додайте вузол для підключення та утримання відкритого з'єднання (дивіться команду `addnode` RPC для отримання додаткової інформації).</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Прив'язатися до даної адреси та прослуховувати її. Використовуйте запис виду [хост]:порт для IPv6</translation>
     </message>
@@ -3200,6 +3236,7 @@
         <translation>Підключення тільки до вказаного(-их) вузла(-ів); -connect = 0 вимикає автоматичні з'єднання (правила для цього вузла такі ж, як для -addnode)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Видалити всі транзакції гаманця та відновити ті, що будуть знайдені під час запуску за допомогою -rescan</translation>
     </message>
@@ -3212,6 +3249,8 @@
         <translation>Виключити налагоджувальну інформацію для категорії. Може використовуватися разом з -debug = 1 для виведення журналів налагодження для всіх категорій за винятком однієї або декількох зазначених категорій.</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Виконати команду, коли транзакція гаманця зміниться (замість %s в команді буде підставлено ідентифікатор транзакції)</translation>
     </message>
@@ -3620,12 +3659,25 @@
         <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: «%s» ( плата повинна бути, принаймні %s, щоб запобігти зависанню транзакцій)</translation>
     </message>
     <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Якщо параметр paytxfee не встановлено, включити комісію для отримання перших підтверджень транзакцій протягом n блоків (типово: %u)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Максимальний розмір даних в транзакціях носіїв даних, що ми передаємо і добуваємо (за замовчуванням: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Надавати випадкові дані доступу для кожного проксі-з'єднання. Це дозволяє ввімкнути ізоляцію потоків Tor'у (типово: %u)</translation>
+=======
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Максимальна загальна плата для використання в одній транзакції, установка занадто низької може перервати великі транзакції(стандартно: %s)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation>Дізнаватися адреси учасників через DNS при замалій кількості відомих адрес (типово: 1 за відсутності -connect)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -3640,16 +3692,58 @@
         <translation>Вам необхідно перебудувати базу даних з використанням -reindex для завантаження повного ланцюжка блоків.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>(default: %u)</source>
         <translation>(типово: %u)</translation>
+=======
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>Для використання bitcoind, або bitcoin-qt з параметром -server, ви повинні встановити rpcpassword в файлі конфігурації:
+%s
+Рекомендується використати такий випадковий пароль:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(вам не треба запам'ятовувати цей пароль)
+Ім'я користувача та пароль ПОВИННІ бути різними.
+Якщо файлу не існує, створіть його, обмеживши доступ правом читання для власника.
+Також рекомендується використовувати alertnotify для того, щоб отримувати сповіщення про проблеми;
+наприклад: alertnotify=echo %%s | mail -s "Сповіщення Bitcoin" admin@foo.com
+</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Увага: установлено дуже велике значення -maxtxfee! Такі великі комісії можуть бути сплачені в окремій транзакції.</translation>
+    </message>
+    <message>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Увага: будь ласка, перевірте дату і час на своєму комп'ютері! Якщо ваш годинник йде неправильно, Bitcoin Core може працювати некоректно.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Приймати публічні REST-запити (типово: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Автоматичне з'єднання з прихованим сервісом Tor (типово: %d)</translation>
+=======
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Приймати публічні REST-запити (типово: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Не вдалося розпізнати адресу для -whitebind: «%s»</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3676,8 +3770,21 @@
         <translation>Інформація</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Невірна -onion адреса або ім'я хоста: '%s'</translation>
+=======
+        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
+        <translation>Не вдалося пройти базові перевірки під час ініціалізації. Bitcoin Core буде вимкнено.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Вказано некоректну суму для параметру -minrelaytxfee: «%s»</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>Invalid -proxy address or hostname: '%s'</source>
@@ -3704,6 +3811,13 @@
         <translation>Параметри вузла ретрансляції:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
+=======
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>Параметри RPC SSL: (див. Bitcoin Wiki для налаштування SSL)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
         <source>RPC server options:</source>
         <translation>Параметри сервера RPC:</translation>
     </message>
@@ -3720,6 +3834,13 @@
         <translation>Відсилати налагоджувальну інформацію на консоль, а не у файл debug.log</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
+=======
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>Не сплачувати комісію за надсилання транзакцій, якщо це можливо (типово: %u)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показати всі налагоджувальні параметри (використання: --help -help-debug)</translation>
     </message>
@@ -3762,6 +3883,10 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Сума транзакції занадто мала</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Транзакція занадто велика для правил комісії</translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
@@ -3864,12 +3989,17 @@
         <translation>Комісії (в %s/kB), що менші за вказану, вважатимуться нульовими для створення транзакцій (типово: %s)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
         <translation>Примусово ретранслювати транзакції вузлів з білого списку, навіть якщо вони порушують політику локального ретранслятора (типово: %d)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Рівень ретельності перевірки блоків (0-4, типово: %u)</translation>
+=======
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+        <translation>Записувати в лог-файл пріоритет транзакції та комісію за кБ під час добування блоків (типово: %u)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -4076,6 +4206,7 @@
         <translation>У транзакції занадто довгий ланцюг</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_uk.ts
         <source>Transaction must have at least one recipient</source>
         <translation>У транзакції повинен бути щонайменше один одержувач</translation>
     </message>
@@ -4084,6 +4215,8 @@
         <translation>Невідома мережа вказана в -onlynet: «%s»</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_uk.ts
         <source>Insufficient funds</source>
         <translation>Недостатньо коштів</translation>
     </message>

@@ -1,6 +1,7 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
+<<<<<<< HEAD
 define(_CLIENT_VERSION_MINOR, 16)
 define(_CLIENT_VERSION_REVISION, 1)
 define(_CLIENT_VERSION_BUILD, 0)
@@ -11,6 +12,16 @@ define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Zuzcoin Core]])
 AC_INIT([Zuzcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/zuzcoin/zuzcoin/issues],[zuzcoin],[https://zuzcoincore.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
 AC_CONFIG_HEADERS([src/config/zuzcoin-config.h])
+=======
+define(_CLIENT_VERSION_MINOR, 10)
+define(_CLIENT_VERSION_REVISION, 2)
+define(_CLIENT_VERSION_BUILD, 0)
+define(_CLIENT_VERSION_IS_RELEASE, false)
+define(_COPYRIGHT_YEAR, 2015)
+AC_INIT([Elements Alpha],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcoin.org],[bitcoin])
+AC_CONFIG_SRCDIR([src/main.cpp])
+AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
+>>>>>>> elements/alpha
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
@@ -299,9 +310,15 @@ AC_ARG_WITH([utils],
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
+<<<<<<< HEAD
   [build libraries (default=yes)])],
   [build_zuzcoin_libs=$withval],
   [build_zuzcoin_libs=yes])
+=======
+  [build libraries (default=no)])],
+  [build_bitcoin_libs=$withval],
+  [build_bitcoin_libs=no])
+>>>>>>> elements/alpha
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
@@ -551,6 +568,11 @@ if test x$use_glibc_compat != xno; then
   AC_DEFINE_UNQUOTED(FDELT_TYPE, $fdelt_type,[parameter and return value type for __fdelt_chk])
 else
   AC_SEARCH_LIBS([clock_gettime],[rt])
+fi
+
+if test x$TARGET_OS != xwindows; then
+  # All windows code is PIC, forcing it on just adds useless compile warnings
+  AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC"])
 fi
 
 if test x$TARGET_OS != xwindows; then
@@ -1236,13 +1258,19 @@ AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
+<<<<<<< HEAD
 AC_SUBST(ERROR_CXXFLAGS)
+=======
+>>>>>>> elements/alpha
 AC_SUBST(HARDENED_CXXFLAGS)
 AC_SUBST(HARDENED_CPPFLAGS)
 AC_SUBST(HARDENED_LDFLAGS)
 AC_SUBST(PIC_FLAGS)
 AC_SUBST(PIE_FLAGS)
+<<<<<<< HEAD
 AC_SUBST(SSE42_CXXFLAGS)
+=======
+>>>>>>> elements/alpha
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
@@ -1288,11 +1316,15 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
+<<<<<<< HEAD
 if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery --disable-jni"
+=======
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-experimental --enable-module-recovery --enable-module-schnorr --enable-module-ecdh --enable-module-rangeproof"
+>>>>>>> elements/alpha
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT

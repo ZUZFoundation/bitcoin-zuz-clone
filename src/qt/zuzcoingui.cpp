@@ -125,7 +125,11 @@ ZuzcoinGUI::ZuzcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
         move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
 
+<<<<<<< HEAD:src/qt/zuzcoingui.cpp
     QString windowTitle = tr(PACKAGE_NAME) + " - ";
+=======
+    QString windowTitle = tr("Elements Alpha") + " - ";
+>>>>>>> elements/alpha:src/qt/bitcoingui.cpp
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
 #endif // ENABLE_WALLET
@@ -334,8 +338,13 @@ void ZuzcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
+<<<<<<< HEAD:src/qt/zuzcoingui.cpp
     aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
     aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
+=======
+    aboutAction = new QAction(networkStyle->getAppIcon(), tr("&About Elements Alpha"), this);
+    aboutAction->setStatusTip(tr("Show information about Elements Alpha"));
+>>>>>>> elements/alpha:src/qt/bitcoingui.cpp
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
@@ -373,9 +382,15 @@ void ZuzcoinGUI::createActions()
     openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a zuzcoin: URI or payment request"));
 
+<<<<<<< HEAD:src/qt/zuzcoingui.cpp
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Zuzcoin command-line options").arg(tr(PACKAGE_NAME)));
+=======
+    showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
+    showHelpMessageAction->setMenuRole(QAction::NoRole);
+    showHelpMessageAction->setStatusTip(tr("Show the Elements Alpha help message to get a list with possible Bitcoin command-line options"));
+>>>>>>> elements/alpha:src/qt/bitcoingui.cpp
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -575,7 +590,11 @@ void ZuzcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
+<<<<<<< HEAD:src/qt/zuzcoingui.cpp
     QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + networkStyle->getTitleAddText();
+=======
+    QString toolTip = tr("Elements Alpha client") + " " + networkStyle->getTitleAddText();
+>>>>>>> elements/alpha:src/qt/bitcoingui.cpp
     trayIcon->setToolTip(toolTip);
     trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
     trayIcon->hide();

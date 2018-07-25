@@ -496,6 +496,7 @@
     <message>
         <source>Catching up...</source>
         <translation>Laster ned...</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
     </message>
     <message>
         <source>Date: %1
@@ -526,6 +527,8 @@
 </source>
         <translation>Adresse: %1
 </translation>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Sent transaction</source>
@@ -660,7 +663,11 @@
     </message>
     <message>
         <source>Copy after fee</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <translation>Kopiér totalt</translation>
+=======
+        <translation>Kopier totalt</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Copy bytes</source>
@@ -1388,6 +1395,14 @@
     <message>
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
         <translation>Betalingsforespørsel %1 er for stor (%2 byte, %3 byte tillatt).</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Betalingsforespørsel %1 er for stor (%2 bytes, tillatt %3 bytes).</translation>
+    </message>
+    <message>
+        <source>Payment request DoS protection</source>
+        <translation>Betalingsforespørsel DoS-beskyttelse</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -3182,6 +3197,7 @@
         <translation>Zuzcoin Core</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>The %s developers</source>
         <translation>%s-utviklerne</translation>
     </message>
@@ -3198,6 +3214,8 @@
         <translation>Legg til node for tilkobling og forsøk å holde forbindelsen åpen (se 'addnode' RPC kommandoen for mer informasjon)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind til angitt adresse. Bruk [vertsmaskin]:port notasjon for IPv6</translation>
     </message>
@@ -3214,6 +3232,7 @@
         <translation>Slett alle transaksjoner i lommeboken og gjenopprett kun de delene av blokkjeden gjennom -rescan ved oppstart</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Feil under lesing av %s! Alle nøkler har blitt lest rett, men transaksjonsdata eller adressebokoppføringer kan mangle eller være uriktige.</translation>
     </message>
@@ -3222,6 +3241,8 @@
         <translation>Ekskluder feilrettingsinformasjon for en kategori. Kan brukes i sammenheng med -debug=1 til utdatafeilrettingslogger for alle kategorier, unntatt én eller flere angitte kategorier.</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Kjør kommando når en lommeboktransaksjon endres (%s i kommando er erstattet med TxID)</translation>
     </message>
@@ -3626,16 +3647,41 @@
         <translation>Ugyldig beløp for -maxtxfee=&lt;amount&gt;: '%s' (må være minst minimum relé gebyr på %s for å hindre fastlåste transaksjoner)</translation>
     </message>
     <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Hvis paytxfee ikke er angitt, inkluderer da nok i gebyr til at transaksjoner gjennomsnittligt bekreftes innen n blokker (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Ugyldig beløp for -maxtxfee=&lt;amount&gt;: '%s' (må være minst minimum relé gebyr på %s for å hindre fastlåste transaksjoner)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maksimal størrelse på data i databærende transaksjoner vi videresender og ufører graving på (standardverdi: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Bruk tilfeldig identitet for hver proxytilkobling. Dette muliggjør TOR stream isolasjon (standardverdi: %u)</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Transaksjonsbeløpet er for lite til å sendes etter at gebyret er fratrukket</translation>
+=======
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Maksimal sum av gebyrer som kan brukes i en enkelt lommebokstransaksjon, settes den for lavt kan store transaksjoner bli avbrutt (standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation>Søk etter nodeadresser via DNS-oppslag, hvis vi har få adresser å koble til (standard: 1 med mindre -connect)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Krev høy prioritet for å videreformidle transaksjoner som er gratis eller har lavt gebyr (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation>Sett maksimum størrelse for transaksjoner med høy prioritet / lavt gebyr, i bytes (standardverdi: %d)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -3646,16 +3692,58 @@
         <translation>Du må gjenoppbygge databasen ved hjelp av -reindex for å gå tilbake til ubeskåret modus. Dette vil laste ned hele blokkjeden på nytt.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>(default: %u)</source>
         <translation>(standardverdi: %u)</translation>
+=======
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>For å bruke bitcoind, eller -server valget til bitcoin-qt, må du angi et rpcpassord i konfigurasjonsfilen:
+%s
+Det anbefales at du bruker det følgende tilfeldige passordet:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(du behøver ikke å huske passordet)
+Brukernavnet og passordet MÅ IKKE være like.
+Om filen ikke eksisterer, opprett den med eier-kun-les filrettigheter.
+Det er også anbefalt at å sette varselsmelding slik du får melding om problemer;
+for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Advarsel: -paytxfee er satt veldig høyt! Så stort gebyr kan bli betalt ved en enkelt transaksjon.</translation>
+    </message>
+    <message>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Advarsel: Vennligst undersøk at din datamaskin har riktig dato og klokkeslett! Hvis klokken er stilt feil vil ikke Bitcoin Core fungere riktig.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Godta offentlige REST forespørsler (standardverdi: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Automatisk opprette Tor skjult tjeneste (standardverdi: %d)</translation>
+=======
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Godta offentlige REST forespørsler (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Kan ikke løse -whitebind-adresse: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3674,8 +3762,21 @@
         <translation>Feil ved oppgradering av kjedetilstandsdatabase</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Imports blocks from external blk000??.dat file on startup</source>
         <translation>Importerer blokker fra ekstern fil blk000??.dat ved oppstart</translation>
+=======
+        <source>Error reading from database, shutting down.</source>
+        <translation>Feil ved lesing fra database, stenger ned.</translation>
+    </message>
+    <message>
+        <source>Error: Unsupported argument -tor found, use -onion.</source>
+        <translation>Feil: Argumentet -tor er ikke støttet, bruk -onion.</translation>
+    </message>
+    <message>
+        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
+        <translation>Gebyr (i BTC/kB) for å legge til i transaksjoner du sender (standardverdi: %s)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Information</source>
@@ -3686,8 +3787,21 @@
         <translation>Ugyldig -onion adresse eller vertsnavn: "%s"</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Invalid -proxy address or hostname: '%s'</source>
         <translation>Ugyldig -mellomtjeneradresse eller vertsnavn: "%s"</translation>
+=======
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ugyldig beløp for -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ugyldig mengde for -minrelaytxfee=&lt;beløp&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ugyldig mengde for -mintxfee=&lt;beløp&gt;: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
@@ -3710,12 +3824,28 @@
         <translation>Node alternativer for videresending:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
+=======
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>RPC SSL-valg: (se Bitcoin Wiki for oppsettsinstruksjoner for SSL)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
         <source>RPC server options:</source>
         <translation>Innstillinger for RPC-tjener:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Reduserer -maxconnections fra %d til %d, pga. systembegrensninger.</translation>
+=======
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC-støtte for persistente HTTP-forbindelser (standardverdi: %d)</translation>
+    </message>
+    <message>
+        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
+        <translation>Slumpvis dropp 1 av hver &lt;n&gt; nettverksmeldinger</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
@@ -3768,6 +3898,10 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Transaksjonen er for liten</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Transaksjon for stor for gebyrpolitikken</translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
@@ -3870,12 +4004,17 @@
         <translation>Gebyrer (i %s/Kb) mindre enn dette anses som null gebyr for laging av transaksjoner (standardverdi: %s)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
         <translation>Tving igjennom stafettransaksjoner av hvitlistede likemenn, selv når de ikke overholder lokal stafettpraksis (forvalg: %d)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hvor grundig blokkverifiseringen til -checkblocks er (0-4, standardverdi: %u)</translation>
+=======
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+        <translation>Logg transaksjonsprioritet og gebyr per kB under blokkutvinning (standardverdi: %u)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -4078,6 +4217,7 @@
         <translation>Transaksjonen har for lang hukommelsespuljekjede</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nb.ts
         <source>Transaction must have at least one recipient</source>
         <translation>Transaksjonen må ha minst én mottaker</translation>
     </message>
@@ -4086,6 +4226,8 @@
         <translation>Ukjent nettverk angitt i -onlynet '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nb.ts
         <source>Insufficient funds</source>
         <translation>Utilstrekkelige midler</translation>
     </message>

@@ -25,8 +25,14 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
+<<<<<<< HEAD
         const uint256& hash = block.vtx[i]->GetHash();
         if (txids && txids->count(hash)) {
+=======
+        const uint256& hash = block.vtx[i].GetFullHash();
+        if (filter.IsRelevantAndUpdate(block.vtx[i]))
+        {
+>>>>>>> elements/alpha
             vMatch.push_back(true);
         } else if (filter && filter->IsRelevantAndUpdate(*block.vtx[i])) {
             vMatch.push_back(true);
@@ -35,6 +41,29 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
             vMatch.push_back(false);
         }
         vHashes.push_back(hash);
+    }
+
+    txn = CPartialMerkleTree(vHashes, vMatch);
+}
+
+CMerkleBlock::CMerkleBlock(const CBlock& block, const std::set<uint256>& txids)
+{
+    header = block.GetBlockHeader();
+
+    vector<bool> vMatch;
+    vector<uint256> vHashes;
+
+    vMatch.reserve(block.vtx.size());
+    vHashes.reserve(block.vtx.size());
+
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    {
+        const uint256& hash = block.vtx[i].GetHash();
+        if (txids.count(hash))
+            vMatch.push_back(true);
+        else
+            vMatch.push_back(false);
+        vHashes.push_back(block.vtx[i].GetFullHash());
     }
 
     txn = CPartialMerkleTree(vHashes, vMatch);

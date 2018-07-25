@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_id_ID.ts
         <source>Right-click to edit address or label</source>
         <translation>Klik-kanan untuk mengubah alamat atau label</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_id_ID.ts
         <source>Create a new address</source>
         <translation>Buat alamat baru</translation>
     </message>
@@ -1808,8 +1811,17 @@
         <translation>Berjalan dibelakang sebagai daemin dan menerima perintah</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_id_ID.ts
         <source>Zuzcoin Core</source>
         <translation>Zuzcoin Core</translation>
+=======
+        <source>Use the test network</source>
+        <translation>Gunakan jaringan uji</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Terima hubungan dari luar (standar: 1 kalau -proxy atau -connect tidak dipilih)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_id_ID.ts
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -1944,6 +1956,21 @@
         <translation>Jaringan tidak diketahui yang ditentukan dalam -onlynet: '%s'</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_id_ID.ts
+=======
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Tidak dapat menyelesaikan alamat -bind: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Tidak dapat menyelesaikan alamat -externalip: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nilai salah untuk -paytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_id_ID.ts
         <source>Insufficient funds</source>
         <translation>Saldo tidak mencukupi</translation>
     </message>

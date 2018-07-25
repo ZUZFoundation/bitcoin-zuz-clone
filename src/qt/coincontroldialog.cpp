@@ -121,8 +121,13 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
     // (un)select all
     connect(ui->pushButtonSelectAll, SIGNAL(clicked()), this, SLOT(buttonSelectAllClicked()));
 
+<<<<<<< HEAD
     // change coin control first column label due Qt4 bug.
     // see https://github.com/zuzcoin/zuzcoin/issues/5716
+=======
+    // change coin control first column label due Qt4 bug. 
+    // see https://github.com/bitcoin/bitcoin/issues/5716
+>>>>>>> elements/alpha
     ui->treeWidget->headerItem()->setText(COLUMN_CHECKBOX, QString());
 
     ui->treeWidget->setColumnWidth(COLUMN_CHECKBOX, 84);
@@ -463,7 +468,14 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nQuantity++;
 
         // Amount
+<<<<<<< HEAD
         nAmount += out.tx->tx->vout[out.i].nValue;
+=======
+        nAmount += out.tx->GetValueOut(out.i);
+
+        // Priority
+        dPriorityInputs += (double)COIN * (out.nDepth+1);
+>>>>>>> elements/alpha
 
         // Bytes
         CTxDestination address;
@@ -648,8 +660,16 @@ void CoinControlDialog::updateView()
 
         CAmount nSum = 0;
         int nChildren = 0;
+<<<<<<< HEAD
         for (const COutput& out : coins.second) {
             nSum += out.tx->tx->vout[out.i].nValue;
+=======
+        int nInputSum = 0;
+        BOOST_FOREACH(const COutput& out, coins.second)
+        {
+            int nInputSize = 0;
+            nSum += out.tx->GetValueOut(out.i);
+>>>>>>> elements/alpha
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -686,16 +706,32 @@ void CoinControlDialog::updateView()
             }
 
             // amount
+<<<<<<< HEAD
             itemOutput->setText(COLUMN_AMOUNT, ZuzcoinUnits::format(nDisplayUnit, out.tx->tx->vout[out.i].nValue));
             itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->tx->vout[out.i].nValue)); // padding so that sorting works correctly
+=======
+            itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->GetValueOut(out.i)));
+            itemOutput->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(out.tx->GetValueOut(out.i)), 15, " ")); // padding so that sorting works correctly
+>>>>>>> elements/alpha
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
             itemOutput->setData(COLUMN_DATE, Qt::UserRole, QVariant((qlonglong)out.tx->GetTxTime()));
 
             // confirmations
+<<<<<<< HEAD
             itemOutput->setText(COLUMN_CONFIRMATIONS, QString::number(out.nDepth));
             itemOutput->setData(COLUMN_CONFIRMATIONS, Qt::UserRole, QVariant((qlonglong)out.nDepth));
+=======
+            itemOutput->setText(COLUMN_CONFIRMATIONS, strPad(QString::number(out.nDepth), 8, " "));
+
+            // priority
+            double dPriority = ((double)COIN  / (nInputSize + 78)) * (out.nDepth+1); // 78 = 2 * 34 + 10
+            itemOutput->setText(COLUMN_PRIORITY, CoinControlDialog::getPriorityLabel(dPriority, mempoolEstimatePriority));
+            itemOutput->setText(COLUMN_PRIORITY_INT64, strPad(QString::number((int64_t)dPriority), 20, " "));
+            dPrioritySum += (double)COIN  * (out.nDepth+1);
+            nInputSum    += nInputSize;
+>>>>>>> elements/alpha
 
             // transaction hash
             uint256 txhash = out.tx->GetHash();

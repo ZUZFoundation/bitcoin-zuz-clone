@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ur_PK.ts
         <source>Right-click to edit address or label</source>
         <translation>پتہ تبدیل کرے کے لیے دائیاں کلک کریں</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ur_PK.ts
         <source>Create a new address</source>
         <translation>نیا ایڈریس بنائیں</translation>
     </message>
@@ -242,7 +245,15 @@
     <name>WalletView</name>
     </context>
 <context>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ur_PK.ts
     <name>zuzcoin-core</name>
+=======
+    <name>bitcoin-core</name>
+    <message>
+        <source>This help message</source>
+        <translation>یہ مدد کا پیغام</translation>
+    </message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ur_PK.ts
     <message>
         <source>Insufficient funds</source>
         <translation>ناکافی فنڈز</translation>

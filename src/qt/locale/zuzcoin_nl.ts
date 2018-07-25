@@ -3,11 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <translation>Rechtermuisklik om het adres of label te wijzigen</translation>
+=======
+        <translation>Klik met de rechtermuisknop om het adres of label te wijzigen</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Maak een nieuw adres aan</translation>
+        <translation>Maak een nieuw adres</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -55,6 +59,7 @@
     </message>
     <message>
         <source>Sending addresses</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <translation>Verzendadressen</translation>
     </message>
     <message>
@@ -68,6 +73,17 @@
     <message>
         <source>These are your Zuzcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Dit zijn uw Zuzcoin-adressen waarmee u betalingen kunt ontvangen. We raden u aan om een nieuw ontvangstadres voor elke transactie te gebruiken.</translation>
+=======
+        <translation>Verstuur adressen</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Ontvang adressen</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Dit zijn uw Bitcoinadressen om betalingen mee te verzenden. Controleer altijd het bedrag en het ontvang adres voordat u uw bitcoins verzendt.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -117,7 +133,11 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <translation>Wachtwoordzindialoog</translation>
+=======
+        <translation>Wachtwoorddialoog</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Enter passphrase</source>
@@ -184,12 +204,21 @@
         <translation>Portemonnee versleuteld</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your zuzcoins from being stolen by malware infecting your computer.</source>
         <translation>%1 zal nu afsluiten om het versleutelingsproces te voltooien. Onthoud dat het versleutelen van uw portemonnee u niet volledig kan beschermen: Malware kan uw computer infecteren en uw zuzcoins stelen.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>BELANGRIJK: Elke eerder gemaakte backup van uw portemonneebestand dient u te vervangen door het nieuw gegenereerde, versleutelde portemonneebestand. Om veiligheidsredenen zullen eerdere backups van het niet-versleutelde portemonneebestand onbruikbaar worden zodra u uw nieuwe, versleutelde, portemonnee begint te gebruiken.</translation>
+=======
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Voer een nieuw wachtwoord in voor uw portomonee.&lt;br/&gt;Gebruik een wachtwoord van &lt;b&gt;tien of meer willekeurige karakters&lt;/b&gt;, of &lt;b&gt;acht of meer woorden&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin zal nu afsluiten om het versleutelingsproces te voltooien. Onthoudt dat het versleutelen van uw portemonnee u niet volledig kan beschermen: Malware kan uw computer infecteren en uw bitcoins stelen.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -311,19 +340,32 @@
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <translation>&amp;Verstuuradressen...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
         <translation>&amp;Ontvangstadressen...</translation>
+=======
+        <translation>V&amp;erstuur adressen...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>O&amp;ntvang adressen...</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Open &amp;URI...</source>
         <translation>Open &amp;URI...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Click to disable network activity.</source>
         <translation>Klik om de netwerkactiviteit te stoppen.</translation>
+=======
+        <source>Bitcoin Core client</source>
+        <translation>Bitcoin Kern applicatie</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Network activity disabled.</source>
@@ -438,12 +480,33 @@
         <translation>&amp;Opdrachtregelopties</translation>
     </message>
     <message numerus="yes">
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>%n active connection(s) to Zuzcoin network</source>
         <translation><numerusform>%n actieve verbinding met Zuzcoinnetwerk</numerusform><numerusform>%n actieve verbindingen met Zuzcoinnetwerk</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
         <translation>Bezig met indexeren van blokken op harde schijf...</translation>
+=======
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n actieve connectie naar Bitcoin netwerk</numerusform><numerusform>%n actieve connecties naar Bitcoin netwerk</numerusform></translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>Geen bron voor blokken beschikbaar...</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n uur</numerusform><numerusform>%n uur</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dag</numerusform><numerusform>%n dagen</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n week</numerusform><numerusform>%n weken</numerusform></translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Processing blocks on disk...</source>
@@ -481,6 +544,7 @@
         <source>Up to date</source>
         <translation>Bijgewerkt</translation>
     </message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
     <message>
         <source>Show the %1 help message to get a list with possible Zuzcoin command-line options</source>
         <translation>Toon het %1 hulpbericht om een lijst te krijgen met mogelijke Zuzcoin commandoregelopties</translation>
@@ -492,6 +556,11 @@
     <message>
         <source>Connecting to peers...</source>
         <translation>Verbinden met peers...</translation>
+=======
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>%n Blok transactie geschiedenis verwerkt.</numerusform><numerusform>%n Blokken transactie geschiedenis verwerkt.</numerusform></translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Catching up...</source>
@@ -1390,6 +1459,13 @@
         <translation>Betalingsverzoek %1 is te groot (%2 bytes, toegestaan ​​%3 bytes).</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
+=======
+        <source>Payment request DoS protection</source>
+        <translation>Betalingsaanvraag DoS bescherming</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
         <source>Error communicating with %1: %2</source>
         <translation>Fout bij communiceren met %1: %2</translation>
     </message>
@@ -2089,6 +2165,7 @@
         <translation>Kies...</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>Gebruik van de terugvalkosten kan resulteren in het verzenden van een transactie die meerdere uren of dagen (of nooit) zal duren om bevestigd te worden. Overweeg om handmatig de vergoeding in te geven of wacht totdat je de volledige keten hebt gevalideerd.</translation>
     </message>
@@ -2099,6 +2176,18 @@
     <message>
         <source>collapse fee-settings</source>
         <translation>verberg vergoeding-instellingen</translation>
+=======
+        <source>collapse fee-settings</source>
+        <translation>Transactiekosteninstellingen verbergen</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimaliseer</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Als de aangepaste toeslag is ingesteld op 1000 satoshis en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 satoshis aan toeslag berekend, terwijl er bij "tenminste" 1000 satoshis worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2107,18 +2196,46 @@
     <message>
         <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Als de aangepaste toeslag is ingesteld op 1000 satoshis en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 satoshis aan toeslag berekend, terwijl er bij "totaal tenminste" 1000 satoshis worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
     </message>
     <message>
         <source>Hide</source>
         <translation>Verbergen</translation>
+=======
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>totaal ten minste</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>De minimale toeslag betalen is prima mits het transactievolume kleiner is dan de ruimte in de blokken. Let wel op dat dit tot gevolg kan hebben dat een transactie nooit wordt bevestigd als er meer vraag is naar bitcointransacties dan het netwerk kan verwerken.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(lees de tooltip)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>Aanbevolen:</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for zuzcoin transactions than the network can process.</source>
         <translation>De minimale toeslag betalen is prima mits het transactievolume kleiner is dan de ruimte in de blokken. Let wel op dat dit tot gevolg kan hebben dat een transactie nooit wordt bevestigd als er meer vraag is naar zuzcointransacties dan het netwerk kan verwerken.</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>(read the tooltip)</source>
         <translation>(lees de tooltip)</translation>
+=======
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Slimme vergoeding is nog niet geïnitialiseerd. Dit duurt meestal een paar blokken...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Bevestigings tijd:</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Recommended:</source>
@@ -2129,8 +2246,17 @@
         <translation>Aangepast:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation>(Slimme transactiekosten is nog niet geïnitialiseerd. Dit duurt meestal een paar blokken...)</translation>
+=======
+        <source>Send as zero-fee transaction if possible</source>
+        <translation>Verstuur als transactie zonder verzendkosten indien mogelijk</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(bevestiging kan langer duren)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2849,11 +2975,19 @@
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <translation>Of er een alleen-bekijken-adres is betrokken bij deze transactie.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>Door gebruiker gedefinieerde intentie/doel van de transactie.</translation>
+=======
+        <translation>Of er een alleen-bekijken adres is betrokken bij deze transactie.</translation>
+    </message>
+    <message>
+        <source>Destination address of transaction.</source>
+        <translation>Ontvangend adres van transactie.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -3178,6 +3312,7 @@
         <translation>Zuzcoin Core</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>The %s developers</source>
         <translation>De %s ontwikkelaars</translation>
     </message>
@@ -3194,10 +3329,13 @@
         <translation>Voeg een node toe om mee te verbinden en probeer de verbinding open te houden (zie bij help voor het `addnode` RPC commando voor meer info)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind aan opgegeven adres en luister er altijd op. Gebruik [host]:port notatie voor IPv6</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Kan geen lock verkrijgen op gegevensmap %s. %s draait waarschijnlijk al.</translation>
     </message>
@@ -3220,6 +3358,18 @@
     <message>
         <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
         <translation>Sluit debugging informatie uit van een categorie. Dit kan samen gebruikt worden met -debug=1 om uitvoer debug logboeken te creëren voor alle categorieën, behalve één of meerdere categorieën.</translation>
+=======
+        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
+        <translation>Verwijder alle transacties van de portemonnee en herstel alleen de delen van de blockchain door -rescan tijdens het opstarten</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Uitgegeven onder de MIT software licentie, zie het bijgevoegde bestand COPYING of &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation>Schakel regressietest-modus in, die een speciale blokketen gebruikt waarin blokken onmiddellijk opgelost kunnen worden.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -3314,12 +3464,21 @@
         <translation>%d van de laatste 100 blokken hebben een onverwachte versie</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>%s corrupt, salvage failed</source>
         <translation>%s corrupt, veiligstellen mislukt</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool moet minstens %d MB zijn</translation>
+=======
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Goedgekeurde peers die verbinden van het ingegeven netmask of IP adres. Kan meerdere keren gespecificeerd worden.</translation>
+    </message>
+    <message>
+        <source>(default: 1)</source>
+        <translation>(standaard: 1)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -3430,10 +3589,17 @@
         <translation>Fout bij openen blokkendatabase</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occured, see debug.log for details</source>
+        <translation>Fout: Een fatale interne fout is opgetreden, zie debug.log voor details</translation>
+    </message>
+    <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
+=======
         <source>Error: Disk space is low!</source>
         <translation>Fout: Weinig vrije diskruimte!</translation>
     </message>
     <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Mislukt om op welke poort dan ook te luisteren. Gebruik -listen=0 as u dit wilt.</translation>
     </message>
@@ -3488,6 +3654,13 @@
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Verbind alleen met nodes in netwerk &lt;net&gt; (ipv4, ipv6 of onion)</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
+=======
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <translation>Blokketen opnieuw opbouwen met behulp van huidige blk000??.dat-bestanden</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -3610,8 +3783,45 @@
         <translation>Ontdek eigen IP-adressen (standaard: 1 voor luisteren en geen -externalip of -proxy)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fout: luisteren naar binnenkomende verbindingen mislukt (luisteren gaf foutmelding %s)</translation>
+=======
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>Sta JSON-RPC verbindingen toe vanuit een gespecificeerde bron. Geldig voor &lt;ip&gt; zijn een enkel IP (bijv. 1.2.3.4), een netwerk/netmask (bijv. 1.2.3.4/255.255.255.0) of een netwerk/CIDR (bijv. 1.2.3.4/24). Deze optie kan meerdere keren gespecificeerd worden.</translation>
+    </message>
+    <message>
+        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
+        <translation>Er is een fout opgetreden tijdens het opzetten van het RPC adres %s poort %u voor luisteren: %s</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>Bind aan opgegeven adres en keur peers die ermee verbinden goed. Gebruik [host]:poort notatie voor IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Bind aan gegeven adres om te luisteren voor JSON-RPC verbindingen. Gebruik [host]:poort notatie voor IPv6. Deze optie kan meerdere keren gespecificeerd worden (standaard: bind aan alle interfaces.</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
+        <translation>Kan geen lock verkrijgen op gegevensmap %s. Bitcoin Core draait waarschijnlijk al.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
+    </message>
+    <message>
+        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:%u)</source>
+        <translation>Doorlopend tarief-limiet op gratis transacties toepassen tot &lt;n&gt;*1000 bytes per minuut (standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
+        <translation>Creër nieuwe bestanden met standaard systeem bestandsrechten in plaats van umask 077 (alleen effectief met uitgeschakelde portemonnee functionaliteit)</translation>
+    </message>
+    <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Fout: luisteren naar binnenkomende verbindingen mislukt (luisteren gaf foutmelding %s)</translation>
+    </message>
+    <message>
+        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Fout: er is een niet-ondersteund argument -socks aangetroffen. Het instellen van de SOCKS-versie is niet langer mogelijk. Alleen SOCKS5-proxy's worden ondersteund.</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
@@ -3658,6 +3868,7 @@
         <translation>Accepteer publieke REST-verzoeken (standaard: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Creëer automatisch verborgen dienst van Tor (standaard:%d)</translation>
     </message>
@@ -3680,14 +3891,120 @@
     <message>
         <source>Imports blocks from external blk000??.dat file on startup</source>
         <translation>Importeer blokken van externe blk000??.dat-bestand bij opstarten</translation>
+=======
+        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
+        <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding (voor doorgeven) (standaard: %s)</translation>
+    </message>
+    <message>
+        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding transactieaanmaak (standaard: %s)</translation>
+    </message>
+    <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Als paytxfee niet is ingesteld, het pakket voldoende vergoeding zodat transacties beginnen bevestiging gemiddeld binnen in blokken (default: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>ongeldig bedrag voor -maxtxfee=&lt;amount&gt;: '%s' (moet ten minste de minrelay vergoeding van %s het voorkomen geplakt transacties voorkomen)</translation>
+    </message>
+    <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>Maximale grootte va  n de gegevens in gegevensdrager transacties we relais en de mijnen
+(default: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Maximale totale kosten om te gebruiken in een enkele portemonnee transactie , vaststellen van een te laag kan grote transacties af te breken (default: %s)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation>Query voor peer- adressen via DNS- lookup , als laag op adressen  (default: 1 unless -connect)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Vereisen een hoge prioriteit voor het doorgeven van gratis of tegen lage vergoeding transacties  (default:%u)</translation>
+    </message>
+    <message>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation>Stel maximumgrootte in bytes in voor hoge-prioriteits-/lage-transactiekosten-transacties (standaard: %d)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
+        <translation>Stel het aantal threads in voor het genereren van coins indien ingesteld (-1 = alle kernen, standaard: %d)</translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Dit product bevat software dat ontwikkeld is door het OpenSSL Project voor gebruik in de OpenSSL Toolkit &lt;https://www.openssl.org/&gt; en cryptografische software geschreven door Eric Young en UPnP software geschreven door Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Let op: -maxtxfee is erg hoog ingesteld! Transactiekosten van dergelijke groottes kunnen in een enkele transactie worden betaald.</translation>
+    </message>
+    <message>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Waarschuwing: Controleer dat de datum en tijd van uw computer correct zijn ingesteld! Bij een onjuist ingestelde klok zal Bitcoin Core niet goed werken.</translation>
+    </message>
+    <message>
+        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
+        <translation>Goedgekeurde peers kunnen niet ge-DoS-banned worden en hun transacties worden altijd doorgestuurd, zelfs als ze reeds in de mempool aanwezig zijn, nuttig voor bijv. een gateway</translation>
+    </message>
+    <message>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Accepteer publieke REST-requests (standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Kan -whitebind adres niet herleiden: '%s'</translation>
+    </message>
+    <message>
+        <source>Connect through SOCKS5 proxy</source>
+        <translation>Verbind door SOCKS5 proxy</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <translation>Auteursrecht (C) 2009-%i De Bitcoin Core Ontwikkelaars</translation>
+    </message>
+    <message>
+        <source>Could not parse -rpcbind value %s as network address</source>
+        <translation>Niet mogelijk om -rpcbind waarde %s te verwerken als netwerk adres</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
+        <translation>Fout bij laden wallet.dat: Portemonnee vereist een nieuwere versie van Bitcoin Core</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Fout bij het lezen van de database, afsluiten. </translation>
+    </message>
+    <message>
+        <source>Error: Unsupported argument -tor found, use -onion.</source>
+        <translation>Fout: Niet ondersteund argument -tor gevonden, gebruik -onion.</translation>
+    </message>
+    <message>
+        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
+        <translation>Transactiekosten (in BTC/kB) om toe te voegen aan transacties die u verstuurd (standaard: %s)</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Informatie</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Ongeldig -onion adress of hostnaam: '%s'</translation>
+=======
+        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
+        <translation>Initialisatie sanity check mislukt. Bitcoin Core is aan het afsluiten.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ongeldig bedrag voor -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ongeldig bedrag voor -minrelaytxfee=&lt;bedrag&gt;: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Invalid -proxy address or hostname: '%s'</source>
@@ -3708,6 +4025,13 @@
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Verplicht een poort met -whitebind op te geven: '%s'</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
+=======
+    </message>
+    <message>
+        <source>Node relay options:</source>
+        <translation>Node relay opties:</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Node relay options:</source>
@@ -3718,8 +4042,17 @@
         <translation>RPC server opties:</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Verminder -maxconnections van %d naar %d, vanwege systeembeperkingen.</translation>
+=======
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC ondersteuning voor HTTP persisten verbindingen (default: %d)</translation>
+    </message>
+    <message>
+        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
+        <translation>Laat willekeurig 1 elke &lt;n&gt; netwerkberichten vallen</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
@@ -3728,6 +4061,10 @@
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Verzend trace/debug-info naar de console in plaats van het debug.log-bestand</translation>
+    </message>
+    <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>Verstuur transacties zonder verzendkosten indien mogelijk (standaard: %u)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3778,6 +4115,10 @@
         <translation>De transactie is te groot voor het transactiekostenbeleid</translation>
     </message>
     <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>De transactie is te groot voor het toeslagenbeleid</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation>Transactie te groot</translation>
     </message>
@@ -3786,24 +4127,34 @@
         <translation>Niet in staat om aan %s te binden op deze computer (bind gaf error %s)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Unable to generate initial keys</source>
         <translation>Niet mogelijk initiële sleutels te genereren</translation>
     </message>
     <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>Upgrade portemonee naar laatste formaat bij opstarten</translation>
+=======
+        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
+        <translation>Gebruik UPnP om de luisterende poort te mappen (standaard: 1 als er wordt geluisterd)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Gebruikersnaam voor JSON-RPC-verbindingen</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Verifying wallet(s)...</source>
         <translation>Portomenee(n) aan het verifiëren...</translation>
     </message>
     <message>
         <source>Wallet %s resides outside wallet directory %s</source>
         <translation>Portemonnee %s begeeft zich buiten portemoneemap %s</translation>
+=======
+        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
+        <translation>Portemonnee moest herschreven worden: Herstart Bitcoin Core om te voltooien</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Warning</source>
@@ -3814,8 +4165,21 @@
         <translation>Waarschuwing: onbekende nieuwe regels geactiveerd (versionbit %i)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Whether to operate in a blocks only mode (default: %u)</source>
         <translation>Om in alleen een blokmodus te opereren (standaard: %u)</translation>
+=======
+        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Waarschuwing: Niet ondersteund argument -benchmark genegeerd, gebruik -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Waarschuwing: Niet ondersteund argument -debugnet genegeerd, gebruik -debug=net.</translation>
+    </message>
+    <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Bezig met het zappen van alle transacties van de portemonnee...</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3882,6 +4246,22 @@
         <translation>Hoe grondig de blokverificatie van -checkblocks is (0-4, standaard: %u)</translation>
     </message>
     <message>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = behoudt tx meta data bijv. account eigenaar en betalingsverzoek informatie, 2. sla tx meta data niet op)</translation>
+    </message>
+    <message>
+        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
+        <translation>Leeg database-activiteit uit de geheugen pool naar schijf log elke &lt;n&gt; megabytes (standaard: %u) </translation>
+    </message>
+    <message>
+        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
+        <translation>Hoe grondig de blokverificatie van -checkblocks is (0-4, standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+        <translation>Log transactieprioriteit en -kosten per kB bij het mijnen van blokken (standaard: %u)</translation>
+    </message>
+    <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>Onderhoud een volledige transactieindex, gebruikt door de getrawtransaction rpc call (standaard: %u)</translation>
     </message>
@@ -3942,6 +4322,7 @@
         <translation>Gebruik een aparte SOCKS5 proxy om verborgen diensten van Tor te bereiken (standaard: %s)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Waarschuwing: Onbekende blok versies worden gemined! Er zijn mogelijk onbekende regels in werking getreden</translation>
     </message>
@@ -3956,6 +4337,14 @@
     <message>
         <source>%s is set very high!</source>
         <translation>%s is zeer hoog ingesteld!</translation>
+=======
+        <source>Acceptable ciphers (default: %s)</source>
+        <translation>Geaccepteerde versleutelingen (standaard: %s)</translation>
+    </message>
+    <message>
+        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
+        <translation>Vind anderen door middel van een DNS-naslag (standaard: %u)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>(default: %s)</source>
@@ -3984,6 +4373,13 @@
     <message>
         <source>Include IP addresses in debug output (default: %u)</source>
         <translation>IP-adressen toevoegen in de debuguitvoer (standaard: %u)</translation>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
+=======
+    </message>
+    <message>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Ongeldig -proxy adres: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
@@ -4015,7 +4411,19 @@
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <translation>Begin debug output met tijdstempel (standaard: %u)</translation>
+=======
+        <translation>Prepend debug output met tijdstempel (standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Relay and mine data carrier transactions (default: %u)</source>
+        <translation>Gegevensdrager transacties relay en de mijnen (default: %u)</translation>
+    </message>
+    <message>
+        <source>Relay non-P2SH multisig (default: %u)</source>
+        <translation>Relay non-P2SH multisig (default: %u)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>Relay and mine data carrier transactions (default: %u)</source>
@@ -4054,8 +4462,17 @@
         <translation>Besteed onbevestigd wisselgeld bij het doen van transacties (standaard: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Starting network threads...</source>
         <translation>Netwerkthread starten...</translation>
+=======
+        <source>Stop running after importing blocks from disk (default: %u)</source>
+        <translation>Stop uitvoeren na het importeren van blokken van de schijf (standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
+        <translation>Drempel om verbinding te verbreken naar zich misdragende peers (standaard: %u)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4082,6 +4499,7 @@
         <translation>Transactie heeft een te lange mempoolketen</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_nl.ts
         <source>Transaction must have at least one recipient</source>
         <translation>Transactie moet ten minste één ontvanger hebben</translation>
     </message>
@@ -4090,6 +4508,8 @@
         <translation>Onbekend netwerk gespecificeerd in -onlynet: '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_nl.ts
         <source>Insufficient funds</source>
         <translation>Ontoereikend saldo</translation>
     </message>

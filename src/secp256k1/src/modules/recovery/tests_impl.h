@@ -4,6 +4,7 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+<<<<<<< HEAD
 #ifndef SECP256K1_MODULE_RECOVERY_TESTS_H
 #define SECP256K1_MODULE_RECOVERY_TESTS_H
 
@@ -146,6 +147,10 @@ void test_ecdsa_recovery_api(void) {
     secp256k1_context_destroy(vrfy);
     secp256k1_context_destroy(both);
 }
+=======
+#ifndef _SECP256K1_MODULE_RECOVERY_TESTS_
+#define _SECP256K1_MODULE_RECOVERY_TESTS_
+>>>>>>> elements/alpha
 
 void test_ecdsa_recovery_end_to_end(void) {
     unsigned char extra[32] = {0x00};
@@ -381,13 +386,20 @@ void test_ecdsa_recovery_edge_cases(void) {
 
 void run_recovery_tests(void) {
     int i;
+<<<<<<< HEAD
     for (i = 0; i < count; i++) {
         test_ecdsa_recovery_api();
     }
+=======
+>>>>>>> elements/alpha
     for (i = 0; i < 64*count; i++) {
         test_ecdsa_recovery_end_to_end();
     }
     test_ecdsa_recovery_edge_cases();
 }
 
+<<<<<<< HEAD
 #endif /* SECP256K1_MODULE_RECOVERY_TESTS_H */
+=======
+#endif
+>>>>>>> elements/alpha

@@ -42,7 +42,11 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, Scri
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
 
+<<<<<<< HEAD
     return VerifyScript(scriptSig, scriptPubKey, nullptr, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue), &err);
+=======
+    return VerifyScript(scriptSig, scriptPubKey, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionNoWithdrawsSignatureChecker(&txTo, 0, txTo.vout[0].nValue), &err);
+>>>>>>> elements/alpha
 }
 
 
@@ -112,7 +116,11 @@ BOOST_AUTO_TEST_CASE(sign)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
+<<<<<<< HEAD
             bool sigOK = CScriptCheck(txFrom.vout[txTo[i].vin[0].prevout.n], txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, &txdata)();
+=======
+            bool sigOK = CScriptCheck(CCoins(txFrom, 0), txTo[i], 0, -1, -1, -1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false)();
+>>>>>>> elements/alpha
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else

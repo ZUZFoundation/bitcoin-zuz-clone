@@ -95,6 +95,7 @@ static std::string Translate(const char* psz)
 }
 
 static QString GetLangTerritory()
+<<<<<<< HEAD:src/qt/zuzcoin.cpp
 {
     QSettings settings;
     // Get desired locale (e.g. "de_DE")
@@ -108,6 +109,25 @@ static QString GetLangTerritory()
     lang_territory = QString::fromStdString(gArgs.GetArg("-lang", lang_territory.toStdString()));
     return lang_territory;
 }
+=======
+{
+    QSettings settings;
+    // Get desired locale (e.g. "de_DE")
+    // 1) System default language
+    QString lang_territory = QLocale::system().name();
+    // 2) Language from QSettings
+    QString lang_territory_qsettings = settings.value("language", "").toString();
+    if(!lang_territory_qsettings.isEmpty())
+        lang_territory = lang_territory_qsettings;
+    // 3) -lang command line argument
+    lang_territory = QString::fromStdString(GetArg("-lang", lang_territory.toStdString()));
+    return lang_territory;
+}
+
+/** Set up translations */
+static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTranslator, QTranslator &translatorBase, QTranslator &translator)
+{
+>>>>>>> elements/alpha:src/qt/bitcoin.cpp
 
 /** Set up translations */
 static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTranslator, QTranslator &translatorBase, QTranslator &translator)
@@ -558,10 +578,17 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
 #endif
 
+<<<<<<< HEAD:src/qt/zuzcoin.cpp
     Q_INIT_RESOURCE(zuzcoin);
     Q_INIT_RESOURCE(zuzcoin_locale);
 
     ZuzcoinApplication app(argc, argv);
+=======
+    Q_INIT_RESOURCE(bitcoin);
+    Q_INIT_RESOURCE(bitcoin_locale);
+
+    BitcoinApplication app(argc, argv);
+>>>>>>> elements/alpha:src/qt/bitcoin.cpp
 #if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -619,6 +646,7 @@ int main(int argc, char *argv[])
     /// - Do not call GetDataDir(true) before this step finishes
     if (!fs::is_directory(GetDataDir(false)))
     {
+<<<<<<< HEAD:src/qt/zuzcoin.cpp
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
@@ -627,6 +655,16 @@ int main(int argc, char *argv[])
         gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+=======
+        QMessageBox::critical(0, QObject::tr("Elements Alpha"),
+                              QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
+        return 1;
+    }
+    try {
+        ReadConfigFile(mapArgs, mapMultiArgs);
+    } catch(std::exception &e) {
+        QMessageBox::critical(0, QObject::tr("Elements Alpha"),
+>>>>>>> elements/alpha:src/qt/bitcoin.cpp
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return EXIT_FAILURE;
     }
@@ -638,11 +676,17 @@ int main(int argc, char *argv[])
     // - Needs to be done before createOptionsModel
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+<<<<<<< HEAD:src/qt/zuzcoin.cpp
     try {
         SelectParams(ChainNameFromCommandLine());
     } catch(std::exception &e) {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1").arg(e.what()));
         return EXIT_FAILURE;
+=======
+    if (!SelectParamsFromCommandLine()) {
+        QMessageBox::critical(0, QObject::tr("Elements Alpha"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+        return 1;
+>>>>>>> elements/alpha:src/qt/bitcoin.cpp
     }
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
@@ -706,7 +750,11 @@ int main(int argc, char *argv[])
         if (ZuzcoinCore::baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
+<<<<<<< HEAD:src/qt/zuzcoin.cpp
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
+=======
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Elements Alpha didn't yet exit safely..."), (HWND)app.getMainWinId());
+>>>>>>> elements/alpha:src/qt/bitcoin.cpp
 #endif
             app.exec();
             app.requestShutdown();

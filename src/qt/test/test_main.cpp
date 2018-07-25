@@ -6,11 +6,16 @@
 #include <config/zuzcoin-config.h>
 #endif
 
+<<<<<<< HEAD
 #include <chainparams.h>
 #include <qt/test/rpcnestedtests.h>
 #include <util.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
+=======
+#include "util.h"
+#include "uritests.h"
+>>>>>>> elements/alpha
 
 #ifdef ENABLE_WALLET
 #include <qt/test/paymentservertests.h>
@@ -50,6 +55,7 @@ extern void noui_connect();
 int main(int argc, char *argv[])
 {
     SetupEnvironment();
+<<<<<<< HEAD
     SetupNetworking();
     SelectParams(CBaseChainParams::MAIN);
     noui_connect();
@@ -58,6 +64,8 @@ int main(int argc, char *argv[])
     fs::create_directories(pathTemp);
     gArgs.ForceSetArg("-datadir", pathTemp.string());
 
+=======
+>>>>>>> elements/alpha
     bool fInvalid = false;
 
     // Prefer the "minimal" platform for the test instead of the normal default

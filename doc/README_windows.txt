@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 Zuzcoin Core
 =============
+=======
+Bitcoin Core 0.10.2
+=====================
+>>>>>>> elements/alpha
 
 Intro
 -----

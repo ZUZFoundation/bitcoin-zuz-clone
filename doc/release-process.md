@@ -42,12 +42,43 @@ Check out the source code in the following directory hierarchy.
 
 Write release notes. git shortlog helps a lot, for example:
 
+<<<<<<< HEAD
     git shortlog --no-merges v(current version, e.g. 0.7.2)..v(new version, e.g. 0.8.0)
+=======
+###fetch and build inputs: (first time, or when dependency versions change)
+ 
+	mkdir -p inputs
+>>>>>>> elements/alpha
 
 (or ping @wumpus on IRC, he has specific tooling to generate the list of merged pulls
 and sort them into categories based on labels)
 
+<<<<<<< HEAD
 Generate list of authors:
+=======
+###Optional: Seed the Gitian sources cache
+
+  By default, gitian will fetch source files as needed. For offline builds, they can be fetched ahead of time:
+
+	make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
+
+  Only missing files will be fetched, so this is safe to re-run for each build.
+
+###Build Bitcoin Core for Linux, Windows, and OS X:
+  
+	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
+	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+	mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
+	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+	mv build/out/bitcoin-*-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
+	mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
+	popd
+  Build output expected:
+>>>>>>> elements/alpha
 
     git log --format='%aN' "$*" | sort -ui | sed -e 's/^/- /'
 
@@ -55,7 +86,41 @@ Tag version (or release candidate) in git
 
     git tag -s v(new version, e.g. 0.8.0)
 
+<<<<<<< HEAD
 ### Setup and perform Gitian builds
+=======
+	pushd gitian.sigs
+	git add ${VERSION}-linux/${SIGNER}
+	git add ${VERSION}-win/${SIGNER}
+	git add ${VERSION}-osx-unsigned/${SIGNER}
+	git commit -a
+	git push  # Assuming you can push to the gitian.sigs tree
+	popd
+
+  Wait for OSX detached signature:
+	Once the OSX build has 3 matching signatures, Gavin will sign it with the apple App-Store key.
+	He will then upload a detached signature to be combined with the unsigned app to create a signed binary.
+
+  Create the signed OSX binary:
+
+	pushd ./gitian-builder
+	# Fetch the signature as instructed by Gavin
+	cp signature.tar.gz inputs/
+	./bin/gbuild -i ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	mv build/out/bitcoin-osx-signed.dmg ../bitcoin-${VERSION}-osx.dmg
+	popd
+
+Commit your signature for the signed OSX binary:
+
+	pushd gitian.sigs
+	git add ${VERSION}-osx-signed/${SIGNER}
+	git commit -a
+	git push  # Assuming you can push to the gitian.sigs tree
+	popd
+
+-------------------------------------------------------------------------
+>>>>>>> elements/alpha
 
 If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--build" command. Otherwise ignore this.
 
@@ -261,8 +326,13 @@ rm SHA256SUMS
 (the digest algorithm is forced to sha256 to avoid confusion of the `Hash:` header that GPG adds with the SHA256 used for the files)
 Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.
 
+<<<<<<< HEAD
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the zuzcoin.org server
   into `/var/www/bin/zuzcoin-core-${VERSION}`
+=======
+- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+  into `/var/www/bin/bitcoin-core-${VERSION}`
+>>>>>>> elements/alpha
 
 - A `.torrent` will appear in the directory after a few minutes. Optionally help seed this torrent. To get the `magnet:` URI use:
 ```bash
@@ -273,6 +343,7 @@ people without access to `zuzcoin.org` to download the binary distribution.
 Also put it into the `optional_magnetlink:` slot in the YAML file for
 zuzcoin.org (see below for zuzcoin.org update instructions).
 
+<<<<<<< HEAD
 - Update zuzcoin.org version
 
   - First, check to see if the Zuzcoin.org maintainers have prepared a
@@ -285,6 +356,18 @@ zuzcoin.org (see below for zuzcoin.org update instructions).
   - If they have not prepared a release, follow the Zuzcoin.org release
     instructions: https://github.com/zuzcoin-dot-org/zuzcoin.org#release-notes
 
+=======
+  - First, check to see if the Bitcoin.org maintainers have prepared a
+    release: https://github.com/bitcoin/bitcoin.org/labels/Releases
+
+      - If they have, it will have previously failed their Travis CI
+        checks because the final release files weren't uploaded.
+        Trigger a Travis CI rebuild---if it passes, merge.
+
+  - If they have not prepared a release, follow the Bitcoin.org release
+    instructions: https://github.com/bitcoin/bitcoin.org#release-notes
+
+>>>>>>> elements/alpha
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
     as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
 

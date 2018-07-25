@@ -48,7 +48,11 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         uint256 merkleRoot1 = BlockMerkleRoot(block);
         std::vector<uint256> vTxid(nTx, uint256());
         for (unsigned int j=0; j<nTx; j++)
+<<<<<<< HEAD
             vTxid[j] = block.vtx[j]->GetHash();
+=======
+            vTxid[j] = block.vtx[j].GetFullHash();
+>>>>>>> elements/alpha
         int nHeight = 1, nTx_ = nTx;
         while (nTx_ > 1) {
             nTx_ = (nTx_+1)/2;

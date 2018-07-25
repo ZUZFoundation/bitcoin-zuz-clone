@@ -69,7 +69,18 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
     {
+<<<<<<< HEAD
         return wallet->GetAvailableBalance(coinControl);
+=======
+        CAmount nBalance = 0;
+        std::vector<COutput> vCoins;
+        wallet->AvailableCoins(vCoins, true, coinControl);
+        BOOST_FOREACH(const COutput& out, vCoins)
+            if(out.fSpendable)
+                nBalance += out.tx->GetValueOut(out.i);
+
+        return nBalance;
+>>>>>>> elements/alpha
     }
 
     return wallet->GetBalance();
@@ -196,7 +207,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
+<<<<<<< HEAD
     std::vector<CRecipient> vecSend;
+=======
+    std::vector<CSend> vecSend;
+>>>>>>> elements/alpha
 
     if(recipients.empty())
     {
@@ -223,9 +238,13 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 subtotal += out.amount();
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
+<<<<<<< HEAD
                 CAmount nAmount = out.amount();
                 CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
                 vecSend.push_back(recipient);
+=======
+                vecSend.push_back(CSend(scriptPubKey, out.amount()));
+>>>>>>> elements/alpha
             }
             if (subtotal <= 0)
             {
@@ -246,9 +265,19 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
+<<<<<<< HEAD
             CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
+=======
+            CBitcoinAddress addr(rcp.address.toStdString());
+            CScript scriptPubKey = GetScriptForDestination(addr.Get());
+            CPubKey confidentiality_pubkey;
+            if (addr.IsBlinded()) {
+                confidentiality_pubkey = addr.GetBlindingKey();
+            }
+            vecSend.push_back(CSend(scriptPubKey, rcp.amount, confidentiality_pubkey));
+>>>>>>> elements/alpha
 
             total += rcp.amount;
         }
@@ -275,8 +304,13 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         std::string strFailReason;
 
         CWalletTx *newTx = transaction.getTransaction();
+        CMutableTransaction newMTx;
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
+<<<<<<< HEAD
         bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl);
+=======
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, newMTx, *keyChange, nFeeRequired, strFailReason, coinControl);
+>>>>>>> elements/alpha
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);

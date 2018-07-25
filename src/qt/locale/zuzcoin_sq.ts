@@ -22,12 +22,21 @@
         <translation>&amp;Kopjo</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>Delete the currently selected address from the list</source>
         <translation>Fshi adresen e selektuar nga lista</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+=======
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopjo adresen</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Fshi adresen e selektuar nga lista</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -38,6 +47,7 @@
         <translation>Zgjidh adresen ku do te dergoni monedhat</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>Choose the address to receive coins with</source>
         <translation>Zgjidh adresën ku do të merrni monedhat</translation>
     </message>
@@ -46,6 +56,8 @@
         <translation>Zgjidh</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
         <source>Sending addresses</source>
         <translation>Duke derguar adresen</translation>
     </message>
@@ -54,6 +66,7 @@
         <translation>Duke marr adresen</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>These are your Zuzcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Këto janë Zuzcoin adresat e juaja për të dërguar pagesa. Gjithmon kontrolloni shumën dhe adresën pranuese para se të dërgoni monedha.</translation>
     </message>
@@ -70,14 +83,19 @@
         <translation>Kopjo &amp;Etiketë</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
         <source>&amp;Edit</source>
         <translation>&amp;Ndrysho</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>Export Address List</source>
         <translation>Eksporto listën e adresave</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
         <source>Comma separated file (*.csv)</source>
         <translation>Skedar i ndarë me pikëpresje(*.csv)</translation>
     </message>
@@ -230,8 +248,13 @@
         <translation>Ndrysho frazkalimin e përdorur per enkriptimin e portofolit</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>Zuzcoin</source>
         <translation>Zuzcoin</translation>
+=======
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
     </message>
     <message>
         <source>Wallet</source>
@@ -266,6 +289,37 @@
         <translation>Shiriti i mjeteve</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
+=======
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>Rreth Berthames Bitkoin</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n ore</numerusform><numerusform>%n ore</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dite</numerusform><numerusform>%n dite</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n jave</numerusform><numerusform>%n jave</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 dhe %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n vit</numerusform><numerusform>%n vite</numerusform></translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
         <source>%1 behind</source>
         <translation>%1 Pas</translation>
     </message>
@@ -390,9 +444,23 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>version</source>
         <translation>versioni</translation>
     </message>
+=======
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
+    <message>
+        <source>version</source>
+        <translation>versioni</translation>
+    </message>
+    <message>
+        <source>About Bitcoin Core</source>
+        <translation>Rreth Berthames Bitkoin</translation>
+    </message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
     </context>
 <context>
     <name>Intro</name>
@@ -401,6 +469,7 @@
         <translation>Miresevini</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>Zuzcoin</source>
         <translation>Zuzcoin</translation>
     </message>
@@ -414,6 +483,18 @@
     <message>
         <source>Form</source>
         <translation>Formilarë</translation>
+=======
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>Miresevini ne Berthamen Bitcoin</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Problem</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
     </message>
     </context>
 <context>
@@ -471,14 +552,24 @@
 <context>
     <name>RPCConsole</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>&amp;Information</source>
         <translation>Informacion</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
         <source>&amp;Open</source>
         <translation>&amp;Hap</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
+=======
+        <source>&amp;Clear</source>
+        <translation>&amp;Pastro</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
         <source>never</source>
         <translation>asnjehere</translation>
     </message>
@@ -486,7 +577,11 @@
         <source>Unknown</source>
         <translation>i/e panjohur</translation>
     </message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
 </context>
+=======
+    </context>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -543,10 +638,13 @@
         <translation>Dërgo Monedha</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
         <source>Insufficient funds!</source>
         <translation>Fonde te pamjaftueshme</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
         <source>Amount:</source>
         <translation>Shuma:</translation>
     </message>
@@ -633,6 +731,10 @@
     </context>
 <context>
     <name>SplashScreen</name>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testo rrjetin]</translation>
@@ -802,6 +904,7 @@
     </message>
     </context>
 <context>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_sq.ts
     <name>zuzcoin-core</name>
     <message>
         <source>Options:</source>
@@ -811,6 +914,9 @@
         <source>Zuzcoin Core</source>
         <translation>Berthama Zuzcoin</translation>
     </message>
+=======
+    <name>bitcoin-core</name>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_sq.ts
     <message>
         <source>Information</source>
         <translation>Informacion</translation>

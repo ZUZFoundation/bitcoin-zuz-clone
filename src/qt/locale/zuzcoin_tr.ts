@@ -3,7 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <translation>Adres veya etiketi düzenlemek için sağ tıklayınız.</translation>
+=======
+        <translation>Adresi ya da etiketi düzenlemek için sağ düğme ile tıklayınız.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>Create a new address</source>
@@ -26,6 +30,13 @@
         <translation>K&amp;apat</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
+=======
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Adresi Kopyala</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
         <source>Delete the currently selected address from the list</source>
         <translation>Seçili adresi listeden sil</translation>
     </message>
@@ -55,7 +66,11 @@
     </message>
     <message>
         <source>Sending addresses</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <translation>Gönderilen adresler</translation>
+=======
+        <translation>&amp;Gönderme adresleri...</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -1372,6 +1387,10 @@
     <message>
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
         <translation>%1 ödeme talebi çok büyük (%2 bayt, üst sınır %3 bayt).</translation>
+    </message>
+    <message>
+        <source>Payment request DoS protection</source>
+        <translation>Ödeme talebi DoS koruması</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -3134,6 +3153,7 @@
         <translation>Zuzcoin Çekirdeği</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <source>The %s developers</source>
         <translation>%s geliştiricileri</translation>
     </message>
@@ -3146,6 +3166,8 @@
         <translation>İşlemler aktarılmadığında dahi beyaz listedeki eşlerden aktarılan işlemleri kabul et (varsayılan: %d)</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Belirtilen adrese bağlan ve daima ondan dinle. IPv6 için [makine]:port yazımını kullanınız</translation>
     </message>
@@ -3170,6 +3192,7 @@
         <translation>Daha küçük boyutlu blok yeniden yapılandırması için fazladan işlemleri bellekte tut. (varsayılan: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
         <translation>Eğer bu blok zincirde yer alıyorsa onun ve atalarının geçerli olduğunu varsay ve potansiyel olarak onların betik doğrulamasını atla.  (Tümünü doğrulamak için 0, varsayılan %s, testnet: %s)</translation>
     </message>
@@ -3180,6 +3203,10 @@
     <message>
         <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
         <translation>Tek bir cüzdan işleminde ya da ham işlemde kullanılacak en yüksek toplam ücret (%s olarak); bunu çok düşük olarak ayarlamak büyük işlemleri iptal edebilir (varsayılan: %s)</translation>
+=======
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Bir cüzdan muamelesi değiştiğinde komutu çalıştır (komuttaki %s muamele kimliği ile değiştirilecektir)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -3546,12 +3573,29 @@
         <translation>-maxtxfee=&lt;tutar&gt; için geçersiz tutar: '%s' (Sıkışmış işlemleri önlemek için en az %s değerinde en düşük aktarım ücretine eşit olmalıdır)</translation>
     </message>
     <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Eğer paytxfee ayarlanmadıysa kafi derecede ücret ekleyin ki muameleler teyite vasati n blok içinde başlasın (varsayılan: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>-maxtxfee=&lt;tutar&gt; için geçersiz tutar: '%s' (Sıkışmış muameleleri önlemek için en az %s değerinde asgari aktarım ücretine eşit olmalıdır)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Aktardığımız ve oluşturduğumuz veri taşıyıcı işlemlerindeki en yüksek veri boyutu (varsayılan: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Her vekil bağlantısı için kimlik verilerini rastgele yap. Bu, Tor akış izolasyonunu etkinleştirir (varsayılan: %u)</translation>
+=======
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Tek cüzdan muamelesinde kullanılacak azami toplam ücret, çok düşük ayarlamak büyük muameleleri iptal edebilir (varsayılan: %s)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation>Adres sayısı azaldıysa DNS sorgulamasıyla eş adresleri ara (varsayılan: 1 -connect kullanılmadıysa)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -3566,16 +3610,58 @@
         <translation>Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <source>(default: %u)</source>
         <translation>(varsayılan: %u)</translation>
+=======
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>bitcoind ya da bitcoin-qt ile -server seçeneğini kullanmak için yapılandırma dosyasında bir rpc parolası belirtmeniz gerekir:
+%s
+Aşağıdaki rastgele oluşturulan parolayı kullanmanız tavsiye edilir:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(bu parolayı hatırlamanız gerekli değildir)
+Kullanıcı ismi ile parolanın FARKLI olmaları gerekir.
+Dosya mevcut değilse, sadece sahibi için okumayla sınırlı izin ile oluşturunuz.
+Sorunlar hakkında bildiri almak için alertnotify unsurunu ayarlamanız tavsiye edilir;
+mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>İkaz: -maxtxfee çok yüksek bir değere ayarlanmış! Bu denli yüksek ücretler tek bir muamelede ödenebilir.</translation>
+    </message>
+    <message>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Uyarı: Lütfen bilgisayarınızın saat ve tarihinin doğru olduğunu kontol ediniz! Saatinizde gecikme varsa Bitcoin Çekirdeği doğru şekilde çalışamaz.</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Herkese açık REST taleplerini kabul et (varsayılan: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Otomatik olarak gizli Tor servisi oluştur (varsayılan: %d)</translation>
+=======
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Herkese açık REST taleplerini kabul et (varsayılan: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>-whitebind adresi çözümlenemedi: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3602,8 +3688,21 @@
         <translation>Bilgi</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Geçersiz -onion adresi veya ana makine adı: '%s'</translation>
+=======
+        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
+        <translation>Başlatma sınaması başarısız oldu. Bitcoin Çekirdeği kapatılıyor.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>-maxtxfee=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>-minrelaytxfee=&lt;amount&gt; için geçersiz meblağ: '%s'</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>Invalid -proxy address or hostname: '%s'</source>
@@ -3627,7 +3726,15 @@
     </message>
     <message>
         <source>Node relay options:</source>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <translation>Düğüm aktarma seçenekleri:</translation>
+=======
+        <translation>Düğüm röle seçenekleri:</translation>
+    </message>
+    <message>
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>RPC SSL seçenekleri: (SSL kurulumu yönergeleri için Bitcoin vikisine bakınız)</translation>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
     </message>
     <message>
         <source>RPC server options:</source>
@@ -3692,6 +3799,10 @@
     <message>
         <source>Transaction too large for fee policy</source>
         <translation>Ücret politikası için işlem çok büyük</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Ücret politikası için çok büyük muamele</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3790,6 +3901,13 @@
         <translation>-checkblocks'un blok kontrolünün ne kadar kapsamlı olacağı (0 ilâ 4, varsayılan: %u)</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
+=======
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+        <translation>Blok oluşturulduğunda muamele önceliğini ve kB başı ücreti kütüğe al (varsayılan: %u)</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>İşlemlerin tamamının indeksini tut, getrawtransaction rpc çağrısı tarafından kullanılır (varsayılan: %u)</translation>
     </message>
@@ -3978,6 +4096,7 @@
         <translation>İşlem tutarı negatif olmamalıdır</translation>
     </message>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_tr.ts
         <source>Transaction has too long of a mempool chain</source>
         <translation>İşlem çok uzun bir mempool zincirine sahip</translation>
     </message>
@@ -3990,6 +4109,8 @@
         <translation>-onlynet için bilinmeyen bir ağ belirtildi: '%s'</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_tr.ts
         <source>Insufficient funds</source>
         <translation>Yetersiz bakiye</translation>
     </message>

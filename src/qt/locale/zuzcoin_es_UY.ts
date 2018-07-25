@@ -2,10 +2,13 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+<<<<<<< HEAD:src/qt/locale/zuzcoin_es_UY.ts
         <source>Right-click to edit address or label</source>
         <translation>Clic derecho para editar dirección o etiqueta</translation>
     </message>
     <message>
+=======
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_es_UY.ts
         <source>Create a new address</source>
         <translation>Crear una nueva dirección </translation>
     </message>

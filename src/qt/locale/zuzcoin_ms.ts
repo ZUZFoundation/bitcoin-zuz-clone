@@ -1,7 +1,18 @@
+<<<<<<< HEAD:src/qt/locale/zuzcoin_ms.ts
 <TS language="ms" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
+=======
+<TS language="ms_MY" version="2.1">
+<context>
+    <name>AddressBookPage</name>
+    <message>
+        <source>Create a new address</source>
+        <translation>Cipta alamat baru</translation>
+    </message>
+    <message>
+>>>>>>> elements/alpha:src/qt/locale/bitcoin_ms_MY.ts
         <source>&amp;New</source>
         <translation>&amp;Baru</translation>
     </message>
