@@ -8,10 +8,10 @@
 
     Zuzcoin should be started with the command line arguments:
         zuzcoind -testnet -daemon \
-                -zmqpubrawtx=tcp://127.0.0.1:24847 \
-                -zmqpubrawblock=tcp://127.0.0.1:24847 \
-                -zmqpubhashtx=tcp://127.0.0.1:24847 \
-                -zmqpubhashblock=tcp://127.0.0.1:24847
+                -zmqpubrawtx=tcp://127.0.0.1:24865 \
+                -zmqpubrawblock=tcp://127.0.0.1:24865 \
+                -zmqpubhashtx=tcp://127.0.0.1:24865 \
+                -zmqpubhashblock=tcp://127.0.0.1:24865
 
     We use the asyncio library here.  `self.handle()` installs itself as a
     future at the end of the function.  Since it never returns with the event
@@ -34,7 +34,7 @@ if not (sys.version_info.major >= 3 and sys.version_info.minor >= 5):
     print("This example only works with Python 3.5 and greater")
     sys.exit(1)
 
-port = 24847
+port = 24865
 
 class ZMQHandler():
     def __init__(self):
