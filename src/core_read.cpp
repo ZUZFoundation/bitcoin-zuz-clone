@@ -27,7 +27,11 @@ CScript ParseScript(const std::string& s)
 
     if (mapOpNames.empty())
     {
+<<<<<<< HEAD
         for (unsigned int op = 0; op <= MAX_OPCODE; op++)
+=======
+        for (int op = 0; op < 0xff; op++)
+>>>>>>> elements/alpha
         {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED)
@@ -80,7 +84,11 @@ CScript ParseScript(const std::string& s)
         }
         else
         {
+<<<<<<< HEAD
             throw std::runtime_error("script parse error");
+=======
+            throw runtime_error("script parse error: '" + s + "'");
+>>>>>>> elements/alpha
         }
     }
 
@@ -90,6 +98,7 @@ CScript ParseScript(const std::string& s)
 // Check that all of the input and output scripts of a transaction contains valid opcodes
 bool CheckTxScriptsSanity(const CMutableTransaction& tx)
 {
+<<<<<<< HEAD
     // Check input scripts for non-coinbase txs
     if (!CTransaction(tx).IsCoinBase()) {
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -97,6 +106,17 @@ bool CheckTxScriptsSanity(const CMutableTransaction& tx)
                 return false;
             }
         }
+=======
+    if (!IsHex(strHexTx))
+        return false;
+
+    vector<unsigned char> txData(ParseHex(strHexTx));
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ssData >> tx;
+        if (!ssData.empty())
+            return false;
+>>>>>>> elements/alpha
     }
     // Check output scripts
     for (unsigned int i = 0; i < tx.vout.size(); i++) {

@@ -7,7 +7,7 @@
 #define BITCOIN_COMPAT_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/zuzcoin-config.h>
 #endif
 
 #ifdef WIN32
@@ -82,9 +82,18 @@ typedef int32_t ssize_t;
 #endif
 #endif
 
-#if HAVE_DECL_STRNLEN == 0
-size_t strnlen( const char *start, size_t max_len);
-#endif // HAVE_DECL_STRNLEN
+#ifndef WIN32
+// PRIO_MAX is not defined on Solaris
+#ifndef PRIO_MAX
+#define PRIO_MAX 20
+#endif
+#define THREAD_PRIORITY_LOWEST          PRIO_MAX
+#define THREAD_PRIORITY_BELOW_NORMAL    2
+#define THREAD_PRIORITY_NORMAL          0
+#define THREAD_PRIORITY_ABOVE_NORMAL    (-2)
+#endif
+
+size_t strnlen_int( const char *start, size_t max_len);
 
 bool static inline IsSelectableSocket(const SOCKET& s) {
 #ifdef WIN32

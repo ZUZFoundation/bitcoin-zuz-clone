@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/zuzcoin-config.h>
 #endif
 
 #include <timedata.h>
@@ -101,8 +101,14 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
                 if (!fMatch)
                 {
                     fDone = true;
+<<<<<<< HEAD
                     std::string strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly."), _(PACKAGE_NAME));
                     SetMiscWarning(strMessage);
+=======
+                    string strMessage = _("Warning: Please check that your computer's date and time are correct! If your clock is wrong Elements Alpha will not work properly.");
+                    strMiscWarning = strMessage;
+                    LogPrintf("*** %s\n", strMessage);
+>>>>>>> elements/alpha
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
                 }
             }

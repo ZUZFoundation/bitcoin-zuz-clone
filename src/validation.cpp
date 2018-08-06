@@ -48,7 +48,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Zuzcoin cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001
@@ -237,7 +237,7 @@ CTxMemPool mempool(&feeEstimator);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const std::string strMessageMagic = "Bitcoin Signed Message:\n";
+const std::string strMessageMagic = "Zuzcoin Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -949,7 +949,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // Remove conflicting transactions from the mempool
         for (const CTxMemPool::txiter it : allConflicting)
         {
-            LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
+            LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s ZUZ additional fees, %d delta bytes\n",
                     it->GetTx().GetHash().ToString(),
                     hash.ToString(),
                     FormatMoney(nModifiedFees - nConflictingFees),
@@ -1143,6 +1143,48 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+    if(nHeight <= consensusParams.zuzPremineChainHeight)
+    {
+        //Premining subsidy
+        return 110000 * COIN;
+    }
+    //This factor will be used to change the threashold value for next subsidy change.
+    static int thresholdChangefactor = 1;
+
+    static CAmount nSubsidy = 350 * COIN;
+    static CAmount subsidyChangeThreashold = consensusParams.zuzSubsidyChangeThreashold + consensusParams.zuzPremineChainHeight;
+
+    if(nHeight > subsidyChangeThreashold)
+    {
+        if(nHeight - 1 != consensusParams.zuzSubsidyChangeThreashold + consensusParams.zuzPremineChainHeight)
+        {
+            // All Cases when nHeight breaches the subsidyChangeThreashold other than first time.
+            nSubsidy = nSubsidy * 75 / 100;
+        }
+        else
+        {
+            //First time when nHeight breaches the subsidyChangeThreashold.
+            //The subsidy will be halved.
+            nSubsidy = nSubsidy * 50 / 100;
+        }
+
+        // This will update the threshold in a way so that we can have a smooth curve between time and mined coins.
+        subsidyChangeThreashold += 3 * consensusParams.zuzThresholdChangefactorValue * thresholdChangefactor;
+        ++thresholdChangefactor;
+    }
+
+    if(nSubsidy < (1 * COIN))
+    {
+        // Near about after 191 years and 2 months supply will be zero.
+        return 0;
+    }
+
+    return nSubsidy;
+
+
+    /*
+     * Old Logic
+
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
@@ -1152,6 +1194,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
+
+    */
 }
 
 bool IsInitialBlockDownload()
@@ -1682,7 +1726,7 @@ static bool WriteTxIndexDataForBlock(const CBlock& block, CValidationState& stat
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
-    RenameThread("bitcoin-scriptch");
+    RenameThread("zuzcoin-scriptch");
     scriptcheckqueue.Thread();
 }
 
@@ -3014,8 +3058,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // Note that witness malleability is checked in ContextualCheckBlock, so no
     // checks that use witness data may be performed here.
 
+
+#ifndef HIM_NDEBUG
+    LogPrintf("HIM : Check block block.vtx.size() : %i", block.vtx.size());
+    LogPrintf("HIM : Check block GetSerializeSize block size : %i", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS)) ;
+#endif
+
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
+    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BLOCK_WEIGHT)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
@@ -3189,6 +3239,29 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
+        }
+    }
+
+    if (nHeight > 0 &&
+            nHeight <= consensusParams.zuzPremineChainHeight &&
+            consensusParams.zuzPremineEnforcePubKeys)
+    {
+        if (block.vtx[0]->vout.size() != 2)
+        {
+#ifndef HIM_NDEBUG
+            std::cout << "Height : " << nHeight << "  ||  block.vtx[0]->vout.size() : " << block.vtx[0]->vout.size() << std::endl;
+#endif
+            return state.DoS(
+                100, error("%s: only one coinbase output is allowed : ",__func__),
+                REJECT_INVALID, "bad-premine-coinbase-output");
+        }
+        const CTxOut& output = block.vtx[0]->vout[0];
+        bool valid = Params().IsPremineAddressScript(output.scriptPubKey, nHeight);
+        if (!valid)
+        {
+            return state.DoS(
+                100, error("%s: not in premine pub key", __func__),
+                REJECT_INVALID, "bad-premine-coinbase-scriptpubkey");
         }
     }
 

@@ -1,6 +1,6 @@
-usr/local/bin/bitcoin-qt usr/bin
-share/pixmaps/bitcoin32.xpm usr/share/pixmaps
-share/pixmaps/bitcoin16.xpm usr/share/pixmaps
-share/pixmaps/bitcoin128.png usr/share/pixmaps
-debian/bitcoin-qt.desktop usr/share/applications
-debian/bitcoin-qt.protocol usr/share/kde4/services/
+usr/local/bin/zuzcoin-qt usr/bin
+share/pixmaps/zuzcoin32.xpm usr/share/pixmaps
+share/pixmaps/zuzcoin16.xpm usr/share/pixmaps
+share/pixmaps/zuzcoin128.png usr/share/pixmaps
+debian/zuzcoin-qt.desktop usr/share/applications
+debian/zuzcoin-qt.protocol usr/share/kde4/services/

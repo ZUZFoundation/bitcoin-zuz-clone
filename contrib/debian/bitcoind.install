@@ -1,2 +1,2 @@
-usr/local/bin/bitcoind usr/bin
-usr/local/bin/bitcoin-cli usr/bin
+usr/local/bin/zuzcoind usr/bin
+usr/local/bin/zuzcoin-cli usr/bin

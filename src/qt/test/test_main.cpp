@@ -3,14 +3,19 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/zuzcoin-config.h>
 #endif
 
+<<<<<<< HEAD
 #include <chainparams.h>
 #include <qt/test/rpcnestedtests.h>
 #include <util.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
+=======
+#include "util.h"
+#include "uritests.h"
+>>>>>>> elements/alpha
 
 #ifdef ENABLE_WALLET
 #include <qt/test/paymentservertests.h>
@@ -50,14 +55,17 @@ extern void noui_connect();
 int main(int argc, char *argv[])
 {
     SetupEnvironment();
+<<<<<<< HEAD
     SetupNetworking();
     SelectParams(CBaseChainParams::MAIN);
     noui_connect();
     ClearDatadirCache();
-    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
+    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_zuzcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
     fs::create_directories(pathTemp);
     gArgs.ForceSetArg("-datadir", pathTemp.string());
 
+=======
+>>>>>>> elements/alpha
     bool fInvalid = false;
 
     // Prefer the "minimal" platform for the test instead of the normal default
@@ -72,7 +80,7 @@ int main(int argc, char *argv[])
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
     QApplication app(argc, argv);
-    app.setApplicationName("Bitcoin-Qt-test");
+    app.setApplicationName("Zuzcoin-Qt-test");
 
     SSL_library_init();
 

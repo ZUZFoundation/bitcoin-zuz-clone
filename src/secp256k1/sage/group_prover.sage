@@ -3,7 +3,11 @@
 # to independently set assumptions on input or intermediary variables.
 #
 # The general approach is:
+<<<<<<< HEAD
 # * A constraint is a tuple of two sets of symbolic expressions:
+=======
+# * A constraint is a tuple of two sets of of symbolic expressions:
+>>>>>>> elements/alpha
 #   the first of which are required to evaluate to zero, the second of which
 #   are required to evaluate to nonzero.
 #   - A constraint is said to be conflicting if any of its nonzero expressions
@@ -17,7 +21,11 @@
 #   - A constraint describing the requirements of the law, called "require"
 # * Implementations are transliterated into functions that operate as well on
 #   algebraic input points, and are called once per combination of branches
+<<<<<<< HEAD
 #   executed. Each execution returns:
+=======
+#   exectured. Each execution returns:
+>>>>>>> elements/alpha
 #   - A constraint describing the assumptions this implementation requires
 #     (such as Z1=1), called "assumeFormula"
 #   - A constraint describing the assumptions this specific branch requires,

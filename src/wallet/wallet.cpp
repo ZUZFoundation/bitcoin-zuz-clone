@@ -35,6 +35,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
+#include <boost/make_shared.hpp>
 
 std::vector<CWalletRef> vpwallets;
 /** Transaction fee set by the user */
@@ -2317,8 +2318,8 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
     // CWalletTx objects, callers to this function really should acquire the
     // cs_wallet lock before calling it. However, the current caller doesn't
     // acquire this lock yet. There was an attempt to add the missing lock in
-    // https://github.com/bitcoin/bitcoin/pull/10340, but that change has been
-    // postponed until after https://github.com/bitcoin/bitcoin/pull/10244 to
+    // https://github.com/zuzcoin/zuzcoin/pull/10340, but that change has been
+    // postponed until after https://github.com/zuzcoin/zuzcoin/pull/10244 to
     // avoid adding some extra complexity to the Qt code.
 
     std::map<CTxDestination, std::vector<COutput>> result;
@@ -2770,7 +2771,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so
-            // change transaction isn't always pay-to-bitcoin-address
+            // change transaction isn't always pay-to-zuzcoin-address
             CScript scriptChange;
 
             // coin control: send change to custom address
@@ -3693,9 +3694,12 @@ void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
     }
 }
 
-void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
+void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 {
-    std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
+#ifndef HIM_NDEBUG
+    std::cout << "HIM :: CWallete GetScriptForMining " << std::endl;
+#endif
+    boost::shared_ptr<CReserveKey> rKey = boost::make_shared<CReserveKey>(this);
     CPubKey pubkey;
     if (!rKey->GetReservedKey(pubkey))
         return;
@@ -3811,8 +3815,8 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) c
  *   the block time.
  *
  * For more information see CWalletTx::nTimeSmart,
- * https://bitcointalk.org/?topic=54527, or
- * https://github.com/bitcoin/bitcoin/pull/1393.
+ * https://zuzcointalk.org/?topic=54527, or
+ * https://github.com/zuzcoin/zuzcoin/pull/1393.
  */
 unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
 {
@@ -4029,6 +4033,10 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     }
 
     walletInstance->m_last_block_processed = chainActive.Tip();
+
+#ifndef HIM_NDEBUG
+            std::cout << "HIM :: Create wallet from file RegisterValidationInterface " << std::endl;
+#endif
     RegisterValidationInterface(walletInstance);
 
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)

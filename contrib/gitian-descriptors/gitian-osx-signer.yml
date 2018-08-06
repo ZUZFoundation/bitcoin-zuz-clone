@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-dmg-signer"
+name: "zuzcoin-dmg-signer"
 suites:
 - "trusty"
 architectures:
@@ -7,10 +7,15 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
+- "url": "https://github.com/zuzcoin-core/zuzcoin-detached-sigs.git"
   "dir": "signature"
 files:
+<<<<<<< HEAD
+- "zuzcoin-osx-unsigned.tar.gz"
+=======
 - "bitcoin-osx-unsigned.tar.gz"
+- "signature.tar.gz"
+>>>>>>> elements/alpha
 script: |
   WRAP_DIR=$HOME/wrapped
   mkdir -p ${WRAP_DIR}
@@ -27,8 +32,13 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
+<<<<<<< HEAD
+  UNSIGNED=zuzcoin-osx-unsigned.tar.gz
+  SIGNED=zuzcoin-osx-signed.dmg
+=======
   UNSIGNED=bitcoin-osx-unsigned.tar.gz
   SIGNED=bitcoin-osx-signed.dmg
+>>>>>>> elements/alpha
 
   tar -xf ${UNSIGNED}
   OSX_VOLNAME="$(cat osx_volname)"

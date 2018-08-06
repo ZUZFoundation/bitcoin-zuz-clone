@@ -5,6 +5,7 @@
 
 #include <key.h>
 
+<<<<<<< HEAD
 #include <arith_uint256.h>
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
@@ -72,6 +73,60 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
         return 0;
     }
     memcpy(out32 + (32 - oslen), privkey, oslen);
+=======
+#include "crypto/common.h"
+#include "crypto/hmac_sha512.h"
+#include "crypto/rfc6979_hmac_sha256.h"
+#include "eccryptoverify.h"
+#include "pubkey.h"
+#include "random.h"
+
+#include <secp256k1.h>
+#include <secp256k1_ecdh.h>
+#include <secp256k1_schnorr.h>
+#include <secp256k1_recovery.h>
+
+static secp256k1_context* secp256k1_context_sign = NULL;
+
+/** These functions are taken from the libsecp256k1 distribution and are very ugly. */
+static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, const unsigned char *privkey, size_t privkeylen) {
+    const unsigned char *end = privkey + privkeylen;
+    int lenb = 0;
+    int len = 0;
+    memset(out32, 0, 32);
+    /* sequence header */
+    if (end < privkey+1 || *privkey != 0x30) {
+        return 0;
+    }
+    privkey++;
+    /* sequence length constructor */
+    if (end < privkey+1 || !(*privkey & 0x80)) {
+        return 0;
+    }
+    lenb = *privkey & ~0x80; privkey++;
+    if (lenb < 1 || lenb > 2) {
+        return 0;
+    }
+    if (end < privkey+lenb) {
+        return 0;
+    }
+    /* sequence length */
+    len = privkey[lenb-1] | (lenb > 1 ? privkey[lenb-2] << 8 : 0);
+    privkey += lenb;
+    if (end < privkey+len) {
+        return 0;
+    }
+    /* sequence element 0: version number (=1) */
+    if (end < privkey+3 || privkey[0] != 0x02 || privkey[1] != 0x01 || privkey[2] != 0x01) {
+        return 0;
+    }
+    privkey += 3;
+    /* sequence element 1: octet string, up to 32 bytes */
+    if (end < privkey+2 || privkey[0] != 0x04 || privkey[1] > 0x20 || end < privkey+2+privkey[1]) {
+        return 0;
+    }
+    memcpy(out32 + 32 - privkey[1], privkey + 2, privkey[1]);
+>>>>>>> elements/alpha
     if (!secp256k1_ec_seckey_verify(ctx, out32)) {
         memset(out32, 0, 32);
         return 0;
@@ -79,6 +134,7 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
     return 1;
 }
 
+<<<<<<< HEAD
 /**
  * This serializes to a DER encoding of the ECPrivateKey type from section C.4 of SEC 1
  * <http://www.secg.org/sec1-v2.pdf>. The optional parameters and publicKey fields are
@@ -91,6 +147,9 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
  */
 static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
     assert(*privkeylen >= CKey::PRIVATE_KEY_SIZE);
+=======
+static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
+>>>>>>> elements/alpha
     secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
     if (!secp256k1_ec_pubkey_create(ctx, &pubkey, key32)) {
@@ -116,11 +175,18 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
+<<<<<<< HEAD
         pubkeylen = CPubKey::COMPRESSED_PUBLIC_KEY_SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
         assert(*privkeylen == CKey::COMPRESSED_PRIVATE_KEY_SIZE);
+=======
+        pubkeylen = 33;
+        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
+        ptr += pubkeylen;
+        *privkeylen = ptr - privkey;
+>>>>>>> elements/alpha
     } else {
         static const unsigned char begin[] = {
             0x30,0x82,0x01,0x13,0x02,0x01,0x01,0x04,0x20
@@ -142,11 +208,18 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
+<<<<<<< HEAD
         pubkeylen = CPubKey::PUBLIC_KEY_SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
         assert(*privkeylen == CKey::PRIVATE_KEY_SIZE);
+=======
+        pubkeylen = 65;
+        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+        ptr += pubkeylen;
+        *privkeylen = ptr - privkey;
+>>>>>>> elements/alpha
     }
     return 1;
 }
@@ -163,14 +236,31 @@ void CKey::MakeNewKey(bool fCompressedIn) {
     fCompressed = fCompressedIn;
 }
 
+<<<<<<< HEAD
+=======
+bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
+    if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), &privkey[0], privkey.size()))
+        return false;
+    fCompressed = fCompressedIn;
+    fValid = true;
+    return true;
+}
+
+>>>>>>> elements/alpha
 CPrivKey CKey::GetPrivKey() const {
     assert(fValid);
     CPrivKey privkey;
     int ret;
     size_t privkeylen;
+<<<<<<< HEAD
     privkey.resize(PRIVATE_KEY_SIZE);
     privkeylen = PRIVATE_KEY_SIZE;
     ret = ec_privkey_export_der(secp256k1_context_sign, (unsigned char*) privkey.data(), &privkeylen, begin(), fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+=======
+    privkey.resize(279);
+    privkeylen = 279;
+    ret = ec_privkey_export_der(secp256k1_context_sign, (unsigned char*)&privkey[0], &privkeylen, begin(), fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+>>>>>>> elements/alpha
     assert(ret);
     privkey.resize(privkeylen);
     return privkey;
@@ -181,7 +271,15 @@ CPubKey CKey::GetPubKey() const {
     secp256k1_pubkey pubkey;
     size_t clen = CPubKey::PUBLIC_KEY_SIZE;
     CPubKey result;
+<<<<<<< HEAD
     int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, begin());
+=======
+    size_t clen = 65;
+    secp256k1_pubkey pubkey;
+    int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, begin());
+    secp256k1_ec_pubkey_serialize(secp256k1_context_sign, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    assert(result.size() == clen);
+>>>>>>> elements/alpha
     assert(ret);
     secp256k1_ec_pubkey_serialize(secp256k1_context_sign, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     assert(result.size() == clen);
@@ -189,9 +287,19 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
+uint256 CKey::ECDH(const CPubKey& pubkey) const {
+    assert(fValid);
+    uint256 result;
+    secp256k1_pubkey pkey;
+    assert(secp256k1_ec_pubkey_parse(secp256k1_context_sign, &pkey, pubkey.begin(), pubkey.size()));
+    assert(secp256k1_ecdh(secp256k1_context_sign, result.begin(), &pkey, begin()));
+    return result;
+}
+
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;
+<<<<<<< HEAD
     vchSig.resize(CPubKey::SIGNATURE_SIZE);
     size_t nSigLen = CPubKey::SIGNATURE_SIZE;
     unsigned char extra_entropy[32] = {0};
@@ -200,6 +308,14 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
     int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, test_case ? extra_entropy : nullptr);
     assert(ret);
     secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, (unsigned char*)vchSig.data(), &nSigLen, &sig);
+=======
+    vchSig.resize(72);
+    int nSigLen = 64;
+    unsigned char extra_entropy[32] = {0};
+    WriteLE32(extra_entropy, test_case);
+    int ret = secp256k1_schnorr_sign(secp256k1_context_sign, (unsigned char*)&vchSig[0], hash.begin(), begin(), secp256k1_nonce_function_rfc6979, test_case ? extra_entropy : NULL);
+    assert(ret);
+>>>>>>> elements/alpha
     vchSig.resize(nSigLen);
     return true;
 }
@@ -209,7 +325,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
         return false;
     }
     unsigned char rnd[8];
-    std::string str = "Bitcoin key verification\n";
+    std::string str = "Zuzcoin key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
     CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
@@ -224,7 +340,11 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     vchSig.resize(CPubKey::COMPACT_SIGNATURE_SIZE);
     int rec = -1;
     secp256k1_ecdsa_recoverable_signature sig;
+<<<<<<< HEAD
     int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, nullptr);
+=======
+    int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, NULL);
+>>>>>>> elements/alpha
     assert(ret);
     secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_sign, (unsigned char*)&vchSig[1], &rec, &sig);
     assert(ret);
@@ -233,8 +353,13 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     return true;
 }
 
+<<<<<<< HEAD
 bool CKey::Load(const CPrivKey &privkey, const CPubKey &vchPubKey, bool fSkipCheck=false) {
     if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), privkey.data(), privkey.size()))
+=======
+bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
+    if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), &privkey[0], privkey.size()))
+>>>>>>> elements/alpha
         return false;
     fCompressed = vchPubKey.IsCompressed();
     fValid = true;
@@ -259,7 +384,12 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     }
     memcpy(ccChild.begin(), vout.data()+32, 32);
     memcpy((unsigned char*)keyChild.begin(), begin(), 32);
+<<<<<<< HEAD
     bool ret = secp256k1_ec_privkey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
+=======
+    bool ret = secp256k1_ec_privkey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), out);
+    UnlockObject(out);
+>>>>>>> elements/alpha
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
     return ret;
@@ -320,6 +450,7 @@ bool ECC_InitSanityCheck() {
     return key.VerifyPubKey(pubkey);
 }
 
+<<<<<<< HEAD
 void ECC_Start() {
     assert(secp256k1_context_sign == nullptr);
 
@@ -332,6 +463,23 @@ void ECC_Start() {
         GetRandBytes(vseed.data(), 32);
         bool ret = secp256k1_context_randomize(ctx, vseed.data());
         assert(ret);
+=======
+
+void ECC_Start() {
+    assert(secp256k1_context_sign == NULL);
+
+    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    assert(ctx != NULL);
+
+    {
+        // Pass in a random blinding seed to the secp256k1 context.
+        unsigned char seed[32];
+        LockObject(seed);
+        GetRandBytes(seed, 32);
+        bool ret = secp256k1_context_randomize(ctx, seed);
+        assert(ret);
+        UnlockObject(seed);
+>>>>>>> elements/alpha
     }
 
     secp256k1_context_sign = ctx;
@@ -339,7 +487,11 @@ void ECC_Start() {
 
 void ECC_Stop() {
     secp256k1_context *ctx = secp256k1_context_sign;
+<<<<<<< HEAD
     secp256k1_context_sign = nullptr;
+=======
+    secp256k1_context_sign = NULL;
+>>>>>>> elements/alpha
 
     if (ctx) {
         secp256k1_context_destroy(ctx);

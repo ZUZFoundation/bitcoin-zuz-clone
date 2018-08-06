@@ -16,7 +16,7 @@
 
 namespace {
 /**
- * Valid signature cache, to avoid doing expensive ECDSA signature checking
+ * Valid signature cache, to avoid doing expensive signature checking
  * twice for every transaction (once when accepted into memory pool, and
  * again when accepted into the block chain)
  */
@@ -86,6 +86,10 @@ bool CachingTransactionSignatureChecker::VerifySignature(const std::vector<unsig
     signatureCache.ComputeEntry(entry, sighash, vchSig, pubkey);
     if (signatureCache.Get(entry, !store))
         return true;
+<<<<<<< HEAD
+=======
+
+>>>>>>> elements/alpha
     if (!TransactionSignatureChecker::VerifySignature(vchSig, pubkey, sighash))
         return false;
     if (store)

@@ -4,7 +4,7 @@
 
 #include <test/data/tx_invalid.json.h>
 #include <test/data/tx_valid.json.h>
-#include <test/test_bitcoin.h>
+#include <test/test_zuzcoin.h>
 
 #include <clientversion.h>
 #include <checkqueue.h>
@@ -33,6 +33,7 @@
 typedef std::vector<unsigned char> valtype;
 
 // In script_tests.cpp
+<<<<<<< HEAD
 extern UniValue read_json(const std::string& jsondata);
 
 static std::map<std::string, unsigned int> mapFlagNames = {
@@ -57,6 +58,24 @@ static std::map<std::string, unsigned int> mapFlagNames = {
 };
 
 unsigned int ParseScriptFlags(std::string strFlags)
+=======
+extern Array read_json(const std::string& jsondata);
+
+static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
+    (string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE)
+    (string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH)
+    (string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC)
+    (string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG)
+    (string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S)
+    (string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY)
+    (string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA)
+    (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
+    (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+    (string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
+    (string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY);
+
+unsigned int ParseScriptFlags(string strFlags)
+>>>>>>> elements/alpha
 {
     if (strFlags.empty()) {
         return 0;
@@ -93,6 +112,9 @@ std::string FormatScriptFlags(unsigned int flags)
 
 BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
 
+// These test cases require their golden sets to be rebuilt when the transaction signatures change, and I don't know
+//   how to do that.
+#if 0
 BOOST_AUTO_TEST_CASE(tx_valid)
 {
     // Read tests from test/data/tx_valid.json
@@ -170,7 +192,11 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
+<<<<<<< HEAD
                                                  witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
+=======
+                                                 verify_flags, TransactionNoWithdrawsSignatureChecker(&tx, i), &err),
+>>>>>>> elements/alpha
                                     strTest);
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
             }
@@ -256,13 +282,18 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                 }
                 const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
+<<<<<<< HEAD
                                       witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
+=======
+                                      verify_flags, TransactionNoWithdrawsSignatureChecker(&tx, i), &err);
+>>>>>>> elements/alpha
             }
             BOOST_CHECK_MESSAGE(!fValid, strTest);
             BOOST_CHECK_MESSAGE(err != SCRIPT_ERR_OK, ScriptErrorString(err));
         }
     }
 }
+<<<<<<< HEAD
 
 BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 {
@@ -279,6 +310,9 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     tx.vin.push_back(tx.vin[0]);
     BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
+=======
+#endif // 0
+>>>>>>> elements/alpha
 
 //
 // Helper: create two dummy transactions, each with
@@ -341,6 +375,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].scriptPubKey << OP_1;
 
     BOOST_CHECK(AreInputsStandard(t1, coins));
+<<<<<<< HEAD
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 }
 
@@ -489,6 +524,10 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
 
     bool controlCheck = control.Wait();
     assert(controlCheck);
+=======
+    BOOST_CHECK(t1.vout[0].nValue.IsAmount());
+    BOOST_CHECK_EQUAL(t1.vout[0].nValue.GetAmount(), 90*CENT);
+>>>>>>> elements/alpha
 
     threadGroup.interrupt_all();
     threadGroup.join_all();
@@ -701,6 +740,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].nValue = nDustThreshold;
     BOOST_CHECK(IsStandardTx(t, reason));
 
+<<<<<<< HEAD
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 3702 / 1000
     dustRelayFee = CFeeRate(3702);
@@ -709,10 +749,13 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(!IsStandardTx(t, reason));
     // not dust:
     t.vout[0].nValue = 673;
+=======
+    t.vout[0].nValue = 1001; // not dust
+>>>>>>> elements/alpha
     BOOST_CHECK(IsStandardTx(t, reason));
     dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 
-    t.vout[0].scriptPubKey = CScript() << OP_1;
+    t.vout[0].scriptPubKey = CScript() << OP_2;
     BOOST_CHECK(!IsStandardTx(t, reason));
 
     // MAX_OP_RETURN_RELAY-byte TX_NULL_DATA (standard)

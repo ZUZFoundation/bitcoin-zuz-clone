@@ -77,7 +77,11 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
                 secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej, NULL);
             }
         }
+<<<<<<< HEAD
         secp256k1_ge_set_all_gej_var(prec, precj, 1024, cb);
+=======
+        secp256k1_ge_set_all_gej_var(1024, prec, precj, cb);
+>>>>>>> elements/alpha
     }
     for (j = 0; j < 64; j++) {
         for (i = 0; i < 16; i++) {
@@ -153,6 +157,61 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
     bits = 0;
     secp256k1_ge_clear(&add);
     secp256k1_scalar_clear(&gnb);
+<<<<<<< HEAD
+=======
+}
+
+/* Setup blinding values for secp256k1_ecmult_gen. */
+static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigned char *seed32) {
+    secp256k1_scalar b;
+    secp256k1_gej gb;
+    secp256k1_fe s;
+    unsigned char nonce32[32];
+    secp256k1_rfc6979_hmac_sha256_t rng;
+    int retry;
+    unsigned char keydata[64] = {0};
+    if (seed32 == NULL) {
+        /* When seed is NULL, reset the initial point and blinding value. */
+        secp256k1_gej_set_ge(&ctx->initial, &secp256k1_ge_const_g);
+        secp256k1_gej_neg(&ctx->initial, &ctx->initial);
+        secp256k1_scalar_set_int(&ctx->blind, 1);
+    }
+    /* The prior blinding value (if not reset) is chained forward by including it in the hash. */
+    secp256k1_scalar_get_b32(nonce32, &ctx->blind);
+    /** Using a CSPRNG allows a failure free interface, avoids needing large amounts of random data,
+     *   and guards against weak or adversarial seeds.  This is a simpler and safer interface than
+     *   asking the caller for blinding values directly and expecting them to retry on failure.
+     */
+    memcpy(keydata, nonce32, 32);
+    if (seed32 != NULL) {
+        memcpy(keydata + 32, seed32, 32);
+    }
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, seed32 ? 64 : 32);
+    memset(keydata, 0, sizeof(keydata));
+    /* Retry for out of range results to achieve uniformity. */
+    do {
+        secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+        retry = !secp256k1_fe_set_b32(&s, nonce32);
+        retry |= secp256k1_fe_is_zero(&s);
+    } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > Fp. */
+    /* Randomize the projection to defend against multiplier sidechannels. */
+    secp256k1_gej_rescale(&ctx->initial, &s);
+    secp256k1_fe_clear(&s);
+    do {
+        secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+        secp256k1_scalar_set_b32(&b, nonce32, &retry);
+        /* A blinding value of 0 works, but would undermine the projection hardening. */
+        retry |= secp256k1_scalar_is_zero(&b);
+    } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > order. */
+    secp256k1_rfc6979_hmac_sha256_finalize(&rng);
+    memset(nonce32, 0, 32);
+    secp256k1_ecmult_gen(ctx, &gb, &b);
+    secp256k1_scalar_negate(&b, &b);
+    ctx->blind = b;
+    ctx->initial = gb;
+    secp256k1_scalar_clear(&b);
+    secp256k1_gej_clear(&gb);
+>>>>>>> elements/alpha
 }
 
 /* Setup blinding values for secp256k1_ecmult_gen. */

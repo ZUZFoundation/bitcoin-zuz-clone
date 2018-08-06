@@ -6,6 +6,7 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
+<<<<<<< HEAD
 #include <stdint.h>
 #include <amount.h>
 #include <script/script.h>
@@ -13,6 +14,72 @@
 #include <uint256.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
+=======
+#include "amount.h"
+#include "hash.h"
+#include "script/script.h"
+#include "serialize.h"
+#include "uint256.h"
+>>>>>>> elements/alpha
+
+#define SERIALIZE_VERSION_MASK_NO_WITNESS   0x40000000
+#define SERIALIZE_VERSION_MASK_ONLY_WITNESS 0x80000000
+#define SERIALIZE_VERSION_MASK_BITCOIN_TX   0x20000000
+#define SERIALIZE_VERSION_MASK_PREHASH      0x10000000
+
+class CTxOutValue
+{
+public:
+    static const size_t nCommitmentSize = 33;
+
+    std::vector<unsigned char> vchCommitment;
+    std::vector<unsigned char> vchRangeproof;
+    std::vector<unsigned char> vchNonceCommitment;
+
+    CTxOutValue();
+    CTxOutValue(CAmount);
+    CTxOutValue(const std::vector<unsigned char>& vchValueCommitment, const std::vector<unsigned char>& vchRangeproofIn);
+
+    ADD_SERIALIZE_METHODS;
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        bool fBitcoinTx = nVersion & SERIALIZE_VERSION_MASK_BITCOIN_TX;
+        bool fWitness = (nVersion & SERIALIZE_VERSION_MASK_NO_WITNESS) == 0;
+        bool fOnlyWitness = nVersion & SERIALIZE_VERSION_MASK_ONLY_WITNESS;
+        assert(!fBitcoinTx || IsAmount() || (IsNull() && ser_action.ForRead()));
+        if (fBitcoinTx) {
+            CAmount amount = 0;
+            if (!ser_action.ForRead())
+                amount = GetAmount();
+            READWRITE(amount);
+            if (ser_action.ForRead())
+                SetToAmount(amount);
+        } else {
+            if (!fOnlyWitness) READWRITE(REF(CFlatData(&vchCommitment[0], &vchCommitment[nCommitmentSize])));
+            if (fWitness) {
+                if (nVersion & SERIALIZE_VERSION_MASK_PREHASH) {
+                    uint256 prehash = (CHashWriter(nType, nVersion) << vchRangeproof << vchNonceCommitment).GetHash();
+                    READWRITE(prehash);
+                } else {
+                    READWRITE(vchRangeproof);
+                    READWRITE(vchNonceCommitment);
+                }
+            }
+        }
+    }
+
+    bool IsValid() const;
+    bool IsNull() const;
+    bool IsAmount() const;
+
+    CAmount GetAmount() const;
+    void SetToAmount(CAmount nAmount);
+
+    friend bool operator==(const CTxOutValue& a, const CTxOutValue& b);
+    friend bool operator!=(const CTxOutValue& a, const CTxOutValue& b);
+};
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -95,19 +162,37 @@ public:
 
     CTxIn()
     {
+<<<<<<< HEAD
         nSequence = SEQUENCE_FINAL;
     }
 
     explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
     CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+=======
+        nSequence = ~(uint32_t)0;
+    }
+
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=~(uint32_t)0);
+    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=~(uint32_t)0);
+>>>>>>> elements/alpha
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
+<<<<<<< HEAD
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(prevout);
         READWRITE(scriptSig);
         READWRITE(nSequence);
+=======
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fWitness = (nVersion & SERIALIZE_VERSION_MASK_NO_WITNESS) == 0;
+        bool fOnlyWitness = nVersion & SERIALIZE_VERSION_MASK_ONLY_WITNESS;
+        assert((nType != SER_GETHASH && !fOnlyWitness && fWitness) || nType == SER_GETHASH);
+        if (!fOnlyWitness) READWRITE(prevout);
+        if (fWitness)      READWRITE(scriptSig);
+        if (!fOnlyWitness) READWRITE(nSequence);
+>>>>>>> elements/alpha
     }
 
     friend bool operator==(const CTxIn& a, const CTxIn& b)
@@ -131,7 +216,7 @@ public:
 class CTxOut
 {
 public:
-    CAmount nValue;
+    CTxOutValue nValue;
     CScript scriptPubKey;
 
     CTxOut()
@@ -139,7 +224,7 @@ public:
         SetNull();
     }
 
-    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const CTxOutValue& valueIn, CScript scriptPubKeyIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -151,15 +236,35 @@ public:
 
     void SetNull()
     {
-        nValue = -1;
+        nValue = CTxOutValue();
         scriptPubKey.clear();
     }
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return nValue.IsNull() && scriptPubKey.empty();
     }
 
+<<<<<<< HEAD
+=======
+    bool IsDust(CFeeRate minRelayTxFee) const
+    {
+        if (!nValue.IsAmount())
+            return false;  // FIXME
+
+        // "Dust" is defined in terms of CTransaction::minRelayTxFee,
+        // which has units satoshis-per-kilobyte.
+        // If you'd pay more than 1/3 in fees
+        // to spend something, then we consider it dust.
+        // A typical txout is 34 bytes big, and will
+        // need a CTxIn of at least 148 bytes to spend:
+        // so dust is a txout less than 546 satoshis 
+        // with default minRelayTxFee.
+        size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
+        return (nValue.GetAmount() < 3*minRelayTxFee.GetFee(nSize));
+    }
+
+>>>>>>> elements/alpha
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
@@ -263,6 +368,17 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
  */
 class CTransaction
 {
+<<<<<<< HEAD
+=======
+private:
+    /** Memory only. */
+    const uint256 hash;
+    const uint256 hashWitness; // Just witness
+    const uint256 hashFull; // Including witness
+    const uint256 hashBitcoin; // For Bitcoin Transactions
+    void UpdateHash() const;
+
+>>>>>>> elements/alpha
 public:
     // Default transaction version.
     static const int32_t CURRENT_VERSION=2;
@@ -279,6 +395,7 @@ public:
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
     const std::vector<CTxIn> vin;
+    const CAmount nTxFee;
     const std::vector<CTxOut> vout;
     const int32_t nVersion;
     const uint32_t nLockTime;
@@ -297,9 +414,30 @@ public:
     CTransaction(const CMutableTransaction &tx);
     CTransaction(CMutableTransaction &&tx);
 
+<<<<<<< HEAD
     template <typename Stream>
     inline void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
+=======
+    CTransaction& operator=(const CTransaction& tx);
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fWitness = (nVersion & SERIALIZE_VERSION_MASK_NO_WITNESS) == 0;
+        bool fOnlyWitness = nVersion & SERIALIZE_VERSION_MASK_ONLY_WITNESS;
+        bool fBitcoinTx = nVersion & SERIALIZE_VERSION_MASK_BITCOIN_TX;
+        assert(!fBitcoinTx || (fBitcoinTx && fWitness && !fOnlyWitness));
+        assert((nType != SER_GETHASH && !fOnlyWitness && fWitness) || nType == SER_GETHASH);
+        if (!fOnlyWitness)                READWRITE(*const_cast<int32_t*>(&this->nVersion));
+                                          READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
+        if (!fBitcoinTx && !fOnlyWitness) READWRITE(*const_cast<CAmount*>(&nTxFee));
+        if (!fOnlyWitness)                READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
+        if (!fOnlyWitness)                READWRITE(*const_cast<uint32_t*>(&nLockTime));
+        if (ser_action.ForRead())
+            UpdateHash();
+>>>>>>> elements/alpha
     }
 
     /** This deserializing constructor is provided instead of an Unserialize method.
@@ -311,10 +449,12 @@ public:
         return vin.empty() && vout.empty();
     }
 
+    /* Transaction hash without witness information */
     const uint256& GetHash() const {
         return hash;
     }
 
+<<<<<<< HEAD
     // Compute a hash that includes both transaction and witness data
     uint256 GetWitnessHash() const;
 
@@ -322,6 +462,23 @@ public:
     CAmount GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
+=======
+    /* Transaction hash including witness information */
+    const uint256& GetFullHash() const {
+        return hashFull;
+    }
+
+    /* Hash of just witness information */
+    const uint256& GetWitnessHash() const {
+        return hashWitness;
+    }
+
+    /* Transaction hash including witness information */
+    const uint256& GetBitcoinHash() const {
+        assert(hashBitcoin != 0);
+        return hashBitcoin;
+    }
+>>>>>>> elements/alpha
 
     /**
      * Get the total transaction size in bytes, including witness data.
@@ -362,6 +519,7 @@ public:
 struct CMutableTransaction
 {
     std::vector<CTxIn> vin;
+    CAmount nTxFee;
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
@@ -374,6 +532,7 @@ struct CMutableTransaction
         SerializeTransaction(*this, s);
     }
 
+<<<<<<< HEAD
 
     template <typename Stream>
     inline void Unserialize(Stream& s) {
@@ -383,6 +542,25 @@ struct CMutableTransaction
     template <typename Stream>
     CMutableTransaction(deserialize_type, Stream& s) {
         Unserialize(s);
+=======
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fWitness = (nVersion & SERIALIZE_VERSION_MASK_NO_WITNESS) == 0;
+        bool fOnlyWitness = nVersion & SERIALIZE_VERSION_MASK_ONLY_WITNESS;
+        bool fBitcoinTx = nVersion & SERIALIZE_VERSION_MASK_BITCOIN_TX;
+        assert(!fBitcoinTx);
+        assert((nType != SER_GETHASH && !fOnlyWitness && fWitness) || nType == SER_GETHASH);
+        if (!fOnlyWitness) READWRITE(this->nVersion);
+                           READWRITE(vin);
+        if (!fOnlyWitness) READWRITE(nTxFee);
+        if (!fOnlyWitness) READWRITE(vout);
+        if (!fOnlyWitness) READWRITE(nLockTime);
+    }
+
+    bool IsCoinBase() const
+    {
+        return (vin.size() == 1 && vin[0].prevout.IsNull());
+>>>>>>> elements/alpha
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the

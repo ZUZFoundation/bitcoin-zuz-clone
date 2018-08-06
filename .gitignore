@@ -1,6 +1,7 @@
 *.tar.gz
 
 *.exe
+<<<<<<< HEAD
 src/bitcoin
 src/bitcoind
 src/bitcoin-cli
@@ -8,6 +9,14 @@ src/bitcoin-tx
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
+=======
+src/alpha
+src/alphad
+src/alpha-cli
+src/alpha-tx
+src/test/test_alpha
+src/qt/test/test_alpha-qt
+>>>>>>> elements/alpha
 
 # autoreconf
 Makefile.in
@@ -80,6 +89,7 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+<<<<<<< HEAD
 bitcoin-qt
 Bitcoin-Qt.app
 background.tiff*
@@ -87,6 +97,15 @@ background.tiff*
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
+=======
+alpha-qt
+Alpha-Qt.app
+
+# Unit-tests
+Makefile.test
+alpha-qt_test
+src/test/buildenv.py
+>>>>>>> elements/alpha
 
 # Resources cpp
 qrc_*.cpp

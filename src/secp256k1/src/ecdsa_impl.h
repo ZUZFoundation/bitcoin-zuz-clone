@@ -81,6 +81,11 @@ static int secp256k1_der_read_len(const unsigned char **sigp, const unsigned cha
         return -1;
     }
     while (lenleft > 0) {
+<<<<<<< HEAD
+=======
+        if ((ret >> ((sizeof(size_t) - 1) * 8)) != 0) {
+        }
+>>>>>>> elements/alpha
         ret = (ret << 8) | **sigp;
         if (ret + lenleft > (size_t)(sigend - *sigp)) {
             /* Result exceeds the length of the passed array. */
@@ -201,9 +206,13 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
 static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const secp256k1_scalar *message) {
     unsigned char c[32];
     secp256k1_scalar sn, u1, u2;
+<<<<<<< HEAD
 #if !defined(EXHAUSTIVE_TEST_ORDER)
     secp256k1_fe xr;
 #endif
+=======
+    secp256k1_fe xr;
+>>>>>>> elements/alpha
     secp256k1_gej pubkeyj;
     secp256k1_gej pr;
 
@@ -219,6 +228,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
     if (secp256k1_gej_is_infinity(&pr)) {
         return 0;
     }
+<<<<<<< HEAD
 
 #if defined(EXHAUSTIVE_TEST_ORDER)
 {
@@ -230,11 +240,47 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
     secp256k1_fe_get_b32(c, &pr_ge.x);
     secp256k1_scalar_set_b32(&computed_r, c, NULL);
     return secp256k1_scalar_eq(sigr, &computed_r);
+=======
+    secp256k1_scalar_get_b32(c, sigr);
+    secp256k1_fe_set_b32(&xr, c);
+
+    /** We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
+     *  in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),
+     *  compute the remainder modulo n, and compare it to xr. However:
+     *
+     *        xr == X(pr) mod n
+     *    <=> exists h. (xr + h * n < p && xr + h * n == X(pr))
+     *    [Since 2 * n > p, h can only be 0 or 1]
+     *    <=> (xr == X(pr)) || (xr + n < p && xr + n == X(pr))
+     *    [In Jacobian coordinates, X(pr) is pr.x / pr.z^2 mod p]
+     *    <=> (xr == pr.x / pr.z^2 mod p) || (xr + n < p && xr + n == pr.x / pr.z^2 mod p)
+     *    [Multiplying both sides of the equations by pr.z^2 mod p]
+     *    <=> (xr * pr.z^2 mod p == pr.x) || (xr + n < p && (xr + n) * pr.z^2 mod p == pr.x)
+     *
+     *  Thus, we can avoid the inversion, but we have to check both cases separately.
+     *  secp256k1_gej_eq_x implements the (xr * pr.z^2 mod p == pr.x) test.
+     */
+    if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        /* xr * pr.z^2 mod p == pr.x, so the signature is valid. */
+        return 1;
+    }
+    if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_const_p_minus_order) >= 0) {
+        /* xr + n >= p, so we can skip testing the second case. */
+        return 0;
+    }
+    secp256k1_fe_add(&xr, &secp256k1_ecdsa_const_order_as_fe);
+    if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        /* (xr + n) * pr.z^2 mod p == pr.x, so the signature is valid. */
+        return 1;
+    }
+    return 0;
+>>>>>>> elements/alpha
 }
 #else
     secp256k1_scalar_get_b32(c, sigr);
     secp256k1_fe_set_b32(&xr, c);
 
+<<<<<<< HEAD
     /** We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
      *  in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),
      *  compute the remainder modulo n, and compare it to xr. However:
@@ -275,16 +321,36 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_scalar n;
     int overflow = 0;
 
+=======
+static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid) {
+    unsigned char b[32];
+    secp256k1_gej rp;
+    secp256k1_ge r;
+    secp256k1_scalar n;
+    int overflow = 0;
+
+>>>>>>> elements/alpha
     secp256k1_ecmult_gen(ctx, &rp, nonce);
     secp256k1_ge_set_gej(&r, &rp);
     secp256k1_fe_normalize(&r.x);
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);
     secp256k1_scalar_set_b32(sigr, b, &overflow);
+<<<<<<< HEAD
     /* These two conditions should be checked before calling */
     VERIFY_CHECK(!secp256k1_scalar_is_zero(sigr));
     VERIFY_CHECK(overflow == 0);
 
+=======
+    if (secp256k1_scalar_is_zero(sigr)) {
+        /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature.
+         * This branch is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N.
+         */
+        secp256k1_gej_clear(&rp);
+        secp256k1_ge_clear(&r);
+        return 0;
+    }
+>>>>>>> elements/alpha
     if (recid) {
         /* The overflow condition is cryptographically unreachable as hitting it requires finding the discrete log
          * of some P where P.x >= order, and only 1 in about 2^127 points meet this criteria.
@@ -310,4 +376,8 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     return 1;
 }
 
+<<<<<<< HEAD
 #endif /* SECP256K1_ECDSA_IMPL_H */
+=======
+#endif
+>>>>>>> elements/alpha

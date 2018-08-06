@@ -4,8 +4,13 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+<<<<<<< HEAD
 #ifndef SECP256K1_MODULE_ECDH_MAIN_H
 #define SECP256K1_MODULE_ECDH_MAIN_H
+=======
+#ifndef _SECP256K1_MODULE_ECDH_MAIN_
+#define _SECP256K1_MODULE_ECDH_MAIN_
+>>>>>>> elements/alpha
 
 #include "include/secp256k1_ecdh.h"
 #include "ecmult_const_impl.h"
@@ -16,10 +21,17 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const se
     secp256k1_gej res;
     secp256k1_ge pt;
     secp256k1_scalar s;
+<<<<<<< HEAD
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(result != NULL);
     ARG_CHECK(point != NULL);
     ARG_CHECK(scalar != NULL);
+=======
+    ARG_CHECK(result != NULL);
+    ARG_CHECK(point != NULL);
+    ARG_CHECK(scalar != NULL);
+    (void)ctx;
+>>>>>>> elements/alpha
 
     secp256k1_pubkey_load(ctx, &pt, point);
     secp256k1_scalar_set_b32(&s, scalar, &overflow);
@@ -51,4 +63,8 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const se
     return ret;
 }
 
+<<<<<<< HEAD
 #endif /* SECP256K1_MODULE_ECDH_MAIN_H */
+=======
+#endif
+>>>>>>> elements/alpha

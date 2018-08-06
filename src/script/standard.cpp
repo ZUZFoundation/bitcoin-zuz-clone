@@ -28,9 +28,15 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
+<<<<<<< HEAD
     case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TX_WITNESS_UNKNOWN: return "witness_unknown";
+=======
+    case TX_WITHDRAW_LOCK: return "withdraw";
+    case TX_WITHDRAW_OUT: return "withdrawout";
+    case TX_TRUE: return "true";
+>>>>>>> elements/alpha
     }
     return nullptr;
 }
@@ -44,11 +50,23 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         // Standard tx, sender provides pubkey, receiver adds signature
         mTemplates.insert(std::make_pair(TX_PUBKEY, CScript() << OP_PUBKEY << OP_CHECKSIG));
 
-        // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
+        // Zuzcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         mTemplates.insert(std::make_pair(TX_PUBKEYHASH, CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
 
         // Sender provides N pubkeys, receivers provides M signatures
+<<<<<<< HEAD
         mTemplates.insert(std::make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+=======
+        mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // Empty, provably prunable, data-carrying output
+        if (GetBoolArg("-datacarrier", true))
+            mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA));
+        mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN));
+
+        // OP_TRUE scriptPubKey
+        mTemplates.insert(make_pair(TX_TRUE, CScript() << OP_TRUE));
+>>>>>>> elements/alpha
     }
 
     vSolutionsRet.clear();
@@ -63,6 +81,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         return true;
     }
 
+<<<<<<< HEAD
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
@@ -92,6 +111,17 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     // script.
     if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN && scriptPubKey.IsPushOnly(scriptPubKey.begin()+1)) {
         typeRet = TX_NULL_DATA;
+=======
+    if (scriptPubKey.IsWithdrawLock(0))
+    {
+        typeRet = TX_WITHDRAW_LOCK;
+        return true;
+    }
+
+    if (scriptPubKey.IsWithdrawOutput())
+    {
+        typeRet = TX_WITHDRAW_OUT;
+>>>>>>> elements/alpha
         return true;
     }
 
@@ -180,6 +210,61 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     return false;
 }
 
+<<<<<<< HEAD
+=======
+int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions)
+{
+    switch (t)
+    {
+    case TX_NONSTANDARD:
+    case TX_NULL_DATA:
+    case TX_WITHDRAW_LOCK:
+    case TX_WITHDRAW_OUT:
+        return -1;
+    case TX_PUBKEY:
+        return 1;
+    case TX_PUBKEYHASH:
+        return 2;
+    case TX_MULTISIG:
+        if (vSolutions.size() < 1 || vSolutions[0].size() < 1)
+            return -1;
+        return vSolutions[0][0] + 1;
+    case TX_SCRIPTHASH:
+        return 1; // doesn't include args needed by the script
+    case TX_TRUE:
+        return 0;
+    }
+    return -1;
+}
+
+bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
+{
+    vector<valtype> vSolutions;
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
+
+    switch (whichType) {
+        case TX_MULTISIG:
+        {
+            unsigned char m = vSolutions.front()[0];
+            unsigned char n = vSolutions.back()[0];
+            // Support up to x-of-3 multisig txns as standard
+            if (n < 1 || n > 3)
+                return false;
+            if (m < 1 || m > n)
+                return false;
+            break;
+        }
+        case TX_TRUE:
+            return false;
+        default:
+            break;
+    }
+
+    return whichType != TX_NONSTANDARD;
+}
+
+>>>>>>> elements/alpha
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 {
     std::vector<valtype> vSolutions;
@@ -234,7 +319,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     std::vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA){
+    if (typeRet == TX_NULL_DATA || typeRet == TX_WITHDRAW_LOCK || typeRet == TX_WITHDRAW_OUT){
         // This is data, not addresses
         return false;
     }

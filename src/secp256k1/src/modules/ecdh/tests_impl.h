@@ -4,6 +4,7 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+<<<<<<< HEAD
 #ifndef SECP256K1_MODULE_ECDH_TESTS_H
 #define SECP256K1_MODULE_ECDH_TESTS_H
 
@@ -35,6 +36,10 @@ void test_ecdh_api(void) {
     /* Cleanup */
     secp256k1_context_destroy(tctx);
 }
+=======
+#ifndef _SECP256K1_MODULE_ECDH_TESTS_
+#define _SECP256K1_MODULE_ECDH_TESTS_
+>>>>>>> elements/alpha
 
 void test_ecdh_generator_basepoint(void) {
     unsigned char s_one[32] = { 0 };
@@ -97,9 +102,16 @@ void test_bad_scalar(void) {
 }
 
 void run_ecdh_tests(void) {
+<<<<<<< HEAD
     test_ecdh_api();
+=======
+>>>>>>> elements/alpha
     test_ecdh_generator_basepoint();
     test_bad_scalar();
 }
 
+<<<<<<< HEAD
 #endif /* SECP256K1_MODULE_ECDH_TESTS_H */
+=======
+#endif
+>>>>>>> elements/alpha

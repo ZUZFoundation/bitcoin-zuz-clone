@@ -11,7 +11,7 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/zuzcoin-config.h>
 #endif
 
 #include <compat.h>
@@ -72,6 +72,7 @@ inline std::string _(const char* psz)
 
 void SetupEnvironment();
 bool SetupNetworking();
+void SetThreadPriority(int nPriority);
 
 struct CLogCategoryActive
 {
@@ -315,7 +316,7 @@ void RenameThread(const char* name);
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("zuzcoin-%s", name);
     RenameThread(s.c_str());
     try
     {

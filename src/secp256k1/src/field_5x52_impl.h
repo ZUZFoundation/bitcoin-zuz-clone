@@ -49,6 +49,13 @@ static void secp256k1_fe_verify(const secp256k1_fe *a) {
     }
     VERIFY_CHECK(r == 1);
 }
+<<<<<<< HEAD
+=======
+#else
+static void secp256k1_fe_verify(const secp256k1_fe *a) {
+    (void)a;
+}
+>>>>>>> elements/alpha
 #endif
 
 static void secp256k1_fe_normalize(secp256k1_fe *r) {
@@ -284,6 +291,7 @@ static int secp256k1_fe_cmp_var(const secp256k1_fe *a, const secp256k1_fe *b) {
 }
 
 static int secp256k1_fe_set_b32(secp256k1_fe *r, const unsigned char *a) {
+<<<<<<< HEAD
     r->n[0] = (uint64_t)a[31]
             | ((uint64_t)a[30] << 8)
             | ((uint64_t)a[29] << 16)
@@ -318,6 +326,18 @@ static int secp256k1_fe_set_b32(secp256k1_fe *r, const unsigned char *a) {
             | ((uint64_t)a[2] << 24)
             | ((uint64_t)a[1] << 32)
             | ((uint64_t)a[0] << 40);
+=======
+    int i;
+    r->n[0] = r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
+    for (i=0; i<32; i++) {
+        int j;
+        for (j=0; j<2; j++) {
+            int limb = (8*i+4*j)/52;
+            int shift = (8*i+4*j)%52;
+            r->n[limb] |= (uint64_t)((a[31-i] >> (4*j)) & 0xF) << shift;
+        }
+    }
+>>>>>>> elements/alpha
     if (r->n[4] == 0x0FFFFFFFFFFFFULL && (r->n[3] & r->n[2] & r->n[1]) == 0xFFFFFFFFFFFFFULL && r->n[0] >= 0xFFFFEFFFFFC2FULL) {
         return 0;
     }
@@ -331,10 +351,15 @@ static int secp256k1_fe_set_b32(secp256k1_fe *r, const unsigned char *a) {
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
 static void secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe *a) {
+<<<<<<< HEAD
+=======
+    int i;
+>>>>>>> elements/alpha
 #ifdef VERIFY
     VERIFY_CHECK(a->normalized);
     secp256k1_fe_verify(a);
 #endif
+<<<<<<< HEAD
     r[0] = (a->n[4] >> 40) & 0xFF;
     r[1] = (a->n[4] >> 32) & 0xFF;
     r[2] = (a->n[4] >> 24) & 0xFF;
@@ -367,6 +392,18 @@ static void secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe *a) {
     r[29] = (a->n[0] >> 16) & 0xFF;
     r[30] = (a->n[0] >> 8) & 0xFF;
     r[31] = a->n[0] & 0xFF;
+=======
+    for (i=0; i<32; i++) {
+        int j;
+        int c = 0;
+        for (j=0; j<2; j++) {
+            int limb = (8*i+4*j)/52;
+            int shift = (8*i+4*j)%52;
+            c |= ((a->n[limb] >> shift) & 0xF) << (4 * j);
+        }
+        r[31-i] = c;
+    }
+>>>>>>> elements/alpha
 }
 
 SECP256K1_INLINE static void secp256k1_fe_negate(secp256k1_fe *r, const secp256k1_fe *a, int m) {
@@ -458,6 +495,41 @@ static SECP256K1_INLINE void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_
         r->magnitude = a->magnitude;
     }
     r->normalized &= a->normalized;
+<<<<<<< HEAD
+=======
+#endif
+}
+
+static SECP256K1_INLINE void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_fe_storage *a, int flag) {
+    uint64_t mask0, mask1;
+    mask0 = flag + ~((uint64_t)0);
+    mask1 = ~mask0;
+    r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
+    r->n[1] = (r->n[1] & mask0) | (a->n[1] & mask1);
+    r->n[2] = (r->n[2] & mask0) | (a->n[2] & mask1);
+    r->n[3] = (r->n[3] & mask0) | (a->n[3] & mask1);
+}
+
+static void secp256k1_fe_to_storage(secp256k1_fe_storage *r, const secp256k1_fe *a) {
+#ifdef VERIFY
+    VERIFY_CHECK(a->normalized);
+#endif
+    r->n[0] = a->n[0] | a->n[1] << 52;
+    r->n[1] = a->n[1] >> 12 | a->n[2] << 40;
+    r->n[2] = a->n[2] >> 24 | a->n[3] << 28;
+    r->n[3] = a->n[3] >> 36 | a->n[4] << 16;
+}
+
+static SECP256K1_INLINE void secp256k1_fe_from_storage(secp256k1_fe *r, const secp256k1_fe_storage *a) {
+    r->n[0] = a->n[0] & 0xFFFFFFFFFFFFFULL;
+    r->n[1] = a->n[0] >> 52 | ((a->n[1] << 12) & 0xFFFFFFFFFFFFFULL);
+    r->n[2] = a->n[1] >> 40 | ((a->n[2] << 24) & 0xFFFFFFFFFFFFFULL);
+    r->n[3] = a->n[2] >> 28 | ((a->n[3] << 36) & 0xFFFFFFFFFFFFFULL);
+    r->n[4] = a->n[3] >> 16;
+#ifdef VERIFY
+    r->magnitude = 1;
+    r->normalized = 1;
+>>>>>>> elements/alpha
 #endif
 }
 

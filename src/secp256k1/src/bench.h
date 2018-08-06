@@ -4,8 +4,13 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+<<<<<<< HEAD
 #ifndef SECP256K1_BENCH_H
 #define SECP256K1_BENCH_H
+=======
+#ifndef _SECP256K1_BENCH_H_
+#define _SECP256K1_BENCH_H_
+>>>>>>> elements/alpha
 
 #include <stdio.h>
 #include <math.h>
@@ -23,7 +28,11 @@ void print_number(double x) {
     if (y < 0.0) {
         y = -y;
     }
+<<<<<<< HEAD
     while (y > 0 && y < 100.0) {
+=======
+    while (y < 100.0) {
+>>>>>>> elements/alpha
         y *= 10.0;
         c++;
     }
@@ -63,4 +72,8 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     printf("us\n");
 }
 
+<<<<<<< HEAD
 #endif /* SECP256K1_BENCH_H */
+=======
+#endif
+>>>>>>> elements/alpha

@@ -144,6 +144,7 @@ static void secp256k1_num_mod_inverse(secp256k1_num *r, const secp256k1_num *a, 
     memset(v, 0, sizeof(v));
 }
 
+<<<<<<< HEAD
 static int secp256k1_num_jacobi(const secp256k1_num *a, const secp256k1_num *b) {
     int ret;
     mpz_t ga, gb;
@@ -170,6 +171,8 @@ static int secp256k1_num_is_one(const secp256k1_num *a) {
     return (a->limbs == 1 && a->data[0] == 1);
 }
 
+=======
+>>>>>>> elements/alpha
 static int secp256k1_num_is_zero(const secp256k1_num *a) {
     return (a->limbs == 1 && a->data[0] == 0);
 }

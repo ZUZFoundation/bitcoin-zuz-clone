@@ -82,8 +82,8 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
-const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
+const char * const BITCOIN_CONF_FILENAME = "zuzcoin.conf";
+const char * const BITCOIN_PID_FILENAME = "zuzcoind.pid";
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
 ArgsManager gArgs;
@@ -558,7 +558,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(nullptr, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "bitcoin";
+    const char* pszModule = "zuzcoin";
 #endif
     if (pex)
         return strprintf(
@@ -577,13 +577,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
-    // Mac: ~/Library/Application Support/Bitcoin
-    // Unix: ~/.bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Zuzcoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Zuzcoin
+    // Mac: ~/Library/Application Support/Zuzcoin
+    // Unix: ~/.zuzcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Zuzcoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -593,10 +593,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Bitcoin";
+    return pathRet / "Library/Application Support/Zuzcoin";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    return pathRet / ".zuzcoin";
 #endif
 #endif
 }
@@ -658,7 +658,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
     fs::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
-        return; // No bitcoin.conf file is OK
+        return; // No zuzcoin.conf file is OK
 
     {
         LOCK(cs_args);
@@ -667,7 +667,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 
         for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
         {
-            // Don't overwrite existing settings so command line settings override bitcoin.conf
+            // Don't overwrite existing settings so command line settings override zuzcoin.conf
             std::string strKey = std::string("-") + it->string_key;
             std::string strValue = it->value[0];
             InterpretNegativeSetting(strKey, strValue);
@@ -895,6 +895,7 @@ void RenameThread(const char* name)
 
 void SetupEnvironment()
 {
+<<<<<<< HEAD
 #ifdef HAVE_MALLOPT_ARENA_MAX
     // glibc-specific: On 32-bit systems set the number of arenas to 1.
     // By default, since glibc 2.10, the C library will create up to two heap
@@ -905,6 +906,8 @@ void SetupEnvironment()
         mallopt(M_ARENA_MAX, 1);
     }
 #endif
+=======
+>>>>>>> elements/alpha
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
     // may be invalid, in which case the "C" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
@@ -917,6 +920,7 @@ void SetupEnvironment()
     // The path locale is lazy initialized and to avoid deinitialization errors
     // in multithreading environments, it is set explicitly by the main thread.
     // A dummy locale is used to extract the internal default locale, used by
+<<<<<<< HEAD
     // fs::path, which is then used to explicitly imbue the path.
     std::locale loc = fs::path::imbue(std::locale::classic());
     fs::path::imbue(loc);
@@ -932,6 +936,24 @@ bool SetupNetworking()
         return false;
 #endif
     return true;
+=======
+    // boost::filesystem::path, which is then used to explicitly imbue the path.
+    std::locale loc = boost::filesystem::path::imbue(std::locale::classic());
+    boost::filesystem::path::imbue(loc);
+>>>>>>> elements/alpha
+}
+
+void SetThreadPriority(int nPriority)
+{
+#ifdef WIN32
+    SetThreadPriority(GetCurrentThread(), nPriority);
+#else // WIN32
+#ifdef PRIO_THREAD
+    setpriority(PRIO_THREAD, 0, nPriority);
+#else // PRIO_THREAD
+    setpriority(PRIO_PROCESS, 0, nPriority);
+#endif // PRIO_THREAD
+#endif // WIN32
 }
 
 int GetNumCores()
@@ -947,8 +969,8 @@ std::string CopyrightHolders(const std::string& strPrefix)
 {
     std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
 
-    // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
+    // Check for untranslated substitution to make sure Zuzcoin Core copyright is not removed by accident
+    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Zuzcoin Core") == std::string::npos) {
         strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;

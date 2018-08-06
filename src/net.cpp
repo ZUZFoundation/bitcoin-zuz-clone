@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/zuzcoin-config.h>
 #endif
 
 #include <net.h>
@@ -723,7 +723,7 @@ void CNode::copyStats(CNodeStats &stats)
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
 
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
+    // Raw ping time is in microseconds, but show it to user as whole seconds (Zuzcoin users should be well used to small numbers with many decimal places by now :)
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dMinPing  = (((double)nMinPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
@@ -762,6 +762,11 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
 
         if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
+            return false;
+        }
+
+        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+            LogPrint("net", "Oversized message from peer=%i, disconnecting", GetId());
             return false;
         }
 
@@ -1507,7 +1512,7 @@ void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "Bitcoin " + FormatFullVersion();
+        std::string strDesc = "Zuzcoin " + FormatFullVersion();
 
         try {
             while (true) {
@@ -1821,7 +1826,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         int nTries = 0;
         while (!interruptNet)
         {
+<<<<<<< HEAD
             CAddrInfo addr = addrman.Select(fFeeler);
+=======
+            CAddress addr = addrman.Select();
+>>>>>>> elements/alpha
 
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
@@ -2019,8 +2028,14 @@ void CConnman::ThreadMessageHandler()
                 return;
             // Send messages
             {
+<<<<<<< HEAD
                 LOCK(pnode->cs_sendProcessing);
                 m_msgproc->SendMessages(pnode, flagInterruptMsgProc);
+=======
+                TRY_LOCK(pnode->cs_vSend, lockSend);
+                if (lockSend)
+                    g_signals.SendMessages(pnode, pnode == pnodeTrickle || pnode->fWhitelisted);
+>>>>>>> elements/alpha
             }
 
             if (flagInterruptMsgProc)
@@ -2096,7 +2111,11 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
+<<<<<<< HEAD
             strError = strprintf(_("Unable to bind to %s on this computer. %s is probably already running."), addrBind.ToString(), _(PACKAGE_NAME));
+=======
+            strError = strprintf(_("Unable to bind to %s on this computer. Elements Alpha is probably already running."), addrBind.ToString());
+>>>>>>> elements/alpha
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
@@ -2795,7 +2814,24 @@ void CNode::AskFor(const CInv& inv)
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)
 {
+<<<<<<< HEAD
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
+=======
+    ENTER_CRITICAL_SECTION(cs_vSend);
+    assert(ssSend.size() == 0);
+    ssSend << CMessageHeader(pszCommand, 0);
+    LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
+>>>>>>> elements/alpha
+}
+
+CCriticalSection& CConnman::getCs_vNodes()
+{
+    return cs_vNodes;
+}
+
+std::vector<CNode *> CConnman::getVNodes() const
+{
+    return vNodes;
 }
 
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)

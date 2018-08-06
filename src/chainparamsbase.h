@@ -9,9 +9,11 @@
 #include <string>
 #include <vector>
 
+#include "script/script.h"
+
 /**
- * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
- * of a given instance of the Bitcoin system.
+ * CBaseChainParams defines the base parameters (shared between zuzcoin-cli and zuzcoind)
+ * of a given instance of the Zuzcoin system.
  */
 class CBaseChainParams
 {
@@ -45,8 +47,19 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
 
 /**
+<<<<<<< HEAD
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
+=======
+ * Looks for hex-encoded -genesisscriptdistenation and returns a CScript of it.
+ * Returns an empty script if the flag is missing or badly encoded.
+ */
+CScript ScriptDestinationFromCommandLine();
+
+/**
+ * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
+ * Returns false if an invalid combination is given.
+>>>>>>> elements/alpha
  */
 const CBaseChainParams& BaseParams();
 

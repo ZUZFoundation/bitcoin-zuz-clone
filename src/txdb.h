@@ -33,7 +33,7 @@ static const int64_t nMinDbCache = 4;
 static const int64_t nMaxBlockDBCache = 2;
 //! Max memory allocated to block tree DB specific cache, if -txindex (MiB)
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
-// a meaningful difference: https://github.com/bitcoin/bitcoin/pull/8273#issuecomment-229601991
+// a meaningful difference: https://github.com/zuzcoin/zuzcoin/pull/8273#issuecomment-229601991
 static const int64_t nMaxBlockDBAndTxIndexCache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
 static const int64_t nMaxCoinsDBCache = 8;
@@ -71,6 +71,7 @@ protected:
 public:
     explicit CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
+<<<<<<< HEAD
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
@@ -81,6 +82,14 @@ public:
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;
+=======
+    bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    bool HaveCoins(const uint256 &txid) const;
+    COutPoint GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const;
+    uint256 GetBestBlock() const;
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool GetStats(CCoinsStats &stats) const;
+>>>>>>> elements/alpha
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */

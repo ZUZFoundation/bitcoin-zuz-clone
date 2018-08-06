@@ -1,11 +1,11 @@
 Sample configuration files for:
 ```
-SystemD: bitcoind.service
-Upstart: bitcoind.conf
-OpenRC:  bitcoind.openrc
-         bitcoind.openrcconf
-CentOS:  bitcoind.init
-OS X:    org.bitcoin.bitcoind.plist
+SystemD: zuzcoind.service
+Upstart: zuzcoind.conf
+OpenRC:  zuzcoind.openrc
+         zuzcoind.openrcconf
+CentOS:  zuzcoind.init
+OS X:    org.zuzcoin.zuzcoind.plist
 ```
 have been made available to assist packagers in creating node packages here.
 

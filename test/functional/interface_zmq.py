@@ -7,7 +7,7 @@ import configparser
 import os
 import struct
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import ZuzcoinTestFramework, SkipTest
 from test_framework.mininode import CTransaction
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
@@ -34,7 +34,7 @@ class ZMQSubscriber:
         return body
 
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (ZuzcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
@@ -45,21 +45,21 @@ class ZMQTest (BitcoinTestFramework):
         except ImportError:
             raise SkipTest("python3-zmq module not available.")
 
-        # Check that bitcoin has been built with ZMQ enabled.
+        # Check that zuzcoin has been built with ZMQ enabled.
         config = configparser.ConfigParser()
         if not self.options.configfile:
             self.options.configfile = os.path.abspath(os.path.join(os.path.dirname(__file__), "../config.ini"))
         config.read_file(open(self.options.configfile))
 
         if not config["components"].getboolean("ENABLE_ZMQ"):
-            raise SkipTest("bitcoind has not been built with zmq enabled.")
+            raise SkipTest("zuzcoind has not been built with zmq enabled.")
 
         # Initialize ZMQ context and socket.
         # All messages are received in the same socket which means
         # that this test fails if the publishing order changes.
         # Note that the publishing order is not defined in the documentation and
         # is subject to change.
-        address = "tcp://127.0.0.1:28332"
+        address = "tcp://127.0.0.1:24847"
         self.zmq_context = zmq.Context()
         socket = self.zmq_context.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)

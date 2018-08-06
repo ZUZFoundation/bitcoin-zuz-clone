@@ -337,7 +337,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
 void AddressTableModel::updateEntry(const QString &address,
         const QString &label, bool isMine, const QString &purpose, int status)
 {
-    // Update address book model from Bitcoin core
+    // Update address book model from Zuzcoin core
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
@@ -384,8 +384,12 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 return QString();
             }
         }
+<<<<<<< HEAD
         wallet->LearnRelatedScripts(newKey, address_type);
         strAddress = EncodeDestination(GetDestinationForKey(newKey, address_type));
+=======
+        strAddress = CBitcoinAddress(newKey.GetID()).AddBlindingKey(wallet->GetBlindingPubKey(GetScriptForDestination(CTxDestination(newKey.GetID())))).ToString();
+>>>>>>> elements/alpha
     }
     else
     {

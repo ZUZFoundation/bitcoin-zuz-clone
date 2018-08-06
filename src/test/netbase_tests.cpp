@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netbase.h>
-#include <test/test_bitcoin.h>
+#include <test/test_zuzcoin.h>
 #include <utilstrencodings.h>
 
 #include <string>
@@ -82,20 +82,20 @@ bool static TestSplitHost(std::string test, std::string host, int port)
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)
 {
-    BOOST_CHECK(TestSplitHost("www.bitcoin.org", "www.bitcoin.org", -1));
-    BOOST_CHECK(TestSplitHost("[www.bitcoin.org]", "www.bitcoin.org", -1));
-    BOOST_CHECK(TestSplitHost("www.bitcoin.org:80", "www.bitcoin.org", 80));
-    BOOST_CHECK(TestSplitHost("[www.bitcoin.org]:80", "www.bitcoin.org", 80));
+    BOOST_CHECK(TestSplitHost("www.zuzcoin.org", "www.zuzcoin.org", -1));
+    BOOST_CHECK(TestSplitHost("[www.zuzcoin.org]", "www.zuzcoin.org", -1));
+    BOOST_CHECK(TestSplitHost("www.zuzcoin.org:80", "www.zuzcoin.org", 80));
+    BOOST_CHECK(TestSplitHost("[www.zuzcoin.org]:80", "www.zuzcoin.org", 80));
     BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", -1));
-    BOOST_CHECK(TestSplitHost("127.0.0.1:8333", "127.0.0.1", 8333));
+    BOOST_CHECK(TestSplitHost("127.0.0.1:4848", "127.0.0.1", 4848));
     BOOST_CHECK(TestSplitHost("[127.0.0.1]", "127.0.0.1", -1));
-    BOOST_CHECK(TestSplitHost("[127.0.0.1]:8333", "127.0.0.1", 8333));
+    BOOST_CHECK(TestSplitHost("[127.0.0.1]:4848", "127.0.0.1", 4848));
     BOOST_CHECK(TestSplitHost("::ffff:127.0.0.1", "::ffff:127.0.0.1", -1));
-    BOOST_CHECK(TestSplitHost("[::ffff:127.0.0.1]:8333", "::ffff:127.0.0.1", 8333));
-    BOOST_CHECK(TestSplitHost("[::]:8333", "::", 8333));
-    BOOST_CHECK(TestSplitHost("::8333", "::8333", -1));
-    BOOST_CHECK(TestSplitHost(":8333", "", 8333));
-    BOOST_CHECK(TestSplitHost("[]:8333", "", 8333));
+    BOOST_CHECK(TestSplitHost("[::ffff:127.0.0.1]:4848", "::ffff:127.0.0.1", 4848));
+    BOOST_CHECK(TestSplitHost("[::]:4848", "::", 4848));
+    BOOST_CHECK(TestSplitHost("::4848", "::4848", -1));
+    BOOST_CHECK(TestSplitHost(":4848", "", 4848));
+    BOOST_CHECK(TestSplitHost("[]:4848", "", 4848));
     BOOST_CHECK(TestSplitHost("", "", -1));
 }
 
@@ -108,10 +108,10 @@ bool static TestParse(std::string src, std::string canon)
 BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
 {
     BOOST_CHECK(TestParse("127.0.0.1", "127.0.0.1:65535"));
-    BOOST_CHECK(TestParse("127.0.0.1:8333", "127.0.0.1:8333"));
+    BOOST_CHECK(TestParse("127.0.0.1:4848", "127.0.0.1:4848"));
     BOOST_CHECK(TestParse("::ffff:127.0.0.1", "127.0.0.1:65535"));
     BOOST_CHECK(TestParse("::", "[::]:65535"));
-    BOOST_CHECK(TestParse("[::]:8333", "[::]:8333"));
+    BOOST_CHECK(TestParse("[::]:4848", "[::]:4848"));
     BOOST_CHECK(TestParse("[127.0.0.1]", "127.0.0.1:65535"));
     BOOST_CHECK(TestParse(":::", "[::]:0"));
 
@@ -136,6 +136,7 @@ BOOST_AUTO_TEST_CASE(onioncat_test)
 
 BOOST_AUTO_TEST_CASE(subnet_test)
 {
+<<<<<<< HEAD
 
     BOOST_CHECK(ResolveSubNet("1.2.3.0/24") == ResolveSubNet("1.2.3.0/255.255.255.0"));
     BOOST_CHECK(ResolveSubNet("1.2.3.0/24") != ResolveSubNet("1.2.4.0/255.255.255.0"));
@@ -154,6 +155,25 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(ResolveSubNet("1.2.2.1/24").Match(ResolveIP("1.2.2.4")));
     BOOST_CHECK(ResolveSubNet("1.2.2.110/31").Match(ResolveIP("1.2.2.111")));
     BOOST_CHECK(ResolveSubNet("1.2.2.20/26").Match(ResolveIP("1.2.2.63")));
+=======
+    BOOST_CHECK(CSubNet("1.2.3.0/24") == CSubNet("1.2.3.0/255.255.255.0"));
+    BOOST_CHECK(CSubNet("1.2.3.0/24") != CSubNet("1.2.4.0/255.255.255.0"));
+    BOOST_CHECK(CSubNet("1.2.3.0/24").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(!CSubNet("1.2.2.0/24").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(CSubNet("1.2.3.4").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(CSubNet("1.2.3.4/32").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(!CSubNet("1.2.3.4").Match(CNetAddr("5.6.7.8")));
+    BOOST_CHECK(!CSubNet("1.2.3.4/32").Match(CNetAddr("5.6.7.8")));
+    BOOST_CHECK(CSubNet("::ffff:127.0.0.1").Match(CNetAddr("127.0.0.1")));
+    BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8").Match(CNetAddr("1:2:3:4:5:6:7:8")));
+    BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8").Match(CNetAddr("1:2:3:4:5:6:7:9")));
+    BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:0/112").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
+    BOOST_CHECK(CSubNet("192.168.0.1/24").Match(CNetAddr("192.168.0.2")));
+    BOOST_CHECK(CSubNet("192.168.0.20/29").Match(CNetAddr("192.168.0.18")));
+    BOOST_CHECK(CSubNet("1.2.2.1/24").Match(CNetAddr("1.2.2.4")));
+    BOOST_CHECK(CSubNet("1.2.2.110/31").Match(CNetAddr("1.2.2.111")));
+    BOOST_CHECK(CSubNet("1.2.2.20/26").Match(CNetAddr("1.2.2.63")));
+>>>>>>> elements/alpha
     // All-Matching IPv6 Matches arbitrary IPv4 and IPv6
     BOOST_CHECK(ResolveSubNet("::/0").Match(ResolveIP("1:2:3:4:5:6:7:1234")));
     BOOST_CHECK(ResolveSubNet("::/0").Match(ResolveIP("1.2.3.4")));

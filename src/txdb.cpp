@@ -52,6 +52,18 @@ struct CoinEntry {
     }
 };
 
+<<<<<<< HEAD
+=======
+void static BatchWriteWithdraw(CLevelDBBatch &batch, const pair<uint256, COutPoint> &outpoint, const COutPoint& spender) {
+    if (!spender.IsNull())
+        batch.Write(make_pair('w', outpoint), spender);
+    else
+        batch.Erase(make_pair('w', outpoint));
+}
+
+void static BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+    batch.Write('B', hash);
+>>>>>>> elements/alpha
 }
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
@@ -64,6 +76,13 @@ bool CCoinsViewDB::GetCoin(const COutPoint &outpoint, Coin &coin) const {
 
 bool CCoinsViewDB::HaveCoin(const COutPoint &outpoint) const {
     return db.Exists(CoinEntry(&outpoint));
+}
+
+COutPoint CCoinsViewDB::GetWithdrawSpent(const pair<uint256, COutPoint> &outpoint) const {
+    COutPoint spender;
+    if (!db.Read(make_pair('w', outpoint), spender))
+        return COutPoint();
+    return spender;
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {
@@ -108,11 +127,18 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
 
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+<<<<<<< HEAD
             CoinEntry entry(&it->first);
             if (it->second.coin.IsSpent())
                 batch.Erase(entry);
             else
                 batch.Write(entry, it->second.coin);
+=======
+            if (it->second.flags & CCoinsCacheEntry::WITHDRAW)
+                BatchWriteWithdraw(batch, it->first, it->second.withdrawSpent);
+            else
+                BatchWriteCoins(batch, it->first.first, it->second.coins);
+>>>>>>> elements/alpha
             changed++;
         }
         count++;
@@ -188,6 +214,7 @@ CCoinsViewCursor *CCoinsViewDB::Cursor() const
     return i;
 }
 
+<<<<<<< HEAD
 bool CCoinsViewDBCursor::GetKey(COutPoint &key) const
 {
     // Return cached key
@@ -234,6 +261,49 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
     return WriteBatch(batch, true);
+=======
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    stats.hashBlock = GetBestBlock();
+    ss << stats.hashBlock;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            leveldb::Slice slKey = pcursor->key();
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
+            char chType;
+            ssKey >> chType;
+            if (chType == 'c') {
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
+                CCoins coins;
+                ssValue >> coins;
+                uint256 txhash;
+                ssKey >> txhash;
+                ss << txhash;
+                ss << VARINT(coins.nVersion);
+                ss << (coins.fCoinBase ? 'c' : 'n');
+                ss << VARINT(coins.nHeight);
+                stats.nTransactions++;
+                for (unsigned int i=0; i<coins.vout.size(); i++) {
+                    const CTxOut &out = coins.vout[i];
+                    if (!out.IsNull()) {
+                        stats.nTransactionOutputs++;
+                        ss << VARINT(i+1);
+                        ss << out;
+                    }
+                }
+                stats.nSerializedSize += 32 + slValue.size();
+                ss << VARINT(0);
+            }
+            pcursor->Next();
+        } catch (std::exception &e) {
+            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        }
+    }
+    stats.nHeight = mapBlockIndex.find(GetBestBlock())->second->nHeight;
+    stats.hashSerialized = ss.GetHash();
+    return true;
+>>>>>>> elements/alpha
 }
 
 bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
@@ -282,14 +352,16 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nVersion       = diskindex.nVersion;
                 pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
                 pindexNew->nTime          = diskindex.nTime;
-                pindexNew->nBits          = diskindex.nBits;
-                pindexNew->nNonce         = diskindex.nNonce;
+                pindexNew->proof          = diskindex.proof;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
+<<<<<<< HEAD
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams))
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
 
+=======
+>>>>>>> elements/alpha
                 pcursor->Next();
             } else {
                 return error("%s: failed to read value", __func__);

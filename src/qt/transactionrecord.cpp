@@ -40,20 +40,32 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         //
         // Credit
         //
+<<<<<<< HEAD
         for(unsigned int i = 0; i < wtx.tx->vout.size(); i++)
         {
             const CTxOut& txout = wtx.tx->vout[i];
+=======
+        for (unsigned int i = 0; i < wtx.vout.size(); i++)
+        {
+            const CTxOut& txout = wtx.vout[i];
+>>>>>>> elements/alpha
             isminetype mine = wallet->IsMine(txout);
             if(mine)
             {
                 TransactionRecord sub(hash, nTime);
                 CTxDestination address;
+<<<<<<< HEAD
                 sub.idx = i; // vout index
                 sub.credit = txout.nValue;
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
+=======
+                sub.idx = parts.size(); // sequence number
+                sub.credit = wtx.GetValueOut(i);
+                sub.involvesWatchAddress = mine == ISMINE_WATCH_ONLY;
+>>>>>>> elements/alpha
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
                 {
-                    // Received by Bitcoin Address
+                    // Received by Zuzcoin Address
                     sub.type = TransactionRecord::RecvWithAddress;
                     sub.address = EncodeDestination(address);
                 }
@@ -106,7 +118,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Debit
             //
+<<<<<<< HEAD
             CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
+=======
+            CAmount nTxFee = wtx.nTxFee;
+>>>>>>> elements/alpha
 
             for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
             {
@@ -125,7 +141,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
                 {
-                    // Sent to Bitcoin Address
+                    // Sent to Zuzcoin Address
                     sub.type = TransactionRecord::SendToAddress;
                     sub.address = EncodeDestination(address);
                 }
@@ -136,7 +152,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.address = mapValue["to"];
                 }
 
-                CAmount nValue = txout.nValue;
+                CAmount nValue = wtx.GetValueOut(nOut);
                 /* Add fee to first output */
                 if (nTxFee > 0)
                 {
@@ -182,17 +198,31 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
 
+<<<<<<< HEAD
     if (!CheckFinalTx(*wtx.tx))
     {
         if (wtx.tx->nLockTime < LOCKTIME_THRESHOLD)
         {
             status.status = TransactionStatus::OpenUntilBlock;
             status.open_for = wtx.tx->nLockTime - chainActive.Height();
+=======
+    int64_t nLockTime = CheckLockTime(wtx);
+    if (nLockTime)
+    {
+        if (nLockTime < LOCKTIME_THRESHOLD)
+        {
+            status.status = TransactionStatus::OpenUntilBlock;
+            status.open_for = nLockTime - chainActive.Height();
+>>>>>>> elements/alpha
         }
         else
         {
             status.status = TransactionStatus::OpenUntilDate;
+<<<<<<< HEAD
             status.open_for = wtx.tx->nLockTime;
+=======
+            status.open_for = nLockTime;
+>>>>>>> elements/alpha
         }
     }
     // For generated transactions, determine maturity

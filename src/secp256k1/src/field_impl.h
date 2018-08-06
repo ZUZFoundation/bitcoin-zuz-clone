@@ -21,6 +21,7 @@
 #error "Please select field implementation"
 #endif
 
+<<<<<<< HEAD
 SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
     secp256k1_fe na;
     secp256k1_fe_negate(&na, a, 1);
@@ -36,6 +37,16 @@ SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe *a, const 
 }
 
 static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
+=======
+SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe *a, const secp256k1_fe *b) {
+    secp256k1_fe na;
+    secp256k1_fe_negate(&na, a, 1);
+    secp256k1_fe_add(&na, b);
+    return secp256k1_fe_normalizes_to_zero_var(&na);
+}
+
+static int secp256k1_fe_sqrt_var(secp256k1_fe *r, const secp256k1_fe *a) {
+>>>>>>> elements/alpha
     /** Given that p is congruent to 3 mod 4, we can compute the square root of
      *  a mod p as the (p+1)/4'th power of a.
      *
@@ -130,7 +141,11 @@ static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
     /* Check that a square root was actually calculated */
 
     secp256k1_fe_sqr(&t1, r);
+<<<<<<< HEAD
     return secp256k1_fe_equal(&t1, a);
+=======
+    return secp256k1_fe_equal_var(&t1, a);
+>>>>>>> elements/alpha
 }
 
 static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a) {
@@ -260,7 +275,11 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
 #endif
 }
 
+<<<<<<< HEAD
 static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, size_t len) {
+=======
+static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe *r, const secp256k1_fe *a) {
+>>>>>>> elements/alpha
     secp256k1_fe u;
     size_t i;
     if (len < 1) {
@@ -287,6 +306,7 @@ static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, siz
     r[0] = u;
 }
 
+<<<<<<< HEAD
 static int secp256k1_fe_is_quad_var(const secp256k1_fe *a) {
 #ifndef USE_NUM_NONE
     unsigned char b[32];
@@ -313,3 +333,6 @@ static int secp256k1_fe_is_quad_var(const secp256k1_fe *a) {
 }
 
 #endif /* SECP256K1_FIELD_IMPL_H */
+=======
+#endif
+>>>>>>> elements/alpha

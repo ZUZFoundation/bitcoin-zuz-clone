@@ -13,6 +13,7 @@
 #include <memory>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/thread.hpp>
 
 class CBlockIndex;
 class CChainParams;
@@ -20,7 +21,12 @@ class CScript;
 
 namespace Consensus { struct Params; };
 
+
+static const bool DEFAULT_GENERATE = false;
+static const int DEFAULT_GENERATE_THREADS = 1;
+
 static const bool DEFAULT_PRINTPRIORITY = false;
+//boost::thread_group* minerThreads = NULL;
 
 struct CBlockTemplate
 {
@@ -29,6 +35,11 @@ struct CBlockTemplate
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
 };
+
+
+/** Run the miner threads */
+void GenerateZuzcoins(bool fGenerate, int nThreads, const CChainParams& chainparams);
+
 
 // Container for tracking updates to ancestor feerate as we include (parent)
 // transactions in a block
@@ -120,6 +131,7 @@ struct update_for_parent_inclusion
 };
 
 /** Generate a new block, without valid proof-of-work */
+<<<<<<< HEAD
 class BlockAssembler
 {
 private:
@@ -195,5 +207,14 @@ private:
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+=======
+CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
+CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
+/** Modify the extranonce in a block */
+void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+/** Check mined block */
+bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
+int64_t UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
+>>>>>>> elements/alpha
 
 #endif // BITCOIN_MINER_H
