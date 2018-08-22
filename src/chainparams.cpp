@@ -161,7 +161,7 @@ public:
         consensus.zuzPowDGWHeight = 400;
         consensus.zuzPremineEnforcePubKeys = true;
         zuzPreminePubkeys =
-        {"MJ2UNWH1jHwabJPSnq9gdZ9RHDNCgJTDLn"}; //nico server : MWCJp4Pg4UhCEbn5PKKK9eJyFsWCmDe8V6;
+        {"MJ2UNWH1jHwabJPSnq9gdZ9RHDNCgJTDLn"}; //nico server : MTUiEzuUT4R5wdfCToTbddnPJ839yLWWZb;
 
         consensus.BIP16Height = 0; // always enforce P2SH
         consensus.BIP34Height = 227931;
