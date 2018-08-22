@@ -3039,6 +3039,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
+<<<<<<< HEAD
 UniValue fundrawtransaction(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3093,6 +3094,33 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
                             "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
                             "}\n"
+=======
+Value fundrawtransaction(const Array& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+                            "fundrawtransaction \"hexstring\" includeWatching\n"
+                            "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
+                            "This will not modify existing inputs, and will add one change output to the outputs.\n"
+                            "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
+                            "The inputs added will not be signed, use signrawtransaction for that.\n"
+                            "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
+                            "Note that all inputs selected must be of standard form and P2SH scripts must be"
+                            "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
+                            "\nArguments:\n"
+                            "1. \"hexstring\"     (string, required) The hex string of the raw transaction\n"
+                            "2. includeWatching (boolean, optional, default false) Also select inputs which are watch only\n"
+                            "\nResult:\n"
+                            "{\n"
+                            "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
+                            "  \"fee\":       n,         (numeric) The fee added to the transaction\n"
+                            "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
+                            "}\n"
+                            "\"hex\"             \n"
+>>>>>>> elements/mainchain
                             "\nExamples:\n"
                             "\nCreate a transaction with no inputs\n"
                             + HelpExampleCli("createrawtransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
@@ -3104,6 +3132,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
                             );
 
+<<<<<<< HEAD
     ObserveSafeMode();
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
@@ -3595,3 +3624,30 @@ void RegisterWalletRPCCommands(CRPCTable &t)
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
+=======
+    RPCTypeCheck(params, boost::assign::list_of(str_type)(bool_type));
+
+    // parse hex string from parameter
+    CTransaction origTx;
+    if (!DecodeHexTx(origTx, params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+
+    bool includeWatching = false;
+    if (params.size() > 1)
+        includeWatching = true;
+
+    CMutableTransaction tx(origTx);
+    CAmount nFee;
+    string strFailReason;
+    int nChangePos = -1;
+    if(!pwalletMain->FundTransaction(tx, nFee, nChangePos, strFailReason, includeWatching))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
+
+    Object result;
+    result.push_back(Pair("hex", EncodeHexTx(tx)));
+    result.push_back(Pair("changepos", nChangePos));
+    result.push_back(Pair("fee", ValueFromAmount(nFee)));
+
+    return result;
+}
+>>>>>>> elements/mainchain

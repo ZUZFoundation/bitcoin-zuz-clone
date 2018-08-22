@@ -962,6 +962,7 @@ public:
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
+<<<<<<< HEAD
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
@@ -988,6 +989,12 @@ public:
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB *pwalletdb);
     template <typename ContainerType>
     bool DummySignTx(CMutableTransaction &txNew, const ContainerType &coins) const;
+=======
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, bool includeWatching);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
+                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
+    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
+>>>>>>> elements/mainchain
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;

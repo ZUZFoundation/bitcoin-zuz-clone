@@ -17,8 +17,20 @@ typedef std::vector<unsigned char> valtype;
 
 TransactionSignatureCreator::TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
 
+<<<<<<< HEAD
 bool TransactionSignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode, SigVersion sigversion) const
+=======
+TransactionSignatureCreator::TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, int nHashTypeIn, bool dummySignIn) : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), checker(txTo, nIn), dummySign(dummySignIn) {}
+
+bool TransactionSignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode) const
+>>>>>>> elements/mainchain
 {
+    if (dummySign)
+    {
+        vchSig.resize(72);
+        return true;
+    }
+
     CKey key;
     if (!keystore->GetKey(address, key))
         return false;
@@ -123,6 +135,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     }
 }
 
+<<<<<<< HEAD
 static CScript PushAll(const std::vector<valtype>& values)
 {
     CScript result;
@@ -139,6 +152,9 @@ static CScript PushAll(const std::vector<valtype>& values)
 }
 
 bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPubKey, SignatureData& sigdata)
+=======
+bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPubKey, CScript& scriptSig, bool dummySign)
+>>>>>>> elements/mainchain
 {
     CScript script = fromPubKey;
     std::vector<valtype> result;
@@ -177,6 +193,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         result.clear();
     }
 
+<<<<<<< HEAD
     if (P2SH) {
         result.push_back(std::vector<unsigned char>(subscript.begin(), subscript.end()));
     }
@@ -203,26 +220,54 @@ void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const Signatur
 }
 
 bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType)
+=======
+    // Test solution or skip in case of length-calculation/dummy-signing
+    if (dummySign)
+        return true;
+
+    return VerifyScript(scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker());
+}
+
+bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType, bool dummySign)
+>>>>>>> elements/mainchain
 {
     assert(nIn < txTo.vin.size());
 
     CTransaction txToConst(txTo);
+<<<<<<< HEAD
     TransactionSignatureCreator creator(&keystore, &txToConst, nIn, amount, nHashType);
 
     SignatureData sigdata;
     bool ret = ProduceSignature(creator, fromPubKey, sigdata);
     UpdateTransaction(txTo, nIn, sigdata);
     return ret;
+=======
+    TransactionSignatureCreator creator(&keystore, &txToConst, nIn, nHashType, dummySign);
+
+    return ProduceSignature(creator, fromPubKey, txin.scriptSig, dummySign);
+>>>>>>> elements/mainchain
 }
 
-bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
+bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType, bool dummySign)
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
+<<<<<<< HEAD
     return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType);
+=======
+    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType, dummySign);
+}
+
+static CScript PushAll(const vector<valtype>& values)
+{
+    CScript result;
+    BOOST_FOREACH(const valtype& v, values)
+        result << v;
+    return result;
+>>>>>>> elements/mainchain
 }
 
 static std::vector<valtype> CombineMultisig(const CScript& scriptPubKey, const BaseSignatureChecker& checker,

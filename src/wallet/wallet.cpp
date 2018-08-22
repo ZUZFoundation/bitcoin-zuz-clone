@@ -2223,6 +2223,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             if (nDepth < 0)
                 continue;
 
+<<<<<<< HEAD
             // We should not consider coins which aren't at least in our mempool
             // It's possible for these to be conflicted via ancestors which we may never be able to detect
             if (nDepth == 0 && !pcoin->InMempool())
@@ -2305,6 +2306,15 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
                     return;
                 }
+=======
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
+                isminetype mine = IsMine(pcoin->vout[i]);
+                if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
+                    !IsLockedCoin((*it).first, i) && (pcoin->vout[i].nValue > 0 || fIncludeZeroValue) &&
+                    (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected((*it).first, i)))
+                        vCoins.push_back(COutput(pcoin, i, nDepth,
+                                                 ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_ONLY) != ISMINE_NO)));
+>>>>>>> elements/mainchain
             }
         }
     }
@@ -2536,43 +2546,72 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         {
             if (!out.fSpendable)
                  continue;
+<<<<<<< HEAD
             nValueRet += out.tx->tx->vout[out.i].nValue;
             setCoinsRet.insert(CInputCoin(out.tx, out.i));
+=======
+            nValueRet += out.tx->vout[out.i].nValue;
+            setCoinsRet.insert(make_pair(out.tx, out.i));
+>>>>>>> elements/mainchain
         }
         return (nValueRet >= nTargetValue);
     }
 
     // calculate value from preset inputs and store them
+<<<<<<< HEAD
     std::set<CInputCoin> setPresetCoins;
+=======
+    set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
+>>>>>>> elements/mainchain
     CAmount nValueFromPresetInputs = 0;
 
     std::vector<COutPoint> vPresetInputs;
     if (coinControl)
         coinControl->ListSelected(vPresetInputs);
+<<<<<<< HEAD
     for (const COutPoint& outpoint : vPresetInputs)
     {
         std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
+=======
+    BOOST_FOREACH(const COutPoint& outpoint, vPresetInputs)
+    {
+        map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
+>>>>>>> elements/mainchain
         if (it != mapWallet.end())
         {
             const CWalletTx* pcoin = &it->second;
             // Clearly invalid input, fail
+<<<<<<< HEAD
             if (pcoin->tx->vout.size() <= outpoint.n)
                 return false;
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
             setPresetCoins.insert(CInputCoin(pcoin, outpoint.n));
+=======
+            if (pcoin->vout.size() <= outpoint.n)
+                return false;
+            nValueFromPresetInputs += pcoin->vout[outpoint.n].nValue;
+            setPresetCoins.insert(make_pair(pcoin, outpoint.n));
+>>>>>>> elements/mainchain
         } else
             return false; // TODO: Allow non-wallet inputs
     }
 
     // remove preset inputs from vCoins
+<<<<<<< HEAD
     for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
     {
         if (setPresetCoins.count(CInputCoin(it->tx, it->i)))
+=======
+    for (vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
+    {
+        if (setPresetCoins.count(make_pair(it->tx, it->i)))
+>>>>>>> elements/mainchain
             it = vCoins.erase(it);
         else
             ++it;
     }
 
+<<<<<<< HEAD
     size_t nMaxChainLength = std::min(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT), gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
     bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
@@ -2584,6 +2623,12 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet)) ||
         (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet)) ||
         (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet));
+=======
+    bool res = nTargetValue <= nValueFromPresetInputs ||
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, vCoins, setCoinsRet, nValueRet) ||
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, vCoins, setCoinsRet, nValueRet) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, vCoins, setCoinsRet, nValueRet));
+>>>>>>> elements/mainchain
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
@@ -2592,6 +2637,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     nValueRet += nValueFromPresetInputs;
 
     return res;
+<<<<<<< HEAD
 }
 
 bool CWallet::SignTransaction(CMutableTransaction &tx)
@@ -2702,6 +2748,56 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
                                 int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
+=======
+}
+
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nChangePosRet, std::string& strFailReason, bool includeWatching)
+{
+    vector<CRecipient> vecSend;
+
+    // Turn the txout set into a CRecipient vector
+    BOOST_FOREACH(const CTxOut& txOut, tx.vout)
+    {
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, false};
+        vecSend.push_back(recipient);
+    }
+
+    CCoinControl coinControl;
+    coinControl.fAllowOtherInputs = true;
+    coinControl.fAllowWatchOnly = includeWatching;
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        coinControl.Select(txin.prevout);
+
+    CReserveKey reservekey(this);
+    CWalletTx wtx;
+    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosRet, strFailReason, &coinControl, false))
+        return false;
+
+    if (nChangePosRet != -1)
+        tx.vout.insert(tx.vout.begin() + nChangePosRet, wtx.vout[nChangePosRet]);
+
+    // Add new txins (keeping original txin scriptSig/order)
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        bool found = false;
+        BOOST_FOREACH(const CTxIn& origTxIn, tx.vin)
+        {
+            if (txin.prevout.hash == origTxIn.prevout.hash && txin.prevout.n == origTxIn.prevout.n)
+            {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            tx.vin.push_back(txin);
+    }
+
+    return true;
+}
+
+bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
+                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
+>>>>>>> elements/mainchain
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -2899,6 +2995,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                 // Fill vin
                 //
+<<<<<<< HEAD
                 // Note how the sequence number is set to non-maxint so that
                 // the nLockTime set above actually works.
                 //
@@ -2917,6 +3014,42 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     strFailReason = _("Signing transaction failed");
                     return false;
                 }
+=======
+                // Note how the sequence number is set to max()-1 so that the
+                // nLockTime set above actually works.
+                BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+                    txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
+                                              std::numeric_limits<unsigned int>::max()-1));
+
+                // Sign
+                int nIn = 0;
+                BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+                    if (!SignSignature(*this, *coin.first, txNew, nIn++, SIGHASH_ALL, !sign))
+                    {
+                        strFailReason = _("Signing transaction failed");
+                        return false;
+                    }
+
+                unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+
+                // Remove scriptSigs if we used dummy signatures for fee calculation
+                if (!sign) {
+                    BOOST_FOREACH (CTxIn& vin, txNew.vin)
+                        vin.scriptSig = CScript();
+                }
+
+                // Embed the constructed transaction data in wtxNew.
+                *static_cast<CTransaction*>(&wtxNew) = CTransaction(txNew);
+
+                // Limit size
+                if (nBytes >= MAX_STANDARD_TX_SIZE)
+                {
+                    strFailReason = _("Transaction too large");
+                    return false;
+                }
+
+                dPriority = wtxNew.ComputePriority(dPriority, nBytes);
+>>>>>>> elements/mainchain
 
                 nBytes = GetVirtualTransactionSize(txNew);
 

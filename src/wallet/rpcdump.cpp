@@ -189,6 +189,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
 UniValue abortrescan(const JSONRPCRequest& request)
 {
+<<<<<<< HEAD
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
@@ -259,16 +260,29 @@ UniValue importaddress(const JSONRPCRequest& request)
         throw std::runtime_error(
             "importaddress \"address\" ( \"label\" rescan p2sh )\n"
             "\nAdds a script (in hex) or address that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
+=======
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
+    if (fHelp || params.size() < 1 || params.size() > 4)
+        throw runtime_error(
+            "importaddress \"address\" ( \"label\" rescan p2sh )\n"
+            "\nAdds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend.\n"
+>>>>>>> elements/mainchain
             "\nArguments:\n"
             "1. \"script\"           (string, required) The hex-encoded script (or address)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
+<<<<<<< HEAD
             "\nNote: This call can take minutes to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported address exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "If you have the full public key, you should call importpubkey instead of this.\n"
             "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
             "as change, and not show up in many RPCs.\n"
+=======
+            "\nNote: This call can take minutes to complete if rescan is true.\n"
+>>>>>>> elements/mainchain
             "\nExamples:\n"
             "\nImport a script with rescan\n"
             + HelpExampleCli("importaddress", "\"myscript\"") +
@@ -304,6 +318,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     {
         LOCK2(cs_main, pwallet->cs_wallet);
 
+<<<<<<< HEAD
         CTxDestination dest = DecodeDestination(request.params[0].get_str());
         if (IsValidDestination(dest)) {
             if (fP2SH) {
@@ -318,6 +333,21 @@ UniValue importaddress(const JSONRPCRequest& request)
         }
     }
     if (fRescan)
+=======
+    // Whether to perform rescan after import
+    bool fP2SH = false;
+    if (params.size() > 3)
+        fP2SH = params[3].get_bool();
+
+    CScript p2shScript;
+    if (fP2SH && address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
+    else if (fP2SH) {
+        address = CBitcoinAddress(CScriptID(script));
+        p2shScript = GetScriptForDestination(CScriptID(script));
+    }
+
+>>>>>>> elements/mainchain
     {
         pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
         pwallet->ReacceptWalletTransactions();
@@ -326,12 +356,18 @@ UniValue importaddress(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+<<<<<<< HEAD
 UniValue importprunedfunds(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
+=======
+        // Don't throw error in case an address is already there
+        if (pwalletMain->HaveWatchOnly(script) && (!fP2SH || (pwalletMain->HaveCScript(script) && pwalletMain->HaveWatchOnly(p2shScript))))
+            return Value::null;
+>>>>>>> elements/mainchain
 
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
@@ -342,6 +378,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
             "2. \"txoutproof\"     (string, required) The hex output from gettxoutproof that contains the transaction\n"
         );
 
+<<<<<<< HEAD
     CMutableTransaction tx;
     if (!DecodeHexTx(tx, request.params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
@@ -481,6 +518,21 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
         for (const auto& dest : GetAllDestinationsForKey(pubKey)) {
             ImportAddress(pwallet, dest, strLabel);
+=======
+        if (!pwalletMain->HaveWatchOnly(script) && !pwalletMain->AddWatchOnly(script))
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
+
+        if (fP2SH) {
+            pwalletMain->AddCScript(script);
+            if (!pwalletMain->HaveWatchOnly(p2shScript) && !pwalletMain->AddWatchOnly(p2shScript))
+                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
+        }
+
+        if (fRescan)
+        {
+            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+            pwalletMain->ReacceptWalletTransactions();
+>>>>>>> elements/mainchain
         }
         ImportScript(pwallet, GetScriptForRawPubKey(pubKey), strLabel, false);
         pwallet->LearnAllRelatedScripts(pubKey);
