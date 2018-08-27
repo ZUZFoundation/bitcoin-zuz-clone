@@ -161,8 +161,9 @@ public:
         consensus.zuzPowDGWHeight = 400;
         consensus.zuzPremineEnforcePubKeys = true;
         zuzPreminePubkeys =
-        {"MJ2UNWH1jHwabJPSnq9gdZ9RHDNCgJTDLn"}; //nico server : MWCJp4Pg4UhCEbn5PKKK9eJyFsWCmDe8V6;
-
+        {"MTUiEzuUT4R5wdfCToTbddnPJ839yLWWZb"}; //nico server : MTUiEzuUT4R5wdfCToTbddnPJ839yLWWZb;
+                                                // my : MJ2UNWH1jHwabJPSnq9gdZ9RHDNCgJTDLn
+                                                //
         consensus.BIP16Height = 0; // always enforce P2SH
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
