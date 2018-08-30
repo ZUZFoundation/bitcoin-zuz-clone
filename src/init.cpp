@@ -517,6 +517,14 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
 
+    strUsage += HelpMessageGroup(_("Federated peg options:"));
+    if (showDebug) {
+        strUsage += HelpMessageOpt("-fedpegscript=<hex>", _("Change federated peg to use a different script.") +
+            " " + _("This creates a new chain with a different genesis block."));
+        strUsage += HelpMessageOpt("-signblockscript=<hex>", _("Change chain to be signed and validated with a different script.") +
+            " " + _(" This creates a new chain with a different genesis block."));
+    }
+
     return strUsage;
 }
 
@@ -1450,7 +1458,7 @@ bool AppInitMain()
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
-                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+                    return InitError(_("Incorrect or no genesis block found. Wrong `-fedpegscript`, `-signblockscript` or datadir for network?"));
 
                 // Check for changed -txindex state
                 if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {

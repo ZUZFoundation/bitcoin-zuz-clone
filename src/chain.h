@@ -210,6 +210,9 @@ public:
     int32_t nVersion;
     uint256 hashMerkleRoot;
     uint32_t nTime;
+
+    CProof proof; //HIM_REVISIT
+
     uint32_t nBits;
     uint32_t nNonce;
 
@@ -240,6 +243,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        proof.SetNull();
     }
 
     CBlockIndex()
@@ -256,6 +260,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        proof          = block.proof;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -286,6 +291,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.proof          = proof;
         return block;
     }
 
@@ -405,6 +411,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(proof);
     }
 
     uint256 GetBlockHash() const
@@ -416,6 +423,7 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+        block.proof           = proof;
         return block.GetHash();
     }
 

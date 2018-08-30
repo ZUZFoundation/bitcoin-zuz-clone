@@ -10,6 +10,7 @@
 #include <limits>
 #include <map>
 #include <string>
+#include "script/script.h"
 
 namespace Consensus {
 
@@ -93,6 +94,8 @@ struct Params {
     int zuzPowDGWHeight;
 
     bool zuzPremineEnforcePubKeys;
+
+    CScript signblockscript; //HIM_REVISIT
 };
 } // namespace Consensus
 
