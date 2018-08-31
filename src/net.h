@@ -314,6 +314,10 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler();
+    std::vector<CNode *> getVNodes() const;
+
+    CCriticalSection &getCs_vNodes();
+
 private:
     struct ListenSocket {
         SOCKET socket;

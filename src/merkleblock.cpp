@@ -9,6 +9,9 @@
 #include <consensus/consensus.h>
 #include <utilstrencodings.h>
 
+#ifndef HIM_NDEBUG
+#include <util.h>
+#endif
 
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids)
 {
@@ -134,6 +137,10 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch, std::ve
     // An empty set will not work
     if (nTransactions == 0)
         return uint256();
+#ifndef HIM_NDEBUG
+    LogPrintf("HIM : ExtractMatches nTransactions : %i", nTransactions);
+#endif
+
     // check for excessively high numbers of transactions
     if (nTransactions > MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT)
         return uint256();

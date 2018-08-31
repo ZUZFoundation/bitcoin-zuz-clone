@@ -13,6 +13,7 @@
 #include <memory>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/thread.hpp>
 
 class CBlockIndex;
 class CChainParams;
@@ -20,7 +21,12 @@ class CScript;
 
 namespace Consensus { struct Params; };
 
+
+static const bool DEFAULT_GENERATE = false;
+static const int DEFAULT_GENERATE_THREADS = 1;
+
 static const bool DEFAULT_PRINTPRIORITY = false;
+//boost::thread_group* minerThreads = NULL;
 
 struct CBlockTemplate
 {
@@ -29,6 +35,11 @@ struct CBlockTemplate
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
 };
+
+
+/** Run the miner threads */
+void GenerateZuzcoins(bool fGenerate, int nThreads, const CChainParams& chainparams);
+
 
 // Container for tracking updates to ancestor feerate as we include (parent)
 // transactions in a block

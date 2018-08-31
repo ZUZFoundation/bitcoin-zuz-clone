@@ -33,7 +33,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system. There are three: the main network on which people trade goods
+ * Zuzcoin system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -73,6 +73,16 @@ public:
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+
+
+    CScript zuzMultiSigScript(uint32_t lockTime = 0) const;
+
+    /**
+     * @brief IsPremineAddressScript
+     * @return
+     */
+    bool IsPremineAddressScript(const CScript& scriptPubKey, int height) const;
+
 protected:
     CChainParams() {}
 
@@ -91,6 +101,7 @@ protected:
     bool fMineBlocksOnDemand;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+    std::vector<std::string> zuzPreminePubkeys;
 };
 
 /**

@@ -137,7 +137,7 @@ public:
 };
 
 /**
- * Bitcoin RPC command dispatcher.
+ * Zuzcoin RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -187,6 +187,9 @@ extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKe
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
+
+//extern UniValue getgenerate(const UniValue& params, bool fHelp); // in rpc/mining.cpp
+//extern UniValue setgenerate(const UniValue& params, bool fHelp);
 
 bool StartRPC();
 void InterruptRPC();

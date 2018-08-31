@@ -97,7 +97,7 @@ public:
 /**
  * A base58-encoded secret key
  */
-class CBitcoinSecret : public CBase58Data
+class CZuzcoinSecret : public CBase58Data
 {
 public:
     void SetKey(const CKey& vchSecret);
@@ -106,11 +106,11 @@ public:
     bool SetString(const char* pszSecret);
     bool SetString(const std::string& strSecret);
 
-    CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
-    CBitcoinSecret() {}
+    CZuzcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
+    CZuzcoinSecret() {}
 };
 
-template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
+template<typename K, int Size, CChainParams::Base58Type Type> class CZuzcoinExtKeyBase : public CBase58Data
 {
 public:
     void SetKey(const K &key) {
@@ -128,23 +128,75 @@ public:
         return ret;
     }
 
-    CBitcoinExtKeyBase(const K &key) {
+    CZuzcoinExtKeyBase(const K &key) {
         SetKey(key);
     }
 
-    CBitcoinExtKeyBase(const std::string& strBase58c) {
+    CZuzcoinExtKeyBase(const std::string& strBase58c) {
         SetString(strBase58c.c_str(), Params().Base58Prefix(Type).size());
     }
 
-    CBitcoinExtKeyBase() {}
+    CZuzcoinExtKeyBase() {}
 };
 
-typedef CBitcoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CBitcoinExtKey;
-typedef CBitcoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CBitcoinExtPubKey;
+typedef CZuzcoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CZuzcoinExtKey;
+typedef CZuzcoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CZuzcoinExtPubKey;
 
 std::string EncodeDestination(const CTxDestination& dest);
 CTxDestination DecodeDestination(const std::string& str);
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);
+
+
+
+
+/** base58-encoded Bitcoin addresses.
+ * Public-key-hash-addresses have version 0 (or 111 testnet).
+ * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
+ * Script-hash-addresses have version 5 (or 196 testnet).
+ * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
+ */
+class CBitcoinAddress : public CBase58Data {
+public:
+    bool Set(const CKeyID &id);
+    bool Set(const CScriptID &id);
+    bool Set(const CTxDestination &dest);
+    bool Set(const CKeyID &id, const CChainParams &params);
+    bool Set(const CScriptID &id, const CChainParams &params);
+    //bool Set(const CTxDestination &dest, const CChainParams &params);
+    bool IsValid() const;
+    bool IsValid(const CChainParams &params) const;
+
+    CBitcoinAddress() {}
+    //CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
+    //CBitcoinAddress(const CTxDestination &dest, const CChainParams &params) { Set(dest, params); }
+    CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
+    CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
+
+    CTxDestination Get() const;
+    CTxDestination Get(const CChainParams &params) const;
+    bool GetKeyID(CKeyID &keyID) const;
+    bool GetKeyID(CKeyID &keyID, const CChainParams &params) const;
+    bool IsScript() const;
+};
+
+
+namespace ZUZ
+{
+class CBitcoinAddressVisitor : public boost::static_visitor<bool>
+{
+private:
+    CBitcoinAddress* addr;
+    const CChainParams& params;
+
+public:
+    CBitcoinAddressVisitor(CBitcoinAddress* addrIn, const CChainParams& paramsIn) : addr(addrIn), params(paramsIn) {}
+
+    bool operator()(const CKeyID& id) const { return addr->Set(id, params); }
+    bool operator()(const CScriptID& id) const { return addr->Set(id, params); }
+    bool operator()(const CNoDestination& no) const { return false; }
+};
+
+} // namespace
 
 #endif // BITCOIN_BASE58_H
