@@ -51,9 +51,9 @@ bool GenericVerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, 
 }
 
 template<typename T>
-bool GenericSignScript(const CKeyStore& keystore, const T& data, const CScript& fromPubKey, SignatureData& scriptSig)
+bool GenericSignScript(const CKeyStore * keystore, const T& data, const CScript& fromPubKey, SignatureData& scriptSig)
 {
-    return ProduceSignature(SimpleSignatureCreator(&keystore, SerializeHash(data)), fromPubKey, scriptSig);
+    return ProduceSignature(SimpleSignatureCreator(keystore, SerializeHash(data)), fromPubKey, scriptSig);
 }
 
 template<typename T>

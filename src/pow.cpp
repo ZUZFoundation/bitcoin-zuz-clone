@@ -106,6 +106,17 @@ void ResetProof(CBlockHeader& block)
     block.proof.solution.clear();
 }
 
+#ifdef ENABLE_WALLET
+bool GenerateProof(CBlockHeader *pblock, CWallet *pwallet)
+{
+    SignatureData solution(pblock->proof.solution);
+    bool res = GenericSignScript((CKeyStore * )pwallet, *pblock, pblock->proof.challenge, solution);
+    pblock->proof.solution = solution.scriptSig;
+    return res;
+}
+#endif
+
+
 
 unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params) {
     /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */

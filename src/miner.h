@@ -18,6 +18,7 @@
 class CBlockIndex;
 class CChainParams;
 class CScript;
+class CReserveKey;
 
 namespace Consensus { struct Params; };
 
@@ -168,6 +169,7 @@ public:
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true, int requiredAgeInSecs=0);
+    //    CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
 
 private:
     // utility functions

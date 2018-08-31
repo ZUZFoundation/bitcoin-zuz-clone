@@ -34,6 +34,11 @@ bool CheckProof(const CBlockHeader& block, const Consensus::Params&);
 //bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, CWallet* pwallet);
 
 void ResetProof(CBlockHeader& block);
+
+#ifdef ENABLE_WALLET
+bool GenerateProof(CBlockHeader* pblock, CWallet* pwallet);
+#endif
+
 bool CheckChallenge(const CBlockHeader& block, const CBlockIndex& indexLast, const Consensus::Params&);
 void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast, const Consensus::Params&);
 
