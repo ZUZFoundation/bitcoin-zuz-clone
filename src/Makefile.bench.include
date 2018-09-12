@@ -34,6 +34,7 @@ nodist_bench_bench_zuzcoin_SOURCES = $(GENERATED_BENCH_FILES)
 bench_bench_zuzcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_zuzcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_zuzcoin_LDADD = \
+  $(LIBUNIVALUE) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -42,8 +43,7 @@ bench_bench_zuzcoin_LDADD = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1) \
-  $(LIBUNIVALUE)
+  $(LIBSECP256K1) 
 
 if ENABLE_ZMQ
 bench_bench_zuzcoin_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
