@@ -615,9 +615,9 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = 0;
+                newcoin.out.nValue.SetToAmount(0);
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
+                    newcoin.out.nValue.SetToAmount(AmountFromValue(prevOut["amount"]));
                 }
                 newcoin.nHeight = 1;
                 view.AddCoin(out, std::move(newcoin), true);
@@ -648,7 +648,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.nValue.GetAmount();
 
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:

@@ -205,21 +205,26 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     // Now modify the output to increase the fee.
     // If the output is not large enough to pay the fee, fail.
     CAmount nDelta = new_fee - old_fee;
+
     assert(nDelta > 0);
     mtx =  *wtx.tx;
     CTxOut* poutput = &(mtx.vout[nOutput]);
-    if (poutput->nValue < nDelta) {
+    CAmount amtValue = poutput->nValue.GetAmount();
+
+    if (amtValue < nDelta) {
         errors.push_back("Change output is too small to bump the fee");
         return Result::WALLET_ERROR;
     }
 
     // If the output would become dust, discard it (converting the dust to fee)
-    poutput->nValue -= nDelta;
-    if (poutput->nValue <= GetDustThreshold(*poutput, ::dustRelayFee)) {
+    amtValue -= nDelta;
+    if (amtValue <= GetDustThreshold(*poutput, ::dustRelayFee)) {
         LogPrint(BCLog::RPC, "Bumping fee and discarding dust output\n");
-        new_fee += poutput->nValue;
+        new_fee += amtValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
+
+    poutput->nValue.SetToAmount(amtValue);
 
     // Mark new tx not replaceable, if requested.
     if (!coin_control.signalRbf) {
