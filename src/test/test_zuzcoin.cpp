@@ -19,6 +19,9 @@
 
 #include <memory>
 
+
+#include <blind.h>
+
 void CConnmanTest::AddNode(CNode& node)
 {
     LOCK(g_connman->cs_vNodes);
@@ -47,6 +50,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {
         SHA256AutoDetect();
         RandomInit();
+        ECC_Verify_Start();
+        ECC_Blinding_Start();
         ECC_Start();
         SetupEnvironment();
         SetupNetworking();
@@ -60,7 +65,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 
 BasicTestingSetup::~BasicTestingSetup()
 {
-        ECC_Stop();
+    ECC_Blinding_Stop();
+    ECC_Verify_Stop();
+    ECC_Stop();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)

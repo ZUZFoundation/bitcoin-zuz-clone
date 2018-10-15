@@ -7,7 +7,7 @@
 
 #include <arith_uint256.h>
 #include <chain.h>
-//#include "chainparams.h"
+#include <chainparams.h>
 //#include "core_io.h"
 //#include "hash.h"
 //#include "keystore.h"
@@ -40,33 +40,32 @@ void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast, const Con
     block.proof.challenge = indexLast.proof.challenge;
 }
 
-/*
+
 //HIM_REVISIT
-bool CheckBitcoinProof(uint256 hash, unsigned int nBits)
+bool CheckBitcoinProof(const CBlockHeader& block)
 {
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
 
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    bnTarget.SetCompact(block.bitcoinproof.challenge, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(Params().GetConsensus().parentChainPowLimit))
-        return false;
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(Params().ProofOfWorkLimit()))
+        return error("%s : nBits below minimum work", __func__);
 
     // Check proof of work matches claimed amount
-    if (UintToArith256(hash) > bnTarget)
-        return false;
+    if (UintToArith256(block.GetHash()) > bnTarget)
+        return error("%s : hash doesn't match nBits", __func__);
 
     return true;
 }
-*/
 
-bool CheckProof(const CBlockHeader& block, const Consensus::Params& params)
+bool CheckProof(const CBlockHeader& block)
 {
-    if (block.GetHash() == params.hashGenesisBlock)
+    if (block.GetHash() == Params().GetConsensus().hashGenesisBlock)
        return true;
-
+  /*
     // Some important anti-DoS flags.
     // Note: Blockhashes do not commit to the proof.
     // Therefore we may have a signature be mealleated
@@ -88,6 +87,9 @@ bool CheckProof(const CBlockHeader& block, const Consensus::Params& params)
         | SCRIPT_VERIFY_WITNESS // Required for cleanstack eval in VerifyScript
         | SCRIPT_NO_SIGHASH_BYTE; // non-Check(Multi)Sig signatures will not have sighash byte
     return GenericVerifyScript(block.proof.solution, params.signblockscript, proof_flags, block);
+  */
+
+    return GenericVerifyScript(block.proof.solution, block.proof.challenge, SCRIPT_VERIFY_P2SH, block);
 }
 
 //bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader *pblock, CWallet *pwallet)
@@ -105,6 +107,38 @@ void ResetProof(CBlockHeader& block)
 {
     block.proof.solution.clear();
 }
+
+
+
+//uint256 GetBlockProof(const CBlockIndex& block)
+//{
+//    return 1;
+//}
+
+double GetChallengeDifficulty(const CBlockIndex* blockindex)
+{
+    return 1;
+}
+
+std::string GetChallengeStr(const CBlockIndex& block)
+{
+    return block.proof.challenge.ToString();
+}
+
+std::string GetChallengeStrHex(const CBlockIndex& block)
+{
+    return block.proof.challenge.ToString();
+}
+
+uint32_t GetNonce(const CBlockHeader& block)
+{
+    return 1;
+}
+
+void SetNonce(CBlockHeader& block, uint32_t nNonce)
+{
+}
+
 
 #ifdef ENABLE_WALLET
 bool GenerateProof(CBlockHeader *pblock, CWallet *pwallet)

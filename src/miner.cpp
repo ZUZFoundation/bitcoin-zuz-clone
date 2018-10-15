@@ -210,7 +210,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             coinbaseTx.vout[0].scriptPubKey = nFees ? scriptPubKeyIn : CScript() << OP_RETURN;
     }
 
-    coinbaseTx.vout[0].nValue = nFees; // + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].nValue = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nFees);
     //HIM_REVISIT coinbaseTx.vout[0].nAsset = policyAsset;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
@@ -530,14 +530,32 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 // nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
 // zero.
 //
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
+bool static ScanHash(CBlockHeader *pblock, uint32_t& nNonce, uint256 &phash)
 {
     // Write the first 76 bytes of the block header to a double-SHA256 state.
-    CHash256 hasher;
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+
+    nNonce++;
+    //    if ((nNonce & 0xfff) == 0)
+    //        return false;
+
+    pblock->nNonce = nNonce;
     ss << *pblock;
-    assert(ss.size() == 80);
-    hasher.Write((unsigned char*)&ss[0], 76);
+
+    phash = ss.GetHash();
+/*
+    CHash256 hasher;
+    CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << *pblock;
+    std::cout << "HIM ss.size() :" << ss.size()
+              << "  CBlockHeader : " << sizeof(CBlockHeader)
+              << "  CProof: " << sizeof(CProof)
+              << "  CBitcoinProof: " << sizeof(CBitcoinProof)
+              << "  CScript: " << sizeof(CScript)
+              << std::endl;
+    assert(ss.size() == 82);
+    hasher.Write((unsigned char*)&ss[0], 78);
 
     while (true) {
         nNonce++;
@@ -545,16 +563,22 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
         // Write the last 4 bytes of the block header (the nonce) to a copy of
         // the double-SHA256 state, and compute the result.
         CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
+//        pblock->nNonce = nNonce;
+//        phash = pblock->GetHash();
 
         // Return the nonce if the hash has at least some zero bits,
         // caller will check if it has enough to reach the target
         if (((uint16_t*)phash)[15] == 0)
+        {
+            std::cout << "HIM scanHash nNonce : " << nNonce << std::endl;
             return true;
+        }
 
         // If nothing found after trying for a while, return -1
         if ((nNonce & 0xfff) == 0)
             return false;
     }
+    */
 }
 
 static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainparams)
@@ -563,7 +587,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 
     LogPrintf("ProcessBlockFound  :  %s\n", pblock->ToString());
     //CTransaction *tx = pblock->vtx[0].get();
-    //LogPrintf("generated %s\n", FormatMoney(tx->vout[0].nValue));
+    //LogPrintf("generated %s\n", FormatMoney(tx->vout[0].nValue.GetAmount()));
 
     // Found a solution
     {
@@ -670,12 +694,16 @@ void static ZuzcoinMiner(const CChainParams& chainparams)
             uint32_t nNonce = 0;
             while (true) {
                 // Check if something found
-                if (ScanHash(pblock, nNonce, &hash))
+                if (ScanHash(pblock, nNonce, hash))
                 {
                     if (UintToArith256(hash) <= hashTarget)
                     {
                         // Found a solution
                         pblock->nNonce = nNonce;
+                        //                        std::cout << "HIM hash              : " << hash.ToString() << std::endl;
+                        //                        std::cout << "HIM pblock->GetHash() : " << pblock->GetHash().ToString() << std::endl;
+                        //                        std::cout << "HIM nNonce    : " << nNonce << std::endl << std::endl ;
+
                         assert(hash == pblock->GetHash());
 
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);

@@ -10,7 +10,42 @@
 #include <serialize.h>
 #include <uint256.h>
 
-//HIM_REVISIT
+class CBitcoinProof
+{
+public:
+    uint32_t challenge;
+    uint32_t solution;
+
+    CBitcoinProof()
+    {
+        SetNull();
+    }
+    CBitcoinProof(uint32_t challengeIn, uint32_t solutionIn) :
+        challenge(challengeIn), solution(solutionIn) {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(challenge);
+        READWRITE(solution);
+    }
+
+    void SetNull()
+    {
+        challenge = 0;
+        solution = 0;
+    }
+
+    bool IsNull() const
+    {
+        return (challenge == 0);
+    }
+
+    std::string ToString() const;
+};
+
 class CProof
 {
 public:
@@ -54,6 +89,7 @@ public:
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
+static const int32_t CURRENT_VERSION=3;
 class CBlockHeader
 {
 public:
@@ -63,8 +99,11 @@ public:
     uint256 hashMerkleRoot;
     uint32_t nTime;
     uint32_t nBits;
-    uint32_t nNonce;
     CProof proof;
+    CBitcoinProof bitcoinproof;
+
+    uint32_t nNonce;
+
 
     CBlockHeader()
     {
@@ -80,22 +119,30 @@ public:
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
         READWRITE(nBits);
-        READWRITE(nNonce);
+
+        if (IsBitcoinBlock())
+            READWRITE(bitcoinproof);
+        else
+            READWRITE(proof);
+
+         READWRITE(nNonce);
     }
 
     void SetNull()
     {
-        nVersion = 0;
+        nVersion = CURRENT_VERSION;
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        bitcoinproof.SetNull();
+        proof.SetNull();
     }
 
     bool IsNull() const
     {
-        return (nBits == 0);
+        return proof.IsNull() && bitcoinproof.IsNull();
     }
 
     uint256 GetHash() const;
@@ -103,6 +150,16 @@ public:
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
+    }
+
+    bool IsBitcoinBlock() const
+    {
+        return !bitcoinproof.IsNull();
+    }
+
+    void SetBitcoinBlock()
+    {
+        bitcoinproof.challenge = 42;
     }
 };
 

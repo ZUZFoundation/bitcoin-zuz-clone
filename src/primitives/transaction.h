@@ -11,8 +11,74 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <hash.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
+
+
+#define SERIALIZE_VERSION_MASK_ONLY_WITNESS 0x80000000
+#define SERIALIZE_VERSION_MASK_BITCOIN_TX   0x20000000
+#define SERIALIZE_VERSION_MASK_PREHASH      0x10000000
+
+
+class CTxOutValue
+{
+public:
+    static const size_t nCommitmentSize = 33;
+
+    std::vector<unsigned char> vchCommitment;
+    std::vector<unsigned char> vchRangeproof;
+    std::vector<unsigned char> vchNonceCommitment;
+
+    CTxOutValue();
+    CTxOutValue(CAmount);
+    CTxOutValue(const std::vector<unsigned char>& vchValueCommitment, const std::vector<unsigned char>& vchRangeproofIn);
+
+    ADD_SERIALIZE_METHODS;
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        int nVersion = s.GetVersion();
+        int nType = s.GetType();
+        bool fBitcoinTx = nVersion & SERIALIZE_VERSION_MASK_BITCOIN_TX;
+        bool fWitness = (nVersion & SERIALIZE_TRANSACTION_NO_WITNESS) == 0;
+        bool fOnlyWitness = nVersion & SERIALIZE_VERSION_MASK_ONLY_WITNESS;
+        assert(!fBitcoinTx || IsAmount() || (IsNull() && ser_action.ForRead()));
+        if (fBitcoinTx) {
+            CAmount amount = 0;
+            if (!ser_action.ForRead())
+                amount = GetAmount();
+            READWRITE(amount);
+            if (ser_action.ForRead())
+                SetToAmount(amount);
+        } else {
+            if (!fOnlyWitness) READWRITE(REF(CFlatData(&vchCommitment[0], &vchCommitment[nCommitmentSize])));
+            if (fWitness) {
+                if (nVersion & SERIALIZE_VERSION_MASK_PREHASH) {
+                    uint256 prehash = (CHashWriter(nType, nVersion) << vchRangeproof << vchNonceCommitment).GetHash();
+                    READWRITE(prehash);
+                } else {
+                    READWRITE(vchRangeproof);
+                    READWRITE(vchNonceCommitment);
+                }
+            }
+        }
+    }
+
+    bool IsValid() const;
+    bool IsNull() const;
+    bool IsAmount() const;
+
+    CAmount GetAmount() const;
+    void SetToAmount(CAmount nAmount);
+
+    friend bool operator==(const CTxOutValue& a, const CTxOutValue& b);
+    friend bool operator!=(const CTxOutValue& a, const CTxOutValue& b);
+
+};
+
+
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -131,7 +197,8 @@ public:
 class CTxOut
 {
 public:
-    CAmount nValue;
+    //CAmount nValue;
+    CTxOutValue nValue;
     CScript scriptPubKey;
 
     CTxOut()
@@ -139,7 +206,7 @@ public:
         SetNull();
     }
 
-    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const CTxOutValue& nValueIn, CScript scriptPubKeyIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -151,13 +218,13 @@ public:
 
     void SetNull()
     {
-        nValue = -1;
+        nValue = CTxOutValue();
         scriptPubKey.clear();
     }
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return nValue.IsNull() && scriptPubKey.empty();
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -284,8 +351,12 @@ public:
     const uint32_t nLockTime;
 
 private:
-    /** Memory only. */
+    /** Memory only. */ //HIM_REVISIT where to use getters
     const uint256 hash;
+    const uint256 hashJustWitness; // Just witness
+    const uint256 hashFull; // Including witness
+    const uint256 hashBitcoin; // For Bitcoin Transactions
+    void UpdateHash() const;
 
     uint256 ComputeHash() const;
 
@@ -313,6 +384,17 @@ public:
 
     const uint256& GetHash() const {
         return hash;
+    }
+
+    /* Transaction hash including witness information */
+    const uint256& GetFullHash() const {
+        return hashFull;
+    }
+
+    /* Transaction hash including witness information */
+    const uint256& GetBitcoinHash() const {
+        assert(hashBitcoin != uint256S(0));
+        return hashBitcoin;
     }
 
     // Compute a hash that includes both transaction and witness data
@@ -356,6 +438,14 @@ public:
         }
         return false;
     }
+
+    uint256 getHashJustWitness() const;
+
+    // Compute priority, given priority of inputs and (optionally) tx size
+    double ComputePriority(double dPriorityInputs, unsigned int nTxSize=0) const; //HIM_REVISIT_L
+
+    // Compute modified tx size for priority calculation (optionally given tx size)
+    unsigned int CalculateModifiedSize(unsigned int nTxSize=0) const; //HIM_REVISIT_L
 };
 
 /** A mutable version of CTransaction. */

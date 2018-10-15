@@ -318,6 +318,19 @@ public:
 
     CCriticalSection &getCs_vNodes();
 
+
+    //HIM_REVISIT_L
+    //std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
+    //std::map<CInv, CDataStream> mapRelay;
+    //CCriticalSection cs_mapRelay;
+
+
+    //class CTransaction;
+    /*
+    void RelayTransaction(const CTransaction& tx);
+    void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
+    */
+
 private:
     struct ListenSocket {
         SOCKET socket;

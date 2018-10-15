@@ -25,6 +25,7 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
+#include <blind.h>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
@@ -658,6 +659,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         // ... and merge in other signatures:
         for (const CTransaction& txv : txVariants)
             sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), sigdata, DataFromTransaction(txv, i));
+
         UpdateTransaction(mergedTx, i, sigdata);
 
         if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, amount)))
@@ -679,9 +681,11 @@ class Secp256k1Init
 public:
     Secp256k1Init() {
         ECC_Start();
+        ECC_Blinding_Start();
     }
     ~Secp256k1Init() {
         ECC_Stop();
+        ECC_Blinding_Stop();
     }
 };
 

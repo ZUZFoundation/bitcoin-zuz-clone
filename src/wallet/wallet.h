@@ -304,7 +304,7 @@ public:
      *     "spent"           - serialized vfSpent value that existed prior to
      *                         2014 (removed in commit 93a18a3)
      */
-    mapValue_t mapValue;
+    mutable mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
@@ -486,6 +486,31 @@ public:
     bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state);
 
     std::set<uint256> GetConflicts() const;
+
+    //HIM_REVISIT_5
+private:
+    void GetBlindingData(unsigned int nOut, CAmount* pamountOut, CPubKey* ppubkeyOut, uint256* pblindingfactorOut) const;
+
+public:
+    //! Returns either the value out (if it is to us) or 0
+    CAmount GetValueOut(unsigned int nOut) const {
+        CAmount ret;
+        GetBlindingData(nOut, &ret, NULL, NULL);
+        return ret;
+    }
+
+    //! Returns either the blinding factor (if it is to us) or 0
+    uint256 GetBlindingFactor(unsigned int nOut) const {
+        uint256 ret;
+        GetBlindingData(nOut, NULL, NULL, &ret);
+        return ret;
+    }
+
+    CPubKey GetBlindingKey(unsigned int nOut) const {
+        CPubKey ret;
+        GetBlindingData(nOut, NULL, &ret, NULL);
+        return ret;
+    }
 };
 
 
@@ -750,7 +775,15 @@ private:
      */
     const CBlockIndex* m_last_block_processed;
 
+
 public:
+    //! The actual blinding key is computed as HMAC-SHA256(key=blinding_derivation_key, msg=scriptPubKey).
+    //! There can be exceptions in mapSpecificBlindingKeys.
+    uint256 blinding_derivation_key;
+
+    //! Only for backward compatibility with older wallets (superseded by blinding_derivation_key).
+    CKey blinding_key;
+
     /*
      * Main wallet lock.
      * This lock protects all the fields added by CWallet.
@@ -788,6 +821,11 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
+    std::map<CScriptID, uint256> mapSpecificBlindingKeys;
+
+    bool fFileBacked;
+    std::string strWalletFile; //HIM_REVISIT_3
+
     // Create wallet with dummy database handle
     CWallet(): dbw(new CWalletDBWrapper())
     {
@@ -822,6 +860,7 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        blinding_key = CKey();
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -895,6 +934,11 @@ public:
     //! Load metadata (used by LoadWallet)
     bool LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &metadata);
     bool LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata &metadata);
+
+    //! Adds a script-specific blinding key to the wallet, and saves it to disk.
+    bool AddSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
+    //! Adds a script-specific blinding key to the wallet without saving it to disk (used by LoadWallet)
+    bool LoadSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
 
     bool LoadMinVersion(int nVersion) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
     void UpdateTimeFirstKey(int64_t nCreateTime);
@@ -1169,6 +1213,15 @@ public:
      * This function will automatically add the necessary scripts to the wallet.
      */
     CTxDestination AddAndGetDestinationForScript(const CScript& script, OutputType);
+
+
+    //! script == NULL gives the backward compatible blinding key
+
+    CKey GetBlindingKey(const CScript* script) const;
+    CPubKey GetBlindingPubKey(const CScript& script) const; //HIM_REVISIT_3
+
+    void ComputeBlindingData(const CTxOut& output, CAmount& amount, CPubKey& pubkey, uint256& blindingfactor) const;
+
 };
 
 /** A key allocated from the key pool. */

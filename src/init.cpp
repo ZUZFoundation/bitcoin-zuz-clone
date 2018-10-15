@@ -67,6 +67,8 @@
 #include <zmq/zmqnotificationinterface.h>
 #endif
 
+#include <blind.h>
+
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -276,7 +278,9 @@ void Shutdown()
     CloseWallets();
 #endif
     globalVerifyHandle.reset();
+    ECC_Blinding_Stop();
     ECC_Stop();
+    ECC_Verify_Stop();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -1158,6 +1162,30 @@ bool AppInitParameterInteraction()
             }
         }
     }
+
+    if (gArgs.IsArgSet("-tracksidechain"))
+    {
+        if (!gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
+            return InitError(_("Cannot -tracksidechain without keeping a -txindex"));
+
+        for(const std::string& str : gArgs.GetArgs("-tracksidechain"))
+        {
+            if (str == "all")
+            {
+                sidechainWithdrawsTracked.clear();
+                sidechainWithdrawsTracked.insert(ArithToUint256(0));
+                break;
+            }
+            else if (IsHex(str) && str.length() == 64)
+                sidechainWithdrawsTracked.insert(uint256S(str));
+            else
+                return InitError(strprintf(_("Invalid value to -tracksidechain: '%s' (must be a hex-encoded genesis block hash)"),
+                                           str));
+        }
+    }
+
+
+
     return true;
 }
 
@@ -1179,6 +1207,8 @@ bool AppInitSanityChecks()
     std::string sha256_algo = SHA256AutoDetect();
     LogPrintf("Using the '%s' SHA256 implementation\n", sha256_algo);
     RandomInit();
+    ECC_Blinding_Start();
+    ECC_Verify_Start();
     ECC_Start();
     globalVerifyHandle.reset(new ECCVerifyHandle());
 

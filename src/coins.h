@@ -103,6 +103,7 @@ public:
 struct CCoinsCacheEntry
 {
     Coin coin; // The actual cached data.
+    COutPoint withdrawSpent;
     unsigned char flags;
 
     enum Flags {
@@ -113,10 +114,11 @@ struct CCoinsCacheEntry
          * flush the changes to the parent cache.  It is always safe to
          * not mark FRESH if that condition is not guaranteed.
          */
+        WITHDRAW = (1 << 2), // represents a withdraw (coins is actually empty/useless, look at withdrawSpent instead)
     };
 
     CCoinsCacheEntry() : flags(0) {}
-    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
+    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), withdrawSpent(), flags(0) {}
 };
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
@@ -175,6 +177,10 @@ public:
 
     //! Estimate database size (0 if not implemented)
     virtual size_t EstimateSize() const { return 0; }
+
+    //! Check if a given withdraw has been spent
+    //! Returning a txhash/input index pointer (bastardizing COutPoint to do so)
+    virtual COutPoint GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const;
 };
 
 
@@ -194,6 +200,7 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursor *Cursor() const override;
     size_t EstimateSize() const override;
+    COutPoint GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const override;
 };
 
 
@@ -220,6 +227,8 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
+    COutPoint GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const override;
+    void MaybeSetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint, COutPoint spender);
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
@@ -292,6 +301,9 @@ public:
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
+
+    //! Return priority of tx at height nHeight
+    double GetPriority(const CTransaction &tx, int nHeight) const; //HIM_REVISIT_5
 
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;

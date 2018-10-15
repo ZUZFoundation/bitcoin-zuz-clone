@@ -19,6 +19,11 @@
 #include <string>
 #include <vector>
 
+
+
+class COutPoint;
+class uint256;
+
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
 
@@ -37,6 +42,10 @@ static const int MAX_STACK_SIZE = 1000;
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+
+// Threshold for inverted CTxIn::nSequence: below this value it is interpreted
+// as a relative lock-time, otherwise ignored.
+static const uint32_t SEQUENCE_THRESHOLD = (1 << 31);
 
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
@@ -180,7 +189,9 @@ enum opcodetype
     OP_CHECKSEQUENCEVERIFY = 0xb2,
     OP_NOP3 = OP_CHECKSEQUENCEVERIFY,
     OP_NOP4 = 0xb3,
+    OP_WITHDRAWPROOFVERIFY = OP_NOP4,
     OP_NOP5 = 0xb4,
+    OP_REORGPROOFVERIFY = OP_NOP5,
     OP_NOP6 = 0xb5,
     OP_NOP7 = 0xb6,
     OP_NOP8 = 0xb7,
@@ -650,6 +661,35 @@ public:
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
+
+    bool IsWithdrawProof() const; //HIM_REVISIT_5
+    bool IsWithdrawOutput() const; //HIM_REVISIT_5
+
+    /**
+     * Returns true if this is a withdraw-lock scriptPubKey.
+     * Note that a withdraw-lock could be a post-reorg-proof output *or* a
+     * x-chain transfer lock.
+     * Note that hashGenesisBlock only need be set if (fRequireToUs)
+     */
+    bool IsWithdrawLock(const uint256 hashGenesisBlock, bool fRequireDestination=false, bool fRequireToUs=false) const;
+
+    //! Push a vector with a length postfix (as used by withdraw proofs)
+    void PushWithdraw(const std::vector<unsigned char> push);
+
+    /** Get the withdraw output spent, asserting IsWithdrawProof first */
+    COutPoint GetWithdrawSpent() const;
+
+    /** Get the genesis hash locked to, asserting IsWithdrawLock first */
+    uint256 GetWithdrawLockGenesisHash() const;
+
+    /**
+     * Gets the fraud bounty value from a withdraw output, asserint IsWithdrawOutput first
+     * (This function is NOT consensus-critical)
+     */
+    int64_t GetFraudBounty() const;
+    //TODO: Rejigger amount.h so that it doesnt pull in serialize.h and then include CAmount for above
+
+
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
@@ -667,12 +707,15 @@ public:
         return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE);
     }
 
+    std::string ToString() const; //HIM_REVISIT_5
+
     void clear()
     {
         // The default prevector::clear() does not release memory
         CScriptBase::clear();
         shrink_to_fit();
     }
+
 };
 
 struct CScriptWitness

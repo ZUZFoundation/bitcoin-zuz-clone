@@ -83,6 +83,8 @@ public:
      */
     bool IsPremineAddressScript(const CScript& scriptPubKey, int height) const;
 
+    const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
+
 protected:
     CChainParams() {}
 
@@ -102,6 +104,8 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     std::vector<std::string> zuzPreminePubkeys;
+
+    uint256 bnProofOfWorkLimit;
 };
 
 /**

@@ -167,6 +167,7 @@ enum
         SerializationOp(s, CSerActionUnserialize());                  \
     }
 
+
 template<typename Stream> inline void Serialize(Stream& s, char a    ) { ser_writedata8(s, a); } // TODO Get rid of bare char
 template<typename Stream> inline void Serialize(Stream& s, int8_t a  ) { ser_writedata8(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, uint8_t a ) { ser_writedata8(s, a); }
@@ -527,8 +528,6 @@ template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_p
 template<typename Stream, typename T> void Serialize(Stream& os, const std::unique_ptr<const T>& p);
 template<typename Stream, typename T> void Unserialize(Stream& os, std::unique_ptr<const T>& p);
 
-
-
 /**
  * If none of the specialized versions above matched, default to calling member function.
  */
@@ -544,8 +543,29 @@ inline void Unserialize(Stream& is, T& a)
     a.Unserialize(is);
 }
 
+///**
+// * If none of the specialized versions above matched, default to calling member function.
+// * "int nType" is changed to "long nType" to keep from getting an ambiguous overload error.
+// * The compiler will only cast int to long if none of the other templates matched.
+// * Thanks to Boost serialization for this idea.
+// */
+//template<typename T>
+//inline unsigned int GetSerializeSize(const T& a, long nType, int nVersion)
+//{
+//    return a.GetSerializeSize((int)nType, nVersion);
+//}
 
+//template<typename Stream, typename T>
+//inline void Serialize(Stream& os, const T& a, long nType, int nVersion)
+//{
+//    a.Serialize(os, (int)nType, nVersion);
+//}
 
+//template<typename Stream, typename T>
+//inline void Unserialize(Stream& is, T& a, long nType, int nVersion)
+//{
+//    a.Unserialize(is, (int)nType, nVersion);
+//}
 
 
 /**
@@ -891,6 +911,18 @@ public:
     int GetVersion() const { return nVersion; }
     int GetType() const { return nType; }
 };
+
+
+//#define ADD_SERIALIZE_METHODS_2                                                                             \
+//    template<typename Stream>                                                        \
+//    void Serialize(Stream& s, int nType, int nVersion) const {                       \
+//        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, nVersion);\
+//    }                                                                                \
+//    template<typename Stream>                                                        \
+//    void Unserialize(Stream& s, int nType, int nVersion) {                           \
+//        SerializationOp(s, CSerActionUnserialize(), nType, nVersion);                \
+//    }
+
 
 template<typename Stream>
 void SerializeMany(Stream& s)

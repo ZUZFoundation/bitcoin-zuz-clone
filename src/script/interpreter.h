@@ -119,6 +119,12 @@ enum
     // Signature checking assumes no sighash byte after the DER signature
     //HIM_REVISIT
     SCRIPT_NO_SIGHASH_BYTE = (1U << 17),
+
+    // Execute sidechain-related opcodes instead of treating them as NOPs
+    SCRIPT_VERIFY_WITHDRAW = (1U << 18),
+
+    // Dirty hack to require a higher bar of bitcoin block confirmation in mempool
+    SCRIPT_VERIFY_INCREASE_CONFIRMATIONS_REQUIRED = (1U << 19)
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
@@ -147,7 +153,7 @@ public:
         return false;
     }
 
-    virtual bool CheckLockTime(const CScriptNum& nLockTime) const
+    virtual bool CheckLockTime(const CScriptNum& nLockTime, bool fSequence = false) const
     {
          return false;
     }
@@ -157,36 +163,126 @@ public:
          return false;
     }
 
+    virtual CTxOut GetOutputOffsetFromCurrent(const int offset) const;
+
+    virtual COutPoint GetPrevOut() const;
+
+    virtual CTxOutValue GetValueIn() const
+    {
+        return -1;
+    }
+
+    virtual CTxOutValue GetValueInPrevIn() const
+    {
+        return -1;
+    }
+
+    virtual CAmount GetTransactionFee() const
+    {
+        return -1;
+    }
+
+#define FEDERATED_PEG_SIDECHAIN_ONLY
+#ifdef FEDERATED_PEG_SIDECHAIN_ONLY
+    virtual bool IsConfirmedBitcoinBlock(const uint256& hash, bool fConservativeConfirmationRequirements) const
+    {
+        return false;
+    }
+#endif
+
+
+
     virtual ~BaseSignatureChecker() {}
 };
 
-class TransactionSignatureChecker : public BaseSignatureChecker
+//HIM_REVISIT
+class TransactionNoWithdrawsSignatureChecker : public BaseSignatureChecker
 {
-private:
-    const CTransaction* txTo;
-    unsigned int nIn;
-    const CAmount amount;
-    const PrecomputedTransactionData* txdata;
-
 protected:
+    const CTransaction* txTo;
+    const CTxOutValue nInValue;
+    const unsigned int nIn;
+    const PrecomputedTransactionData* txdata;
+    
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
-    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
-    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
-    bool CheckLockTime(const CScriptNum& nLockTime) const override;
+
+    TransactionNoWithdrawsSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CTxOutValue& nInValueIn) : 
+        txTo(txToIn), nInValue(nInValueIn), nIn(nInIn), txdata(nullptr) {}
+    
+    TransactionNoWithdrawsSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, 
+                                           const CTxOutValue& nInValueIn, const PrecomputedTransactionData& txdata) : 
+        txTo(txToIn), nInValue(nInValueIn), nIn(nInIn), txdata(&txdata) {}
+    
+    bool CheckSig(const std::vector<unsigned char>& scriptSig,
+                  const std::vector<unsigned char>& vchPubKey,
+                  const CScript& scriptCode,
+                  SigVersion sigversion) const override;
+
+    bool CheckLockTime(const CScriptNum& nLockTime, bool fSequence = false) const override;
+
+    CTxOutValue GetValueIn() const;
+
     bool CheckSequence(const CScriptNum& nSequence) const override;
 };
 
-class MutableTransactionSignatureChecker : public TransactionSignatureChecker
+
+
+class TransactionSignatureChecker : public TransactionNoWithdrawsSignatureChecker //HIM_REVISIT
+{
+private:
+    const CTxOutValue nInMinusOneValue;
+    const CAmount nTransactionFee;
+    const int nSpendHeight;
+
+public:
+
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CTxOutValue& nInValueIn,
+                                CTxOutValue nInMinusOneValueIn, CAmount nTransactionFeeIn,
+                                int nSpendHeightIn) :
+        TransactionNoWithdrawsSignatureChecker(txToIn, nInIn, nInValueIn), 
+        nInMinusOneValue(nInMinusOneValueIn), nTransactionFee(nTransactionFeeIn),
+        nSpendHeight(nSpendHeightIn) {}
+    
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CTxOutValue& nInValueIn,
+                                CTxOutValue nInMinusOneValueIn, CAmount nTransactionFeeIn,
+                                int nSpendHeightIn, const PrecomputedTransactionData& txdataIn) :
+        TransactionNoWithdrawsSignatureChecker(txToIn, nInIn, nInValueIn, txdataIn),
+        nInMinusOneValue(nInMinusOneValueIn), nTransactionFee(nTransactionFeeIn),
+        nSpendHeight(nSpendHeightIn) {}
+    
+    CTxOut GetOutputOffsetFromCurrent(const int offset) const override;
+    COutPoint GetPrevOut() const override;
+    CTxOutValue GetValueInPrevIn() const override;
+    CAmount GetTransactionFee() const override;
+#ifdef FEDERATED_PEG_SIDECHAIN_ONLY
+    bool IsConfirmedBitcoinBlock(const uint256& hash, bool fConservativeConfirmationRequirements) const override;
+#endif 
+    
+};
+
+class MutableTransactionSignatureChecker : public TransactionNoWithdrawsSignatureChecker
 {
 private:
     const CTransaction txTo;
 
 public:
-    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn) : TransactionSignatureChecker(&txTo, nInIn, amountIn), txTo(*txToIn) {}
+    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CTxOutValue& nInValueIn) :
+        TransactionNoWithdrawsSignatureChecker(&txTo, nInIn, nInValueIn), txTo(*txToIn) {}
 };
+
+
+class MutableTransactionNoWithdrawsSignatureChecker : public TransactionNoWithdrawsSignatureChecker
+{
+private:
+    const CTransaction txTo;
+
+public:
+    MutableTransactionNoWithdrawsSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CTxOutValue& nInValueIn) :
+        TransactionNoWithdrawsSignatureChecker(&txTo, nInIn, nInValueIn), txTo(*txToIn) {}
+};
+
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);

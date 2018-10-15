@@ -64,7 +64,10 @@ enum txnouttype
     TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
     TX_WITNESS_V0_SCRIPTHASH,
     TX_WITNESS_V0_KEYHASH,
-    TX_WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
+    TX_WITNESS_UNKNOWN,
+    TX_WITHDRAW_LOCK,
+    TX_WITHDRAW_OUT,
+    TX_TRUE,//!< Only for Witness versions not already defined above
 };
 
 class CNoDestination {

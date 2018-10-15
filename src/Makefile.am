@@ -174,7 +174,8 @@ BITCOIN_CORE_H = \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h
+  zmq/zmqpublishnotifier.h \
+	blind.h
 
 
 obj/build.h: FORCE
@@ -253,6 +254,9 @@ libzuzcoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   $(BITCOIN_CORE_H)
+
+#libzuzcoin_wallet_a_LIBADD = $(LIBSECP256K1) 
+
 
 # crypto primitives library
 crypto_libzuzcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS)
@@ -344,6 +348,7 @@ libzuzcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
+	blind.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.

@@ -16,6 +16,12 @@ uint256 CBlockHeader::GetHash() const
     return SerializeHash(*this);
 }
 
+std::string CBitcoinProof::ToString() const
+{
+    return strprintf("CBitcoinProof(challenge=%08x, solution=%u)",
+                     challenge, solution);
+}
+
 std::string CProof::ToString() const
 {
     return strprintf("CProof(challenge=%s, solution=%s)",

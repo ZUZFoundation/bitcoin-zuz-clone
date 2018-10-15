@@ -9,6 +9,7 @@
 #include <script/script.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <arith_uint256.h>
 
 
 typedef std::vector<unsigned char> valtype;
@@ -31,6 +32,9 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TX_WITNESS_UNKNOWN: return "witness_unknown";
+    case TX_WITHDRAW_LOCK: return "withdraw";
+    case TX_WITHDRAW_OUT: return "withdrawout";
+    case TX_TRUE: return "true";
     }
     return nullptr;
 }
@@ -49,6 +53,14 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(std::make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // Empty, provably prunable, data-carrying output //HIM_REVISIT_5
+        //        if (GetBoolArg("-datacarrier", true))
+        //            mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA));
+        //        mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN));
+
+        // OP_TRUE scriptPubKey
+        mTemplates.insert(std::make_pair(TX_TRUE, CScript() << OP_TRUE));
     }
 
     vSolutionsRet.clear();
@@ -60,6 +72,18 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         typeRet = TX_SCRIPTHASH;
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    if (scriptPubKey.IsWithdrawLock(ArithToUint256(0)))
+    {
+        typeRet = TX_WITHDRAW_LOCK;
+        return true;
+    }
+
+    if (scriptPubKey.IsWithdrawOutput())
+    {
+        typeRet = TX_WITHDRAW_OUT;
         return true;
     }
 
@@ -234,7 +258,8 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     std::vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA){
+    if (typeRet == TX_NULL_DATA || typeRet == TX_WITHDRAW_LOCK || typeRet == TX_WITHDRAW_OUT)
+    {
         // This is data, not addresses
         return false;
     }

@@ -7,11 +7,14 @@
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
+#include <secp256k1_rangeproof.h>
+
 
 namespace
 {
 /* Global secp256k1_context object used for verification. */
 secp256k1_context* secp256k1_context_verify = nullptr;
+secp256k1_context* secp256k1_bitcoin_verify_context = NULL;
 } // namespace
 
 /** This function is taken from the libsecp256k1 distribution and implements
@@ -298,5 +301,25 @@ ECCVerifyHandle::~ECCVerifyHandle()
         assert(secp256k1_context_verify != nullptr);
         secp256k1_context_destroy(secp256k1_context_verify);
         secp256k1_context_verify = nullptr;
+    }
+}
+
+void ECC_Verify_Start() {
+    assert(secp256k1_bitcoin_verify_context == NULL);
+
+    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
+    assert(ctx != NULL);
+    secp256k1_pedersen_context_initialize(ctx);
+    secp256k1_rangeproof_context_initialize(ctx);
+
+    secp256k1_bitcoin_verify_context = ctx;
+}
+
+void ECC_Verify_Stop() {
+    secp256k1_context *ctx = secp256k1_bitcoin_verify_context;
+    secp256k1_bitcoin_verify_context = NULL;
+
+    if (ctx) {
+        secp256k1_context_destroy(ctx);
     }
 }
