@@ -17,6 +17,7 @@ AC_CONFIG_MACRO_DIR([build-aux/m4])
 BITCOIN_DAEMON_NAME=zuzcoind
 BITCOIN_GUI_NAME=zuzcoin-qt
 BITCOIN_CLI_NAME=zuzcoin-cli
+BITCOIN_MERGED_CLI_NAME=zuzcoin-merged-cli
 BITCOIN_TX_NAME=zuzcoin-tx
 
 dnl Unless the user specified ARFLAGS, force it to be cr
@@ -293,7 +294,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build zuzcoin-cli zuzcoin-tx (default=yes)])],
+  [build zuzcoin-cli zuzcoin-merged-cli zuzcoin-tx (default=yes)])],
   [build_zuzcoin_utils=$withval],
   [build_zuzcoin_utils=yes])
 
@@ -1064,7 +1065,7 @@ AC_MSG_CHECKING([whether to build zuzcoind])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_zuzcoind = xyes])
 AC_MSG_RESULT($build_zuzcoind)
 
-AC_MSG_CHECKING([whether to build utils (zuzcoin-cli zuzcoin-tx)])
+AC_MSG_CHECKING([whether to build utils (zuzcoin-cli zuzcoin-merged-cli zuzcoin-tx)])
 AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_zuzcoin_utils = xyes])
 AC_MSG_RESULT($build_zuzcoin_utils)
 
@@ -1233,6 +1234,7 @@ AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
 AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
+AC_SUBST(BITCOIN_MERGED_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)

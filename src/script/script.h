@@ -662,8 +662,8 @@ public:
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
 
-    bool IsWithdrawProof() const; //HIM_REVISIT_5
-    bool IsWithdrawOutput() const; //HIM_REVISIT_5
+    bool IsWithdrawProof() const;
+    bool IsWithdrawOutput() const;
 
     /**
      * Returns true if this is a withdraw-lock scriptPubKey.

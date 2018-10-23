@@ -69,7 +69,7 @@ if BUILD_BITCOIND
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += zuzcoin-cli zuzcoin-tx
+  bin_PROGRAMS += zuzcoin-cli zuzcoin-merged-cli zuzcoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -434,6 +434,23 @@ zuzcoin_cli_LDADD = \
 
 zuzcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
+
+
+# zuzcoin-cli binary #
+zuzcoin_merged_cli_SOURCES = zuzcoin-merged-cli.cpp
+zuzcoin_merged_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+zuzcoin_merged_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+zuzcoin_merged_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+zuzcoin_merged_cli_LDADD = \
+  $(LIBBITCOIN_CLI) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO)
+
+zuzcoin_merged_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+#
+
 
 # zuzcoin-tx binary #
 zuzcoin_tx_SOURCES = zuzcoin-tx.cpp
