@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <wallet/wallet.h>
+#include "chainparams.h"
 
 #include <set>
 
@@ -50,8 +51,14 @@ static void CoinSelection(benchmark::State& state)
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
         bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet);
+/*        std::set<std::pair<const CWalletTx*, unsigned int> > setCoinsRet;
+        CAmountMap nValueRet;
+        CAmountMap mapValue;
+        mapValue[Params().GetConsensus().pegged_asset] = 1003 * COIN;
+        bool success = wallet.SelectCoinsMinConf(mapValue, 1, 6, 0, vCoins, setCoinsRet, nValueRet);
+*/
         assert(success);
-        assert(nValueRet == 1003 * COIN);
+        assert(nValueRet[Params().GetConsensus().pegged_asset] == 1003 * COIN);
         assert(setCoinsRet.size() == 2);
     }
 }

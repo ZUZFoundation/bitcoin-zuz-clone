@@ -14,6 +14,7 @@ purposes. As such there are repository "maintainers" who are responsible for
 merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
+In Contrast to Bitcoin Core, this repository is property of Blockstream Inc. which means that acceptance of contributions comes down to one of the privelaged "maintainers" of the repository. These maintainers are responsible for merging pull requests as well as a “lead maintainer” who is responsible for the release cycle, overall merging, moderation and appointment of maintainers. The intention is however to follow a very similar meritocratic model to Bitcoin Core's, meaning that all contributions are welcome, and a history of high-quality contributions will likely pull more weight than otherwise.
 
 Contributor Workflow
 --------------------

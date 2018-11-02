@@ -25,6 +25,13 @@ static constexpr int MAX_BLOCK_COINSDB_USAGE = 10;
 static const int64_t nDefaultDbCache = 450;
 //! -dbbatchsize default (bytes)
 static const int64_t nDefaultDbBatchSize = 16 << 20;
+//! Compensate for extra memory peak (x1.5-x1.9) at flush time.
+static constexpr int DB_PEAK_USAGE_FACTOR = 2;
+//! No need to periodic flush if at least this much space still available.
+static constexpr int MAX_BLOCK_COINSDB_USAGE = 200 * DB_PEAK_USAGE_FACTOR;
+//! Always periodic flush if less than this much space still available.
+static constexpr int MIN_BLOCK_COINSDB_USAGE = 50 * DB_PEAK_USAGE_FACTOR;
+//! -dbcache default (MiB)
 //! max. -dbcache (MiB)
 static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
 //! min. -dbcache (MiB)
@@ -81,6 +88,10 @@ public:
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;
+
+    //bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    //bool HaveCoins(const uint256 &txid) const;
+    bool IsWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const;
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
@@ -124,6 +135,8 @@ public:
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
+    bool ReadInvalidBlockQueue(std::vector<uint256> &vBlocks);
+    bool WriteInvalidBlockQueue(const std::vector<uint256> &vBlocks);
 };
 
 #endif // BITCOIN_TXDB_H

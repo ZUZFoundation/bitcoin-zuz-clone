@@ -428,7 +428,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         if (amount > 0)
         {
-            CTxOut txout(amount, (CScript)std::vector<unsigned char>(24, 0));
+            CTxOut txout(Params().GetConsensus().pegged_asset, amount, (CScript)std::vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
             fDust |= IsDust(txout, ::dustRelayFee);
         }
@@ -463,7 +463,10 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nQuantity++;
 
         // Amount
-        nAmount += out.tx->tx->vout[out.i].nValue;
+        nAmount += out.tx->GetOutputValueOut(out.i);
+
+        // Priority
+        dPriorityInputs += (double)COIN * (out.nDepth+1);
 
         // Bytes
         CTxDestination address;
@@ -519,8 +522,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < MIN_CHANGE)
             {
-                CTxOut txout(nChange, (CScript)std::vector<unsigned char>(24, 0));
-                if (IsDust(txout, ::dustRelayFee))
+                CTxOut txout(Params().GetConsensus().pegged_asset, nChange, (CScript)std::vector<unsigned char>(24, 0));
+                if (txout.IsDust(dustRelayFee))
                 {
                     nPayFee += nChange;
                     nChange = 0;
@@ -649,7 +652,8 @@ void CoinControlDialog::updateView()
         CAmount nSum = 0;
         int nChildren = 0;
         for (const COutput& out : coins.second) {
-            nSum += out.tx->tx->vout[out.i].nValue;
+            nSum += out.tx->tx->vout[out.i].nValue.GetAmount();
+            nSum += out.tx->GetOutputValueOut(out.i);
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -686,8 +690,8 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            itemOutput->setText(COLUMN_AMOUNT, ZuzcoinUnits::format(nDisplayUnit, out.tx->tx->vout[out.i].nValue));
-            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->tx->vout[out.i].nValue)); // padding so that sorting works correctly
+            itemOutput->setText(COLUMN_AMOUNT, ZuzcoinUnits::format(nDisplayUnit, out.tx->GetOutputValueOut(out.i)));
+            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->GetOutputValueOut(out.i))); // padding so that sorting works correctly
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));

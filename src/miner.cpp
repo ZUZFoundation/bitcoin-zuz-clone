@@ -25,6 +25,8 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validationinterface.h>
+#include "txmempool.h"
+#include "pubkey.h"
 
 #include <algorithm>
 #include <queue>
@@ -55,7 +57,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+        ResetChallenge(*pblock, *pindexPrev, consensusParams);
 
     return nNewTime - nOldTime;
 }
@@ -104,7 +106,7 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx, int required_age_in_secs)
 {
     int64_t nTimeStart = GetTimeMicros();
 
@@ -115,6 +117,31 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if(!pblocktemplate.get())
         return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
+
+    LOCK2(cs_main, mempool.cs);
+    CBlockIndex* pindexPrev = chainActive.Tip();
+
+    // Reset proof here, for weight calculations since header
+    // is not fixed size.
+    ResetProof(*pblock);
+    ResetChallenge(*pblock, *pindexPrev, chainparams.GetConsensus());
+
+    // Pad weight for challenge
+    // We won't bother with serialization byte(s), we have room
+    nBlockWeight += chainparams.GetConsensus().signblockscript.size() * WITNESS_SCALE_FACTOR;
+
+    // Pad weight for proof
+    // Note: Assumes "naked" script template with pubkeys
+    txnouttype dummy_type;
+    std::vector<CTxDestination> dummy_addresses;
+    int required_sigs = -1;
+    if (!ExtractDestinations(chainparams.GetConsensus().signblockscript, dummy_type, dummy_addresses, required_sigs)) {
+        // No idea how to sign this... log error but return block.
+        LogPrintf("CreateNewBlock: Can not extract destinations from signblockscript");
+    } else {
+        assert(required_sigs > 0);
+        nBlockWeight += required_sigs*74*WITNESS_SCALE_FACTOR;
+    }
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.emplace_back();
@@ -149,7 +176,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+    addPackageTxs(nPackagesSelected, nDescendantsUpdated, required_age_in_secs);
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -162,25 +189,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     
-    if( chainActive.Tip()->nHeight <= chainparams.GetConsensus().zuzPremineChainHeight &&
-            chainparams.GetConsensus().zuzPremineEnforcePubKeys)
-    {
-//#ifndef HIM_NDEBUG
-//        std::cout << " HIM : coinbaseTx.vout[0].scriptPubKey = chainparams.zuzMultiSigScript() height : " << chainActive.Tip()->nHeight << std::endl;
-
-//#endif
-        coinbaseTx.vout[0].scriptPubKey = chainparams.zuzMultiSigScript();
-    }
-    else
-    {
-//#ifndef HIM_NDEBUG
-//        std::cout << " HIM : coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn height : " << chainActive.Tip()->nHeight << std::endl;
-//#endif
-
-            coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    }
-
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].scriptPubKey = nFees ? scriptPubKeyIn : CScript() << OP_RETURN;
+    coinbaseTx.vout[0].nValue = nFees;
+    coinbaseTx.vout[0].nAsset = policyAsset;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
@@ -191,8 +202,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-    pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
-    pblock->nNonce         = 0;
+    pblock->nHeight = nHeight;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     CValidationState state;
@@ -200,6 +210,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
     int64_t nTime2 = GetTimeMicros();
+
+    LogPrint("bench", "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
 
     LogPrint(BCLog::BENCH, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
 
@@ -331,8 +343,9 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, int required_age_in_secs)
 {
+    int64_t current_time = GetTime();
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
     indexed_modified_transaction_set mapModifiedTx;
@@ -387,22 +400,20 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             }
         }
 
+        // Skip transactions that are under X seconds in mempool
+        if (iter->GetTime() > current_time - required_age_in_secs) {
+            continue;
+        }
+
         // We skip mapTx entries that are inBlock, and mapModifiedTx shouldn't
         // contain anything that is inBlock.
         assert(!inBlock.count(iter));
 
         uint64_t packageSize = iter->GetSizeWithAncestors();
-        CAmount packageFees = iter->GetModFeesWithAncestors();
         int64_t packageSigOpsCost = iter->GetSigOpCostWithAncestors();
         if (fUsingModified) {
             packageSize = modit->nSizeWithAncestors;
-            packageFees = modit->nModFeesWithAncestors;
             packageSigOpsCost = modit->nSigOpCostWithAncestors;
-        }
-
-        if (packageFees < blockMinFeeRate.GetFee(packageSize)) {
-            // Everything else we might consider has a lower fee rate
-            return;
         }
 
         if (!TestPackage(packageSize, packageSigOpsCost)) {

@@ -9,6 +9,43 @@
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
+#include "script/script.h"
+
+class CProof
+{
+public:
+    CScript challenge;
+    CScript solution;
+
+    CProof()
+    {
+        SetNull();
+    }
+    CProof(CScript challengeIn, CScript solutionIn) : challenge(challengeIn), solution(solutionIn) {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(*(CScriptBase*)(&challenge));
+        if (!(s.GetType() & SER_GETHASH))
+            READWRITE(*(CScriptBase*)(&solution));
+    }
+
+    void SetNull()
+    {
+        challenge.clear();
+        solution.clear();
+    }
+
+    bool IsNull() const
+    {
+        return challenge.empty();
+    }
+
+    std::string ToString() const;
+};
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -25,8 +62,8 @@ public:
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    uint32_t nHeight;
+    CProof proof;
 
     CBlockHeader()
     {
@@ -41,8 +78,8 @@ public:
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
+        READWRITE(nHeight);
+        READWRITE(proof);
     }
 
     void SetNull()
@@ -51,13 +88,13 @@ public:
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
         nTime = 0;
-        nBits = 0;
-        nNonce = 0;
+        nHeight = 0;
+        proof.SetNull();
     }
 
     bool IsNull() const
     {
-        return (nBits == 0);
+        return proof.IsNull();
     }
 
     uint256 GetHash() const;
@@ -111,8 +148,8 @@ public:
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
         block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.nHeight        = nHeight;
+        block.proof          = proof;
         return block;
     }
 

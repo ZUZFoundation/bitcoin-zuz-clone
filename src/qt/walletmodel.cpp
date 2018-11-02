@@ -69,20 +69,28 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
     {
-        return wallet->GetAvailableBalance(coinControl);
+        //return wallet->GetAvailableBalance(coinControl);
+        CAmount nBalance = 0;
+        std::vector<COutput> vCoins;
+        wallet->AvailableCoins(vCoins, true, coinControl);
+        BOOST_FOREACH(const COutput& out, vCoins)
+            if(out.fSpendable)
+                nBalance += out.tx->GetOutputValueOut(out.i);
+
+        return nBalance;
     }
 
-    return wallet->GetBalance();
+    return wallet->GetBalance()[Params().GetConsensus().pegged_asset];
 }
 
 CAmount WalletModel::getUnconfirmedBalance() const
 {
-    return wallet->GetUnconfirmedBalance();
+    return wallet->GetUnconfirmedBalance()[Params().GetConsensus().pegged_asset];
 }
 
 CAmount WalletModel::getImmatureBalance() const
 {
-    return wallet->GetImmatureBalance();
+    return wallet->GetImmatureBalance()[Params().GetConsensus().pegged_asset];
 }
 
 bool WalletModel::haveWatchOnly() const
@@ -92,17 +100,17 @@ bool WalletModel::haveWatchOnly() const
 
 CAmount WalletModel::getWatchBalance() const
 {
-    return wallet->GetWatchOnlyBalance();
+    return wallet->GetWatchOnlyBalance()[Params().GetConsensus().pegged_asset];
 }
 
 CAmount WalletModel::getWatchUnconfirmedBalance() const
 {
-    return wallet->GetUnconfirmedWatchOnlyBalance();
+    return wallet->GetUnconfirmedWatchOnlyBalance()[Params().GetConsensus().pegged_asset];
 }
 
 CAmount WalletModel::getWatchImmatureBalance() const
 {
-    return wallet->GetImmatureWatchOnlyBalance();
+    return wallet->GetImmatureWatchOnlyBalance()[Params().GetConsensus().pegged_asset];
 }
 
 void WalletModel::updateStatus()
@@ -224,7 +232,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
                 CAmount nAmount = out.amount();
-                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
+                CRecipient recipient = {scriptPubKey, nAmount, Params().GetConsensus().pegged_asset, CPubKey(), rcp.fSubtractFeeFromAmount};
                 vecSend.push_back(recipient);
             }
             if (subtotal <= 0)
@@ -246,8 +254,15 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
-            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
+           // CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
+           // CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
+            CBitcoinAddress addr(rcp.address.toStdString());
+            CScript scriptPubKey = GetScriptForDestination(addr.Get());
+            CPubKey confidentiality_pubkey;
+            if (addr.IsBlinded()) {
+                confidentiality_pubkey = addr.GetBlindingKey();
+            }
+            CRecipient recipient = {scriptPubKey, rcp.amount, Params().GetConsensus().pegged_asset, confidentiality_pubkey, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
             total += rcp.amount;
@@ -275,11 +290,14 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         std::string strFailReason;
 
         CWalletTx *newTx = transaction.getTransaction();
-        CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl);
+        //CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        std::vector<CReserveKey> vkeyChange;
+        vkeyChange.emplace_back(CReserveKey(wallet));
+        std::vector<CAmount> outAmounts;
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, vkeyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, true, &outAmounts);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
-            transaction.reassignAmounts(nChangePosRet);
+            transaction.reassignAmounts(outAmounts, nChangePosRet);
 
         if(!fCreated)
         {
@@ -329,9 +347,11 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
         }
 
-        CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        //CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        std::vector<CReserveKey> vkeyChange;
+        vkeyChange.emplace_back(CReserveKey(wallet));
         CValidationState state;
-        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), state))
+        if(!wallet->CommitTransaction(*newTx, vkeyChange, g_connman.get(), state))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(state.GetRejectReason()));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);

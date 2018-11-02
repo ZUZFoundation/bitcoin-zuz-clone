@@ -169,7 +169,8 @@ Always query for peer addresses via DNS lookup (default: 0)
 .HP
 \fB\-listen\fR
 .IP
-Accept connections from outside (default: 1 if no \fB\-proxy\fR or \fB\-connect\fR)
+Accept connections from outside (default: 1 if no \fB\-proxy\fR or
+\fB\-connect\fR/\-noconnect)
 .HP
 \fB\-listenonion\fR
 .IP
@@ -224,6 +225,11 @@ Connect through SOCKS5 proxy
 Randomize credentials for every proxy connection. This enables Tor
 stream isolation (default: 1)
 .HP
+\fB\-rpcserialversion\fR
+.IP
+Sets the serialization of raw transaction or block hex returned in
+non\-verbose mode, non\-segwit(0) or segwit(1) (default: 1)
+.HP
 \fB\-seednode=\fR<ip>
 .IP
 Connect to a node to retrieve peer addresses, and disconnect
@@ -257,6 +263,16 @@ CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple
 times. Whitelisted peers cannot be DoS banned and their
 transactions are always relayed, even if they are already in the
 mempool, useful e.g. for a gateway
+.HP
+\fB\-whitelistrelay\fR
+.IP
+Accept relayed transactions received from whitelisted peers even when
+not relaying transactions (default: 1)
+.HP
+\fB\-whitelistforcerelay\fR
+.IP
+Force relay of transactions from whitelisted peers even if they violate
+local relay policy (default: 1)
 .HP
 \fB\-maxuploadtarget=\fR<n>
 .IP
@@ -476,7 +492,12 @@ blockmaxweight
 .HP
 \fB\-blockmintxfee=\fR<amt>
 .IP
-Set lowest fee rate (in ZUZ/kB) for transactions to be included in block
+Set maximum size of high\-priority/low\-fee transactions in bytes
+(default: 0)
+.HP
+\fB\-blockmintxfee=\fR<amt>
+.IP
+Set lowest fee rate (in BTC/kB) for transactions to be included in block
 creation. (default: 0.00001)
 .PP
 RPC server options:

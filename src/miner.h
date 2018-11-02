@@ -84,6 +84,21 @@ struct modifiedentry_iter {
     }
 };
 
+// This matches the calculation in CompareTxMemPoolEntryByAncestorFee,
+// except operating on CTxMemPoolModifiedEntry.
+// TODO: refactor to avoid duplication of this logic.
+struct CompareModifiedEntry {
+    bool operator()(const CTxMemPoolModifiedEntry &a, const CTxMemPoolModifiedEntry &b) const
+    {
+        double f1 = (double)a.nModFeesWithAncestors * b.nSizeWithAncestors;
+        double f2 = (double)b.nModFeesWithAncestors * a.nSizeWithAncestors;
+        if (f1 == f2) {
+            return CTxMemPool::CompareIteratorByHash()(a.iter, b.iter);
+        }
+        return f1 > f2;
+    }
+};
+
 // A comparator that sorts transactions based on number of ancestors.
 // This is sufficient to sort an ancestor package in an order that is valid
 // to appear in a block.
@@ -167,7 +182,7 @@ public:
     BlockAssembler(const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true, int required_age_in_secs=0);
 
 private:
     // utility functions
@@ -177,10 +192,18 @@ private:
     void AddToBlock(CTxMemPool::txiter iter);
 
     // Methods for how to add transactions to a block.
+    /** Add transactions based on tx "priority" */
+    void addPriorityTxs();
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated);
+    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, int required_age_in_secs=0);
+
+    // helper function for addPriorityTxs
+    /** Test if tx will still "fit" in the block */
+    bool TestForBlock(CTxMemPool::txiter iter);
+    /** Test if tx still has unconfirmed parents not yet in block */
+    bool isStillDependent(CTxMemPool::txiter iter);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

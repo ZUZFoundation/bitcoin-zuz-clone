@@ -10,6 +10,8 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include "amount.h"
+#include "chainparamsbase.h"
 
 #include <memory>
 #include <vector>
@@ -44,18 +46,29 @@ public:
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
+        BLINDED_ADDRESS,
         SECRET_KEY,
         EXT_PUBLIC_KEY,
         EXT_SECRET_KEY,
+        PARENT_PUBKEY_ADDRESS,
+        PARENT_SCRIPT_ADDRESS,
 
         MAX_BASE58_TYPES
     };
+
+    /**
+     * Maps strNetworkID [see BIP70] to chainID (hashGenesisBlock and genesis checkpoint)
+     */
+    static const std::vector<std::string> supportedChains;
 
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     int GetDefaultPort() const { return nDefaultPort; }
 
     const CBlock& GenesisBlock() const { return genesis; }
+    const uint256 ParentGenesisBlockHash() const { return parentGenesisBlockHash; }
+    /** Make miner wait to have peers to avoid wasting work */
+    bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
@@ -83,8 +96,12 @@ public:
      */
     bool IsPremineAddressScript(const CScript& scriptPubKey, int height) const;
 
+    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+    /** All coinbase outputs (after genesis) must be to this destination */
+    bool anyonecanspend_aremine;
 protected:
-    CChainParams() {}
+    CChainParams() = delete;
+    CChainParams(const std::string& chain) : strNetworkID(chain) {}
 
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
@@ -95,6 +112,9 @@ protected:
     std::string bech32_hrp;
     std::string strNetworkID;
     CBlock genesis;
+    uint256 parentGenesisBlockHash;
+    CAmount initialFreeCoins;
+    CAmount initial_reissuance_tokens;
     std::vector<SeedSpec6> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
@@ -127,5 +147,6 @@ void SelectParams(const std::string& chain);
  * Allows modifying the Version Bits regtest parameters.
  */
 void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
 #endif // BITCOIN_CHAINPARAMS_H

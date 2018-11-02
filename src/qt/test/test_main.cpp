@@ -73,6 +73,8 @@ int main(int argc, char *argv[])
     // QApplication:: and QCoreApplication:: in the tests
     QApplication app(argc, argv);
     app.setApplicationName("Zuzcoin-Qt-test");
+    // QCoreApplication:: in the tests
+    // QCoreApplication app(argc, argv);
 
     SSL_library_init();
 

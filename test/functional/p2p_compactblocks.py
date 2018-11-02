@@ -103,7 +103,7 @@ class CompactBlocksTest(ZuzcoinTestFramework):
         height = node.getblockcount()
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
-        block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
+        block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1, height + 1)
         block.nVersion = 4
         if segwit:
             add_witness_commitment(block)
@@ -118,12 +118,12 @@ class CompactBlocksTest(ZuzcoinTestFramework):
         assert(int(self.nodes[0].getbestblockhash(), 16) == block.sha256)
         self.nodes[0].generate(100)
 
-        total_value = block.vtx[0].vout[0].nValue
-        out_value = total_value // 10
+        total_value = block.vtx[0].vout[0].nValue.getAmount()
+        out_value = total_value
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(block.vtx[0].sha256, 0), b''))
         for i in range(10):
-            tx.vout.append(CTxOut(out_value, CScript([OP_TRUE])))
+            tx.vout.append(CTxOut(CTxOutValue(out_value), CScript([OP_TRUE])))
         tx.rehash()
 
         block2 = self.build_block_on_tip(self.nodes[0])
@@ -425,6 +425,7 @@ class CompactBlocksTest(ZuzcoinTestFramework):
             tx = CTransaction()
             tx.vin.append(CTxIn(COutPoint(utxo[0], utxo[1]), b''))
             tx.vout.append(CTxOut(utxo[2] - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
+            #tx.vout.append(CTxOut(CTxOutValue(utxo[2].getAmount() - 1000), CScript([OP_TRUE])))
             tx.rehash()
             utxo = [tx.sha256, 0, tx.vout[0].nValue]
             block.vtx.append(tx)

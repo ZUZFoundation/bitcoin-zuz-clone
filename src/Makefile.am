@@ -77,14 +77,16 @@ endif
 BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
+  assetsdir.h \
   base58.h \
   bech32.h \
+  blind.h \
   bloom.h \
   blockencodings.h \
+  callrpc.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
-  chainparamsseeds.h \
   checkpoints.h \
   checkqueue.h \
   clientversion.h \
@@ -100,6 +102,7 @@ BITCOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   fs.h \
+  global/common.h \
   httprpc.h \
   httpserver.h \
   indirectmap.h \
@@ -135,6 +138,7 @@ BITCOIN_CORE_H = \
   rpc/register.h \
   rpc/util.h \
   scheduler.h \
+  script/generic.hpp \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
@@ -189,8 +193,8 @@ libzuzcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libzuzcoin_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
-  bloom.cpp \
   blockencodings.cpp \
+  bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
   consensus/tx_verify.cpp \
@@ -242,6 +246,7 @@ endif
 libzuzcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libzuzcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libzuzcoin_wallet_a_SOURCES = \
+  global/common.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/feebumper.cpp \
@@ -252,6 +257,9 @@ libzuzcoin_wallet_a_SOURCES = \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
+  policy/rbf.cpp \
+  primitives/bitcoin/merkleblock.cpp \
+  primitives/bitcoin/block.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -287,30 +295,47 @@ libzuzcoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  bloom.cpp \
+  bloom.h \
+  callrpc.cpp \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  issuance.h \
+  issuance.cpp \
+  merkleblock.cpp \
+  pow.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
   primitives/transaction.cpp \
   primitives/transaction.h \
+  primitives/bitcoin/block.cpp \
+  primitives/bitcoin/block.h \
+  primitives/bitcoin/merkleblock.cpp \
+  primitives/bitcoin/merkleblock.h \
+  primitives/bitcoin/transaction.cpp \
+  primitives/bitcoin/transaction.h \
   pubkey.cpp \
   pubkey.h \
   script/zuzcoinconsensus.cpp \
+  rpc/protocol.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
   script/script.h \
   script/script_error.cpp \
   script/script_error.h \
+  support/events.cpp \
+  script/sign.cpp \
   serialize.h \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
+  utilmoneystr.cpp \
   utilstrencodings.cpp \
   utilstrencodings.h \
   version.h
@@ -321,16 +346,24 @@ libzuzcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libzuzcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
+  amount.cpp \
+  assetsdir.cpp \
+  blind.cpp \
+  bloom.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  global/common.cpp \
   key.cpp \
   keystore.cpp \
   netaddress.cpp \
+  issuance.cpp \
+  merkleblock.cpp \
   netbase.cpp \
   policy/feerate.cpp \
+  pow.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \
@@ -345,6 +378,8 @@ libzuzcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libzuzcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libzuzcoin_util_a_SOURCES = \
   support/lockedpool.cpp \
+  support/events.cpp \
+  callrpc.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
   compat/glibc_sanity.cpp \
@@ -357,6 +392,7 @@ libzuzcoin_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
+  uint256.cpp \
   util.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
@@ -440,7 +476,7 @@ zuzcoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-zuzcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+zuzcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # zuzcoinconsensus library #
@@ -474,6 +510,7 @@ CLEANFILES += consensus/*.gcda consensus/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
 CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno
+CLEANFILES += primitives/bitcoin/*.gcda primitives/bitcoin/*.gcno
 CLEANFILES += script/*.gcda script/*.gcno
 CLEANFILES += support/*.gcda support/*.gcno
 CLEANFILES += univalue/*.gcda univalue/*.gcno
@@ -498,6 +535,9 @@ clean-local:
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
+
+bitcoind bitcoin-cli bitcoin-tx:
+	@echo "Remember to 'make elements*' rather than 'make bitcoin*' in this repository."
 
 .rc.o:
 	@test -f $(WINDRES)

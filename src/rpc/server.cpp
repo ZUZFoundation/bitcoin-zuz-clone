@@ -15,6 +15,9 @@
 #include <utilstrencodings.h>
 
 #include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include <boost/algorithm/string/classification.hpp>
@@ -22,6 +25,18 @@
 
 #include <memory> // for unique_ptr
 #include <unordered_map>
+
+//For thread local rpc username
+#include <boost/thread/tss.hpp>
+//Thread local rpc user name for logging purposes
+boost::thread_specific_ptr<std::string> userInstance;
+
+std::string getUser() {
+        return (userInstance.get() ? *userInstance.get() : "UNDEFINED_USER");
+}
+
+using namespace RPCServer;
+using namespace std;
 
 static bool fRPCRunning = false;
 static bool fRPCInWarmup = true;

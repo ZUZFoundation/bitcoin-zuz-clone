@@ -41,6 +41,25 @@ public:
     //! construct a Coin from a CTxOut and height/coinbase information.
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    //! version of the CTransaction; accesses to this value should probably check for nHeight as well,
+    //! as new tx version will probably only be introduced at certain heights
+    int nVersion;
+
+    void FromTx(const CTransaction &tx, int nHeightIn) {
+        fCoinBase = tx.IsCoinBase();
+        vout = tx.vout;
+        for (size_t i = 0; i < vout.size(); i++) {
+            vout[i].nNonce.SetNull();
+        }
+        nHeight = nHeightIn;
+        nVersion = tx.nVersion;
+        ClearUnspendable();
+    }
+
+    //! construct a CCoins from a CTransaction, at a given height
+    CCoins(const CTransaction &tx, int nHeightIn) {
+        FromTx(tx, nHeightIn);
+    }
 
     void Clear() {
         out.SetNull();
@@ -81,6 +100,10 @@ public:
     }
 };
 
+// For ~WITHDRAW entries, the first element is the txhash, the second is IsNull()
+// For WITHDRAW entries, the first is the genesis hash, the second is the txo (on the other chain) spent
+typedef std::pair<uint256, COutPoint> CCoinsMapKey;
+
 class SaltedOutpointHasher
 {
 private:
@@ -98,16 +121,25 @@ public:
     size_t operator()(const COutPoint& id) const {
         return SipHashUint256Extra(k0, k1, id.hash, id.n);
     }
+    size_t operator()(const CCoinsMapKey& key) const {
+        return SipHashUint256(k0, k1, key.first) ^ SipHashUint256(k0, k1, key.second.hash);
+    }
+    size_t operator()(const uint256& txid) const {
+        return SipHashUint256(k0, k1, txid);
+    }
 };
 
 struct CCoinsCacheEntry
 {
     Coin coin; // The actual cached data.
+    CCoins coins; // The actual cached data.
+    bool withdrawSpent;
     unsigned char flags;
 
     enum Flags {
         DIRTY = (1 << 0), // This cache entry is potentially different from the version in the parent view.
         FRESH = (1 << 1), // The parent view does not have this entry (or it is pruned).
+        WITHDRAW = (1 << 2), // represents a withdraw (coins is actually empty/useless, look at withdrawSpent instead)
         /* Note that FRESH is a performance optimization with which we can
          * erase coins that are fully spent if we know we do not need to
          * flush the changes to the parent cache.  It is always safe to
@@ -115,11 +147,13 @@ struct CCoinsCacheEntry
          */
     };
 
-    CCoinsCacheEntry() : flags(0) {}
+    CCoinsCacheEntry() : coins(), withdrawSpent(false), flags(0) {}
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
 };
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
+
+//typedef boost::unordered_map<CCoinsMapKey, CCoinsCacheEntry, SaltedTxidHasher> CCoinsMap;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor
@@ -153,6 +187,9 @@ public:
 
     //! Just check whether a given outpoint is unspent.
     virtual bool HaveCoin(const COutPoint &outpoint) const;
+
+    //! Check if a given withdraw has been spent
+    virtual bool IsWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
@@ -190,6 +227,10 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
+    bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    bool HaveCoins(const uint256 &txid) const;
+    bool IsWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const;
+    uint256 GetBestBlock() const;
     void SetBackend(CCoinsView &viewIn);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursor *Cursor() const override;
@@ -223,6 +264,11 @@ public:
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
+    bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    bool HaveCoins(const uint256 &txid) const;
+    bool IsWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const;
+    void SetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint, bool fSpent);
+    uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursor* Cursor() const override {

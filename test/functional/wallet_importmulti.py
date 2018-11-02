@@ -21,6 +21,14 @@ class ImportMultiTest (ZuzcoinTestFramework):
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
+        # keyword definition
+        PRIV_KEY = 'privkey'
+        PUB_KEY = 'pubkey'
+        ADDRESS_KEY = 'unconfidential'
+        UNCONF_KEY = 'address'
+        SCRIPT_KEY = 'script'
+
+
         node0_address1 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
 
         #Check only one address
@@ -30,7 +38,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
         assert_equal(self.nodes[1].getblockcount(),1)
 
         #Address Test - before import
-        address_info = self.nodes[1].validateaddress(node0_address1['address'])
+        address_info = self.nodes[1].validateaddress(node0_address1[ADDRESS_KEY])
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
@@ -42,16 +50,16 @@ class ImportMultiTest (ZuzcoinTestFramework):
         address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": address['address']
+                "address": address[ADDRESS_KEY]
             },
             "timestamp": "now",
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
         assert_equal(address_assert['timestamp'], timestamp)
-        watchonly_address = address['address']
+        watchonly_address = address[ADDRESS_KEY]
         watchonly_timestamp = timestamp
 
         self.log.info("Should not import an invalid address")
@@ -74,7 +82,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
             "internal": True
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
         assert_equal(address_assert['timestamp'], timestamp)
@@ -89,7 +97,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
         assert_equal(result[0]['error']['message'], 'Internal must be set for hex scriptPubKey')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
@@ -100,13 +108,13 @@ class ImportMultiTest (ZuzcoinTestFramework):
         address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": address['address']
+                "address": address[ADDRESS_KEY]
             },
             "timestamp": "now",
             "pubkeys": [ address['pubkey'] ]
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
         assert_equal(address_assert['timestamp'], timestamp)
@@ -123,7 +131,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
         }]
         result = self.nodes[1].importmulti(request)
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
         assert_equal(address_assert['timestamp'], timestamp)
@@ -140,7 +148,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
         assert_equal(result[0]['error']['message'], 'Internal must be set for hex scriptPubKey')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
@@ -150,13 +158,13 @@ class ImportMultiTest (ZuzcoinTestFramework):
         address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": address['address']
+                "address": address[ADDRESS_KEY]
             },
             "timestamp": "now",
-            "keys": [ self.nodes[0].dumpprivkey(address['address']) ]
+            "keys": [ self.nodes[0].dumpprivkey(address[ADDRESS_KEY]) ]
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], True)
         assert_equal(address_assert['timestamp'], timestamp)
@@ -178,16 +186,16 @@ class ImportMultiTest (ZuzcoinTestFramework):
         address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": address['address']
+                "address": address[ADDRESS_KEY]
             },
             "timestamp": "now",
-            "keys": [ self.nodes[0].dumpprivkey(address['address']) ],
+            "keys": [ self.nodes[0].dumpprivkey(address[ADDRESS_KEY]) ],
             "watchonly": True
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
         assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
@@ -198,11 +206,11 @@ class ImportMultiTest (ZuzcoinTestFramework):
         result = self.nodes[1].importmulti([{
             "scriptPubKey": address['scriptPubKey'],
             "timestamp": "now",
-            "keys": [ self.nodes[0].dumpprivkey(address['address']) ],
+            "keys": [ self.nodes[0].dumpprivkey(address[ADDRESS_KEY]) ],
             "internal": True
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], True)
         assert_equal(address_assert['timestamp'], timestamp)
@@ -213,40 +221,39 @@ class ImportMultiTest (ZuzcoinTestFramework):
         result = self.nodes[1].importmulti([{
             "scriptPubKey": address['scriptPubKey'],
             "timestamp": "now",
-            "keys": [ self.nodes[0].dumpprivkey(address['address']) ]
+            "keys": [ self.nodes[0].dumpprivkey(address[ADDRESS_KEY]) ]
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
         assert_equal(result[0]['error']['message'], 'Internal must be set for hex scriptPubKey')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
-
 
         # P2SH address
         sig_address_1 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_3 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1[ADDRESS_KEY], sig_address_2[ADDRESS_KEY], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        transactionid = self.nodes[1].sendtoaddress(multi_sig_script[UNCONF_KEY], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multi_sig_script[UNCONF_KEY]
             },
             "timestamp": "now",
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(multi_sig_script['address'])
+        address_assert = self.nodes[1].validateaddress(multi_sig_script[UNCONF_KEY])
         assert_equal(address_assert['isscript'], True)
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['timestamp'], timestamp)
-        p2shunspent = self.nodes[1].listunspent(0,999999, [multi_sig_script['address']])[0]
+        p2shunspent = self.nodes[1].listunspent(0,999999, [multi_sig_script[UNCONF_KEY]])[0]
         assert_equal(p2shunspent['spendable'], False)
         assert_equal(p2shunspent['solvable'], False)
 
@@ -255,25 +262,25 @@ class ImportMultiTest (ZuzcoinTestFramework):
         sig_address_1 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_3 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1[ADDRESS_KEY], sig_address_2[ADDRESS_KEY], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        transactionid = self.nodes[1].sendtoaddress(multi_sig_script[UNCONF_KEY], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh with respective redeem script")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multi_sig_script[UNCONF_KEY]
             },
             "timestamp": "now",
             "redeemscript": multi_sig_script['redeemScript']
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(multi_sig_script['address'])
+        address_assert = self.nodes[1].validateaddress(multi_sig_script[UNCONF_KEY])
         assert_equal(address_assert['timestamp'], timestamp)
 
-        p2shunspent = self.nodes[1].listunspent(0,999999, [multi_sig_script['address']])[0]
+        p2shunspent = self.nodes[1].listunspent(0,999999, [multi_sig_script[UNCONF_KEY]])[0]
         assert_equal(p2shunspent['spendable'], False)
         assert_equal(p2shunspent['solvable'], True)
 
@@ -282,26 +289,26 @@ class ImportMultiTest (ZuzcoinTestFramework):
         sig_address_1 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_3 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1[ADDRESS_KEY], sig_address_2[ADDRESS_KEY], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        transactionid = self.nodes[1].sendtoaddress(multi_sig_script[UNCONF_KEY], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh with respective redeem script and private keys")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multi_sig_script[UNCONF_KEY]
             },
             "timestamp": "now",
             "redeemscript": multi_sig_script['redeemScript'],
-            "keys": [ self.nodes[0].dumpprivkey(sig_address_1['address']), self.nodes[0].dumpprivkey(sig_address_2['address'])]
+            "keys": [ self.nodes[0].dumpprivkey(sig_address_1[ADDRESS_KEY]), self.nodes[0].dumpprivkey(sig_address_2[ADDRESS_KEY])]
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].validateaddress(multi_sig_script['address'])
+        address_assert = self.nodes[1].validateaddress(multi_sig_script[UNCONF_KEY])
         assert_equal(address_assert['timestamp'], timestamp)
 
-        p2shunspent = self.nodes[1].listunspent(0,999999, [multi_sig_script['address']])[0]
+        p2shunspent = self.nodes[1].listunspent(0,999999, [multi_sig_script[UNCONF_KEY]])[0]
         assert_equal(p2shunspent['spendable'], False)
         assert_equal(p2shunspent['solvable'], True)
 
@@ -309,20 +316,20 @@ class ImportMultiTest (ZuzcoinTestFramework):
         sig_address_1 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         sig_address_3 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1[ADDRESS_KEY], sig_address_2[ADDRESS_KEY], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        transactionid = self.nodes[1].sendtoaddress(multi_sig_script[UNCONF_KEY], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh with respective redeem script and private keys")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multi_sig_script[UNCONF_KEY]
             },
             "timestamp": "now",
             "redeemscript": multi_sig_script['redeemScript'],
-            "keys": [ self.nodes[0].dumpprivkey(sig_address_1['address']), self.nodes[0].dumpprivkey(sig_address_2['address'])],
+            "keys": [ self.nodes[0].dumpprivkey(sig_address_1[ADDRESS_KEY]), self.nodes[0].dumpprivkey(sig_address_2[ADDRESS_KEY])],
             "watchonly": True
         }])
         assert_equal(result[0]['success'], False)
@@ -336,7 +343,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
         address2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": address['address']
+                "address": address[ADDRESS_KEY]
             },
             "timestamp": "now",
             "pubkeys": [ address2['pubkey'] ]
@@ -344,7 +351,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
         assert_equal(result[0]['error']['message'], 'Consistency check failed')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
@@ -364,7 +371,7 @@ class ImportMultiTest (ZuzcoinTestFramework):
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
         assert_equal(result[0]['error']['message'], 'Consistency check failed')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
@@ -376,15 +383,15 @@ class ImportMultiTest (ZuzcoinTestFramework):
         address2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": address['address']
+                "address": address[ADDRESS_KEY]
             },
             "timestamp": "now",
-            "keys": [ self.nodes[0].dumpprivkey(address2['address']) ]
+            "keys": [ self.nodes[0].dumpprivkey(address2[ADDRESS_KEY]) ]
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
         assert_equal(result[0]['error']['message'], 'Consistency check failed')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
@@ -397,13 +404,13 @@ class ImportMultiTest (ZuzcoinTestFramework):
         result = self.nodes[1].importmulti([{
             "scriptPubKey": address['scriptPubKey'],
             "timestamp": "now",
-            "keys": [ self.nodes[0].dumpprivkey(address2['address']) ],
+            "keys": [ self.nodes[0].dumpprivkey(address2[ADDRESS_KEY]) ],
             "internal": True
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
         assert_equal(result[0]['error']['message'], 'Consistency check failed')
-        address_assert = self.nodes[1].validateaddress(address['address'])
+        address_assert = self.nodes[1].validateaddress(address[ADDRESS_KEY])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)

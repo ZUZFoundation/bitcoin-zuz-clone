@@ -28,8 +28,17 @@ static const int MAX_OPS_PER_SCRIPT = 201;
 // Maximum number of public keys per multisig
 static const int MAX_PUBKEYS_PER_MULTISIG = 20;
 
+// Validate pegin proof by checking Bitcoin transaction inclusion in
+// mainchain.
+static const bool DEFAULT_VALIDATE_PEGIN = false;
+
+// Number of confirms on parent chain required to confirm on sidechain
+static const unsigned int DEFAULT_PEGIN_CONFIRMATION_DEPTH = 8;
+
 // Maximum script length in bytes
 static const int MAX_SCRIPT_SIZE = 10000;
+class uint256;
+class COutPoint;
 
 // Maximum number of values on script interpreter stack
 static const int MAX_STACK_SIZE = 1000;
@@ -109,6 +118,7 @@ enum opcodetype
     // splice ops
     OP_CAT = 0x7e,
     OP_SUBSTR = 0x7f,
+    OP_SUBSTR_LAZY = 0xc3,
     OP_LEFT = 0x80,
     OP_RIGHT = 0x81,
     OP_SIZE = 0x82,
@@ -166,6 +176,9 @@ enum opcodetype
     OP_CHECKSIGVERIFY = 0xad,
     OP_CHECKMULTISIG = 0xae,
     OP_CHECKMULTISIGVERIFY = 0xaf,
+    OP_DETERMINISTICRANDOM = 0xc0,
+    OP_CHECKSIGFROMSTACK = 0xc1,
+    OP_CHECKSIGFROMSTACKVERIFY = 0xc2,
 
     // expansion
     OP_NOP1 = 0xb0,
@@ -174,6 +187,7 @@ enum opcodetype
     OP_CHECKSEQUENCEVERIFY = 0xb2,
     OP_NOP3 = OP_CHECKSEQUENCEVERIFY,
     OP_NOP4 = 0xb3,
+    OP_WITHDRAWPROOFVERIFY = OP_NOP4,
     OP_NOP5 = 0xb4,
     OP_NOP6 = 0xb5,
     OP_NOP7 = 0xb6,
@@ -644,6 +658,18 @@ public:
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
+    /**
+     * Returns true if script follows OP_RETURN <genesis_block_hash> <pegout_scriptpubkey>
+     * and if correct it returns both things in the output parameters.
+     */
+    bool IsPegoutScript(uint256& genesis_hash, CScript& pegout_scriptpubkey) const;
+    /**
+     * Returns true if script follows OP_RETURN <genesis_block_hash> <destination_scriptpubkey>
+     * it may also have additional pushes at the end. It checks
+     * the genesis hash matches the specified one.
+     */
+    bool IsPegoutScript(const uint256& genesis_hash) const;
+
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
@@ -654,11 +680,13 @@ public:
     /**
      * Returns whether the script is guaranteed to fail at execution,
      * regardless of the initial stack. This allows outputs to be pruned
-     * instantly when entering the UTXO set.
+     * instantly when entering the UTXO set. This includes fee outputs.
+     *
+     * This is consensus-critical because it is called by VerifyAmounts().
      */
     bool IsUnspendable() const
     {
-        return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE);
+        return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE) || (size() == 0);
     }
 
     void clear()

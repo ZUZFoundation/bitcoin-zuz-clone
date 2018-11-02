@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+
 #include <amount.h>
 #include <policy/feerate.h>
 #include <streams.h>
@@ -18,6 +19,7 @@
 #include <wallet/crypter.h>
 #include <wallet/walletdb.h>
 #include <wallet/rpcwallet.h>
+#include "blind.h"
 
 #include <algorithm>
 #include <atomic>
@@ -39,6 +41,8 @@ extern CFeeRate payTxFee;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
+extern bool fSendFreeTransactions;
+
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
@@ -61,14 +65,24 @@ static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
+
 //! -walletrbf default
 static const bool DEFAULT_WALLET_RBF = false;
+
+//! Largest (in bytes) free transaction we're willing to create
+static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
+
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
 extern const char * DEFAULT_WALLET_DAT;
 
+
 static const int64_t TIMESTAMP_MIN = 0;
+
+bool hasNegativeValue(const CAmountMap& amount);
+bool hasNonPositiveValue(const CAmountMap& amount);
+
 
 class CBlockIndex;
 class CCoinControl;
@@ -166,6 +180,8 @@ struct CRecipient
 {
     CScript scriptPubKey;
     CAmount nAmount;
+    CAsset asset;
+    CPubKey confidentiality_key;
     bool fSubtractFeeFromAmount;
 };
 
@@ -194,7 +210,11 @@ struct COutputEntry
 {
     CTxDestination destination;
     CAmount amount;
+    CAsset asset;
     int vout;
+    CPubKey confidentiality_pubkey;
+    uint256 amountBlindingFactor;
+    uint256 assetBlindingFactor;
 };
 
 /** A transaction with a merkle branch linking it to the block chain. */
@@ -304,7 +324,9 @@ public:
      *     "spent"           - serialized vfSpent value that existed prior to
      *                         2014 (removed in commit 93a18a3)
      */
-    mapValue_t mapValue;
+
+    mutable mapValue_t mapValue;
+
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
@@ -327,6 +349,11 @@ public:
     std::string strFromAccount;
     int64_t nOrderPos; //!< position in ordered transaction list
 
+    // For each output
+    mutable std::vector<uint256> vBlindingFactors;
+    mutable std::vector<CAmount> vAmountsOut;
+    mutable std::vector<CPubKey> vBlindingKeys;
+
     // memory only
     mutable bool fDebitCached;
     mutable bool fCreditCached;
@@ -337,16 +364,28 @@ public:
     mutable bool fImmatureWatchCreditCached;
     mutable bool fAvailableWatchCreditCached;
     mutable bool fChangeCached;
+
     mutable bool fInMempool;
-    mutable CAmount nDebitCached;
-    mutable CAmount nCreditCached;
-    mutable CAmount nImmatureCreditCached;
-    mutable CAmount nAvailableCreditCached;
-    mutable CAmount nWatchDebitCached;
-    mutable CAmount nWatchCreditCached;
-    mutable CAmount nImmatureWatchCreditCached;
-    mutable CAmount nAvailableWatchCreditCached;
-    mutable CAmount nChangeCached;
+    //mutable CAmount nDebitCached;
+    //mutable CAmount nCreditCached;
+    //mutable CAmount nImmatureCreditCached;
+    //mutable CAmount nAvailableCreditCached;
+    //mutable CAmount nWatchDebitCached;
+    //mutable CAmount nWatchCreditCached;
+    //mutable CAmount nImmatureWatchCreditCached;
+    //mutable CAmount nAvailableWatchCreditCached;
+    //mutable CAmount nChangeCached;
+
+    mutable CAmountMap nDebitCached;
+    mutable CAmountMap nCreditCached;
+    mutable CAmountMap nImmatureCreditCached;
+    mutable CAmountMap nAvailableCreditCached;
+    mutable CAmountMap nWatchDebitCached;
+    mutable CAmountMap nWatchCreditCached;
+    mutable CAmountMap nImmatureWatchCreditCached;
+    mutable CAmountMap nAvailableWatchCreditCached;
+    mutable CAmountMap nChangeCached;
+
 
     CWalletTx()
     {
@@ -377,16 +416,28 @@ public:
         fImmatureWatchCreditCached = false;
         fAvailableWatchCreditCached = false;
         fChangeCached = false;
+
         fInMempool = false;
-        nDebitCached = 0;
-        nCreditCached = 0;
-        nImmatureCreditCached = 0;
-        nAvailableCreditCached = 0;
-        nWatchDebitCached = 0;
-        nWatchCreditCached = 0;
-        nAvailableWatchCreditCached = 0;
-        nImmatureWatchCreditCached = 0;
-        nChangeCached = 0;
+//        nDebitCached = 0;
+//        nCreditCached = 0;
+//        nImmatureCreditCached = 0;
+//        nAvailableCreditCached = 0;
+//        nWatchDebitCached = 0;
+//        nWatchCreditCached = 0;
+//        nAvailableWatchCreditCached = 0;
+//        nImmatureWatchCreditCached = 0;
+//        nChangeCached = 0;
+
+        nDebitCached.clear();
+        nCreditCached.clear();
+        nImmatureCreditCached.clear();
+        nAvailableCreditCached.clear();
+        nWatchDebitCached.clear();
+        nWatchCreditCached.clear();
+        nAvailableWatchCreditCached.clear();
+        nImmatureWatchCreditCached.clear();
+        nChangeCached.clear();
+
         nOrderPos = -1;
     }
 
@@ -445,6 +496,7 @@ public:
         fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
+        WipeUnknownBlindingData();
     }
 
     void BindWallet(CWallet *pwalletIn)
@@ -454,20 +506,32 @@ public:
     }
 
     //! filter decides which addresses will count towards the debit
-    CAmount GetDebit(const isminefilter& filter) const;
-    CAmount GetCredit(const isminefilter& filter) const;
-    CAmount GetImmatureCredit(bool fUseCache=true) const;
-    CAmount GetAvailableCredit(bool fUseCache=true) const;
-    CAmount GetImmatureWatchOnlyCredit(const bool fUseCache=true) const;
-    CAmount GetAvailableWatchOnlyCredit(const bool fUseCache=true) const;
-    CAmount GetChange() const;
+
+//    CAmount GetDebit(const isminefilter& filter) const;
+//    CAmount GetCredit(const isminefilter& filter) const;
+//    CAmount GetImmatureCredit(bool fUseCache=true) const;
+//    CAmount GetAvailableCredit(bool fUseCache=true) const;
+//    CAmount GetImmatureWatchOnlyCredit(const bool fUseCache=true) const;
+//    CAmount GetAvailableWatchOnlyCredit(const bool fUseCache=true) const;
+//    CAmount GetChange() const;
+
+    CAmountMap GetDebit(const isminefilter& filter) const;
+    CAmountMap GetCredit(unsigned int nTxOut, const isminefilter& filter) const;
+    CAmountMap GetCredit(const isminefilter& filter) const;
+    CAmountMap GetImmatureCredit(bool fUseCache=true) const;
+    CAmountMap GetAvailableCredit(bool fUseCache=true) const;
+    CAmountMap GetImmatureWatchOnlyCredit(const bool& fUseCache=true) const;
+    CAmountMap GetAvailableWatchOnlyCredit(const bool& fUseCache=true) const;
+    CAmountMap GetChange(unsigned int nTxOut) const;
+    CAmountMap GetChange() const;
+
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
     bool IsFromMe(const isminefilter& filter) const
     {
-        return (GetDebit(filter) > 0);
+        return (GetDebit(filter) > CAmountMap());
     }
 
     // True if only scriptSigs are different
@@ -486,6 +550,39 @@ public:
     bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state);
 
     std::set<uint256> GetConflicts() const;
+
+    // For use in wallet transaction creation to remember 3rd party values
+    // Unneeded for issuance.
+    void SetBlindingData(unsigned int nOut, CAmount amountIn, CPubKey pubkeyIn, uint256 blindingfactorIn, const CAsset& assetIn, uint256 assetBlindingFactorIn) const;
+
+private:
+    /* Computes, stores and returns the unblinded info, or retrieves if already computed previously.
+    * @param[in]    mapIndex - Where to store the blinding data. Issuance data is stored after the output data, with additional index offset calculated via GetPseudoInputOffset
+    * @param[in]    vchRangeproof - The rangeproof to unwind
+    * @param[in]    confValue - The value to unblind
+    * @param[in]    confAsset - The asset to unblind
+    * @param[in]    nonce - The nonce used to ECDH with the blinding key. This is null for issuance as blinding key is directly used as nonce
+    * @param[in]    scriptPubKey - The script being committed to by the rangeproof
+    */
+    void GetBlindingData(const unsigned int mapIndex, const std::vector<unsigned char>& vchRangeproof, const CConfidentialValue& confValue, const CConfidentialAsset& confAsset, const CConfidentialNonce nonce, const CScript& scriptPubKey, CAmount* pamountOut, CPubKey* ppubkeyOut, uint256* pblindingfactorOut, CAsset* pAssetOut, uint256* passetBlindingFactorOut) const;
+    void WipeUnknownBlindingData() const;
+
+public:
+    //! Returns either the value out (if it is known) or -1
+    CAmount GetOutputValueOut(unsigned int nOut) const;
+
+    //! Returns either the blinding factor (if it is to us) or 0
+    uint256 GetOutputBlindingFactor(unsigned int nOut) const;
+    uint256 GetOutputAssetBlindingFactor(unsigned int nOut) const;
+    CAsset GetOutputAsset(unsigned int nOut) const;
+    CPubKey GetOutputBlindingPubKey(unsigned int nOut) const;
+    //! Get the issuance blinder for either the asset itself or the issuing tokens
+    uint256 GetIssuanceBlindingFactor(unsigned int vinIndex, bool fIssuanceToken) const;
+    //! Get the issuance amount for either the asset itself or the issuing tokens
+    CAmount GetIssuanceAmount(unsigned int vinIndex, bool fIssuanceToken) const;
+
+    //! Get the mapValue offset for a specific vin index and type of issuance pseudo-input
+    unsigned int GetPseudoInputOffset(const unsigned int index, const bool fIssuanceToken) const;
 };
 
 
@@ -679,7 +776,11 @@ private:
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
      */
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = nullptr) const;
+//<<<<<<< HEAD
+//    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = nullptr) const;
+//=======
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmountMap& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmountMap& nValueRet, const CCoinControl* coinControl) const;
+//>>>>>>> elements/elements-0.14.1
 
     CWalletDB *pwalletdbEncryption;
 
@@ -787,6 +888,10 @@ public:
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
+    std::map<CScriptID, uint256> mapSpecificBlindingKeys;
+    std::map<CAsset, std::string> mapAssetLabels;
+    std::map<std::string, CAsset> mapAssets;
+
 
     // Create wallet with dummy database handle
     CWallet(): dbw(new CWalletDBWrapper())
@@ -819,9 +924,13 @@ public:
         m_max_keypool_index = 0;
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
+
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+
+        blinding_derivation_key = uint256();
+
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -838,6 +947,10 @@ public:
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
 
     std::set<COutPoint> setLockedCoins;
+
+    //! The actual blinding key is computed as HMAC-SHA256(key=blinding_derivation_key, msg=scriptPubKey).
+    //! There can be exceptions in mapSpecificBlindingKeys.
+    uint256 blinding_derivation_key;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -861,11 +974,15 @@ public:
 
     /**
      * Shuffle and select coins until nTargetValue is reached while avoiding
-     * small change; This method is stochastic for some inputs and upon
+     Returns asset id corresponding to asset label * small change; This method is stochastic for some inputs and upon
      * completion the coin set and corresponding actual target value is
      * assembled
      */
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const;
+//<<<<<<< HEAD
+//    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const;
+//=======
+    bool SelectCoinsMinConf(const CAmountMap& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmountMap& nValueRet) const;
+//>>>>>>> elements/elements-0.14.1
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
@@ -893,8 +1010,15 @@ public:
     //! Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key, const CPubKey &pubkey) { return CCryptoKeyStore::AddKeyPubKey(key, pubkey); }
     //! Load metadata (used by LoadWallet)
+
     bool LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &metadata);
     bool LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata &metadata);
+
+    //bool LoadKeyMetadata(const CTxDestination& pubKey, const CKeyMetadata &metadata);
+    //! Adds a script-specific blinding key to the wallet, and saves it to disk.
+    bool AddSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
+    //! Adds a script-specific blinding key to the wallet without saving it to disk (used by LoadWallet)
+    bool LoadSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
 
     bool LoadMinVersion(int nVersion) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
     void UpdateTimeFirstKey(int64_t nCreateTime);
@@ -948,24 +1072,37 @@ public:
     void TransactionAddedToMempool(const CTransactionRef& tx) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
+
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
+
     CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, CBlockIndex* pindexStop, const WalletRescanReserver& reserver, bool fUpdate = false);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx) override;
+    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock) override;
+
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     // ResendWalletTransactionsBefore may only be called if fBroadcastTransactions!
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
-    CAmount GetBalance() const;
-    CAmount GetUnconfirmedBalance() const;
-    CAmount GetImmatureBalance() const;
-    CAmount GetWatchOnlyBalance() const;
-    CAmount GetUnconfirmedWatchOnlyBalance() const;
-    CAmount GetImmatureWatchOnlyBalance() const;
+
+//    CAmount GetBalance() const;
+//    CAmount GetUnconfirmedBalance() const;
+//    CAmount GetImmatureBalance() const;
+//    CAmount GetWatchOnlyBalance() const;
+//    CAmount GetUnconfirmedWatchOnlyBalance() const;
+//    CAmount GetImmatureWatchOnlyBalance() const;
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
     OutputType TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend);
+
+    CAmountMap GetBalance() const;
+    CAmountMap GetUnconfirmedBalance() const;
+    CAmountMap GetImmatureBalance() const;
+    CAmountMap GetWatchOnlyBalance() const;
+    CAmountMap GetUnconfirmedWatchOnlyBalance() const;
+    CAmountMap GetImmatureWatchOnlyBalance() const;
+
 
     /**
      * Insert additional inputs into the transaction by
@@ -979,9 +1116,15 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
-    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
+//<<<<<<< HEAD
+//    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
+//                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
+//    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
+//=======
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, std::vector<CReserveKey>& vChangeKey, CAmount& nFeeRet, int& nChangePosInOut,
+                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, std::vector<CAmount> *outAmounts = NULL, bool fBlindIssuances = true, const uint256* issuanceEntropy = NULL, const CAsset* reissuanceAsset = NULL, const CAsset* reissuanceToken = NULL, bool fIgnoreBlindFail = true);
+    bool CommitTransaction(CWalletTx& wtxNew, std::vector<CReserveKey>& reservekey, CConnman* connman, CValidationState& state);
+//>>>>>>> elements/elements-0.14.1
 
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries);
     bool AddAccountingEntry(const CAccountingEntry&);
@@ -1013,23 +1156,21 @@ public:
     std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;
 
     isminetype IsMine(const CTxIn& txin) const;
+    CAmountMap GetDebit(const CTxIn& txin, const isminefilter& filter) const;
     /**
      * Returns amount of debit if the input matches the
      * filter, otherwise returns 0
      */
-    CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
     isminetype IsMine(const CTxOut& txout) const;
-    CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;
     bool IsChange(const CTxOut& txout) const;
-    CAmount GetChange(const CTxOut& txout) const;
     bool IsMine(const CTransaction& tx) const;
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
-    CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    CAmountMap GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    CAmountMap GetCredit(const CWalletTx& tx, const isminefilter& filter) const;
+    CAmountMap GetChange(const CWalletTx& tx) const;
     /** Returns whether all of the inputs match the filter */
     bool IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const;
-    CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
-    CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc) override;
 
     DBErrors LoadWallet(bool& fFirstRunRet);
@@ -1112,6 +1253,12 @@ public:
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
 
+    //! script == NULL gives the backward compatible blinding key
+    CKey GetBlindingKey(const CScript* script) const;
+    CPubKey GetBlindingPubKey(const CScript& script) const;
+
+    void ComputeBlindingData(const CConfidentialValue& confValue, const CConfidentialAsset& confAsset, const CConfidentialNonce& nonce, const CScript& scriptPubKey, const std::vector<unsigned char>& vchRangeproof, CAmount& amount, CPubKey& pubkey, uint256& blindingfactor, CAsset& asset, uint256& assetBlindingFactor) const;
+
     /** Mark a transaction as replaced by another transaction (e.g., BIP 125). */
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
@@ -1169,6 +1316,11 @@ public:
      * This function will automatically add the necessary scripts to the wallet.
      */
     CTxDestination AddAndGetDestinationForScript(const CScript& script, OutputType);
+
+    /* Returns map of issuance entropy to token/asset pairs known to the wallet from
+        initial issuance transactions*/
+    std::map<uint256, std::pair<CAsset, CAsset> > GetReissuanceTokenTypes() const;
+
 };
 
 /** A key allocated from the key pool. */

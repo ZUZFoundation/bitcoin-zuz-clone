@@ -376,6 +376,20 @@ bool IsValidDestinationString(const std::string& str)
     return IsValidDestinationString(str, Params());
 }
 
+class CParentBitcoinAddressVisitor : public boost::static_visitor<bool>
+{
+private:
+    CParentBitcoinAddress* addr;
+
+public:
+    CParentBitcoinAddressVisitor(CParentBitcoinAddress* addrIn) : addr(addrIn) {}
+
+    bool operator()(const CKeyID& id) const { return addr->Set(id); }
+    bool operator()(const CScriptID& id) const { return addr->Set(id); }
+    bool operator()(const CNoDestination& no) const { return false; }
+};
+
+} // anon namespace
 
 bool CBitcoinAddress::Set(const CKeyID& id)
 {
@@ -410,22 +424,100 @@ bool CBitcoinAddress::Set(const CScriptID& id, const CChainParams &params)
     return boost::apply_visitor(ZUZ::CBitcoinAddressVisitor(this, params), dest);
 }*/
 
+bool CParentBitcoinAddress::Set(const CKeyID& id)
+{
+    SetData(Params().Base58Prefix(CChainParams::PARENT_PUBKEY_ADDRESS), &id, 20);
+    return true;
+}
+
+bool CParentBitcoinAddress::Set(const CScriptID& id)
+{
+    SetData(Params().Base58Prefix(CChainParams::PARENT_SCRIPT_ADDRESS), &id, 20);
+    return true;
+}
+
+bool CParentBitcoinAddress::Set(const CTxDestination& dest)
+{
+    return boost::apply_visitor(CParentBitcoinAddressVisitor(this), dest);
+}
+
+CBitcoinAddress& CBitcoinAddress::AddBlindingKey(const CPubKey& pubkey)
+{
+    if (!pubkey.IsValid()) {
+        return *this;
+    }
+    assert(pubkey.size() == 33);
+    assert(!IsBlinded());
+    std::vector<unsigned char> data = vchVersion;
+    data.insert(data.end(), pubkey.begin(), pubkey.end());
+    data.insert(data.end(), vchData.begin(), vchData.end());
+    SetData(Params().Base58Prefix(CChainParams::BLINDED_ADDRESS), &data[0], data.size());
+    return *this;
+}
+
+CPubKey CBitcoinAddress::GetBlindingKey() const
+{
+    assert(IsBlinded());
+    CPubKey pubkey(&vchData[1], &vchData[34]);
+    return pubkey;
+}
+
+bool CBitcoinAddress::IsBlinded(const CChainParams& params) const
+{
+    return (vchVersion == params.Base58Prefix(CChainParams::BLINDED_ADDRESS) && vchData.size() > 34);
+}
+
 bool CBitcoinAddress::IsValid() const
 {
     return IsValid(Params());
 }
 
+bool CParentBitcoinAddress::IsValid() const
+{
+    return IsValid(Params());
+}
+
+CBitcoinAddress CBitcoinAddress::GetUnblinded() const
+{
+    CBitcoinAddress subaddr;
+    subaddr.SetData(std::vector<unsigned char>(&vchData[0], &vchData[1]), &vchData[34], vchData.size() - 34);
+    return subaddr;
+}
+
 bool CBitcoinAddress::IsValid(const CChainParams& params) const
 {
+    if (IsBlinded(params)) {
+        return GetUnblinded().IsValid(params);
+    }
     bool fCorrectSize = vchData.size() == 20;
     bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
                          vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
     return fCorrectSize && fKnownVersion;
 }
 
+bool CParentBitcoinAddress::IsValid(const CChainParams& params) const
+{
+    bool fCorrectSize = vchData.size() == 20;
+    bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PARENT_PUBKEY_ADDRESS) ||
+                         vchVersion == params.Base58Prefix(CChainParams::PARENT_SCRIPT_ADDRESS);
+    return fCorrectSize && fKnownVersion;
+}
+
 CTxDestination CBitcoinAddress::Get() const
 {
-    return Get(Params());
+    if (IsBlinded()) {
+        return GetUnblinded().Get();
+    }
+    if (!IsValid())
+        return CNoDestination();
+    uint160 id;
+    memcpy(&id, &vchData[0], 20);
+    if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+        return CKeyID(id);
+    else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
+        return CScriptID(id);
+    else
+        return CNoDestination();
 }
 
 CTxDestination CBitcoinAddress::Get(const CChainParams &params) const
@@ -442,9 +534,31 @@ CTxDestination CBitcoinAddress::Get(const CChainParams &params) const
         return CNoDestination();
 }
 
+CTxDestination CParentBitcoinAddress::Get() const
+{
+    if (!IsValid())
+        return CNoDestination();
+    uint160 id;
+    memcpy(&id, &vchData[0], 20);
+    if (vchVersion == Params().Base58Prefix(CChainParams::PARENT_PUBKEY_ADDRESS))
+        return CKeyID(id);
+    else if (vchVersion == Params().Base58Prefix(CChainParams::PARENT_SCRIPT_ADDRESS))
+        return CScriptID(id);
+    else
+        return CNoDestination();
+}
+
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
 {
-    return GetKeyID(keyID, Params());
+    if (IsBlinded()) {
+        return GetUnblinded().GetKeyID(keyID);
+    }
+    if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+        return false;
+    uint160 id;
+    memcpy(&id, &vchData[0], 20);
+    keyID = CKeyID(id);
+    return true;
 }
 
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID, const CChainParams &params) const
@@ -457,9 +571,42 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID, const CChainParams &params) const
     return true;
 }
 
+bool CParentBitcoinAddress::GetKeyID(CKeyID& keyID) const
+{
+    if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PARENT_PUBKEY_ADDRESS))
+        return false;
+    uint160 id;
+    memcpy(&id, &vchData[0], 20);
+    keyID = CKeyID(id);
+    return true;
+}
+
 bool CBitcoinAddress::IsScript() const
 {
+    if (IsBlinded()) {
+        return GetUnblinded().IsScript();
+    }
     return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
 }
 
+bool CParentBitcoinAddress::IsScript() const
+{
+    return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::PARENT_SCRIPT_ADDRESS);
+}
+
+void CBitcoinSecret::SetKey(const CKey& vchSecret)
+{
+    assert(vchSecret.IsValid());
+    SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
+    if (vchSecret.IsCompressed())
+        vchData.push_back(1);
+}
+
+CKey CBitcoinSecret::GetKey()
+{
+    CKey ret;
+    assert(vchData.size() >= 32);
+    ret.Set(vchData.begin(), vchData.begin() + 32, vchData.size() > 32 && vchData[32] == 1);
+    return ret;
+}
 

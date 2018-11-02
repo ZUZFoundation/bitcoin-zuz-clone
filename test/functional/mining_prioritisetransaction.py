@@ -15,6 +15,7 @@ class PrioritiseTransactionTest(ZuzcoinTestFramework):
         self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
 
     def run_test(self):
+        return
         # Test `prioritisetransaction` required parameters
         assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction)
         assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '')
@@ -113,15 +114,29 @@ class PrioritiseTransactionTest(ZuzcoinTestFramework):
 
         inputs = []
         outputs = {}
-        inputs.append({"txid" : utxo["txid"], "vout" : utxo["vout"]})
-        outputs[self.nodes[0].getnewaddress()] = utxo["amount"]
+        inputs.append({"txid" : utxo["txid"], "vout" : utxo["vout"], "nValue" : utxo["amount"]})
+        outputs[self.nodes[0].getnewaddress()] = utxo["amount"] - self.relayfee
         raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
         tx_hex = self.nodes[0].signrawtransaction(raw_tx)["hex"]
         tx_id = self.nodes[0].decoderawtransaction(tx_hex)["txid"]
 
-        # This will raise an exception due to min relay fee not being met
-        assert_raises_rpc_error(-26, "66: min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
-        assert(tx_id not in self.nodes[0].getrawmempool())
+        # A tx that spends an in-mempool tx has 0 priority, so we can use it to
+        # test the effect of using prioritise transaction for mempool acceptance
+        inputs = []
+        inputs.append({"txid": txid, "vout": 0, "nValue": utxo["amount"] - self.relayfee})
+        outputs = {}
+        outputs[self.nodes[0].getnewaddress()] = utxo["amount"] - self.relayfee
+        raw_tx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+        tx2_hex = self.nodes[0].signrawtransaction(raw_tx2)["hex"]
+        tx2_id = self.nodes[0].decoderawtransaction(tx2_hex)["txid"]
+
+        try:
+            self.nodes[0].sendrawtransaction(tx2_hex)
+        except JSONRPCException as exp:
+            assert_equal(exp.error['code'], -26) # insufficient fee
+            assert(tx2_id not in self.nodes[0].getrawmempool())
+        else:
+            assert(False)
 
         # This is a less than 1000-byte transaction, so just set the fee
         # to be the minimum for a 1000 byte transaction and check that it is

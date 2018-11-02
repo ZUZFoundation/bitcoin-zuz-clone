@@ -41,11 +41,27 @@
 #include <warnings.h>
 
 #include <future>
+#include "callrpc.h"
+#include "coins.h"
+#include "crypto/hmac_sha256.h"
+#include "issuance.h"
+#include "merkleblock.h"
+#include "pow.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "primitives/bitcoin/block.h"
+#include "primitives/bitcoin/transaction.h"
+#include "primitives/bitcoin/merkleblock.h"
+#include "versionbits.h"
+#include <atomic>
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/thread.hpp>
+#include <secp256k1.h>
+#include <secp256k1_rangeproof.h>
+#include <secp256k1_surjectionproof.h>
 
 #if defined(NDEBUG)
 # error "Zuzcoin cannot be compiled without assertions."
@@ -223,7 +239,6 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
-bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
@@ -332,6 +347,94 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
     return IsFinalTx(tx, nBlockHeight, nBlockTime);
 }
 
+/**
+ * Calculates the block height and previous block's median time past at
+ * which the transaction will be considered final in the context of BIP 68.
+ * Also removes from the vector of input heights any entries which did not
+ * correspond to sequence locked inputs as they do not affect the calculation.
+ */
+static std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
+{
+    assert(prevHeights->size() == tx.vin.size());
+
+    // Will be set to the equivalent height- and time-based nLockTime
+    // values that would be necessary to satisfy all relative lock-
+    // time constraints given our view of block chain history.
+    // The semantics of nLockTime are the last invalid height/time, so
+    // use -1 to have the effect of any height or time being valid.
+    int nMinHeight = -1;
+    int64_t nMinTime = -1;
+
+    // tx.nVersion is signed integer so requires cast to unsigned otherwise
+    // we would be doing a signed comparison and half the range of nVersion
+    // wouldn't support BIP 68.
+    bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
+                      && flags & LOCKTIME_VERIFY_SEQUENCE;
+
+    // Do not enforce sequence numbers as a relative lock time
+    // unless we have been instructed to
+    if (!fEnforceBIP68) {
+        return std::make_pair(nMinHeight, nMinTime);
+    }
+
+    for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
+        const CTxIn& txin = tx.vin[txinIndex];
+
+        // Peg-ins have no output height
+        if (txin.m_is_pegin) {
+            continue;
+        }
+
+        // Sequence numbers with the most significant bit set are not
+        // treated as relative lock-times, nor are they given any
+        // consensus-enforced meaning at this point.
+        if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) {
+            // The height of this input is not relevant for sequence locks
+            (*prevHeights)[txinIndex] = 0;
+            continue;
+        }
+
+        int nCoinHeight = (*prevHeights)[txinIndex];
+
+        if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) {
+            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast();
+            // NOTE: Subtract 1 to maintain nLockTime semantics
+            // BIP 68 relative lock times have the semantics of calculating
+            // the first block or time at which the transaction would be
+            // valid. When calculating the effective block time or height
+            // for the entire transaction, we switch to using the
+            // semantics of nLockTime which is the last invalid block
+            // time or height.  Thus we subtract 1 from the calculated
+            // time or height.
+
+            // Time-based relative lock-times are measured from the
+            // smallest allowed timestamp of the block containing the
+            // txout being spent, which is the median time past of the
+            // block prior.
+            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
+        } else {
+            nMinHeight = std::max(nMinHeight, nCoinHeight + (int)(txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) - 1);
+        }
+    }
+
+    return std::make_pair(nMinHeight, nMinTime);
+}
+
+static bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> lockPair)
+{
+    assert(block.pprev);
+    int64_t nBlockTime = block.pprev->GetMedianTimePast();
+    if (lockPair.first >= block.nHeight || lockPair.second >= nBlockTime)
+        return false;
+
+    return true;
+}
+
+bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
+{
+    return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
+}
+
 bool TestLockPointValidity(const LockPoints* lp)
 {
     AssertLockHeld(cs_main);
@@ -381,6 +484,11 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
             const CTxIn& txin = tx.vin[txinIndex];
+            // pegins should not restrict validity of sequence locks
+            if (txin.m_is_pegin) {
+                prevheights[txinIndex] = -1;
+                continue;
+            }
             Coin coin;
             if (!viewMemPool.GetCoin(txin.prevout, coin)) {
                 return error("%s: Missing input", __func__);
@@ -435,6 +543,581 @@ static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) 
     pool.TrimToSize(limit, &vNoSpendsRemaining);
     for (const COutPoint& removed : vNoSpendsRemaining)
         pcoinsTip->Uncache(removed);
+}
+
+unsigned int GetLegacySigOpCount(const CTransaction& tx)
+{
+    unsigned int nSigOps = 0;
+    for (const auto& txin : tx.vin)
+    {
+        nSigOps += txin.scriptSig.GetSigOpCount(false);
+    }
+    for (const auto& txout : tx.vout)
+    {
+        nSigOps += txout.scriptPubKey.GetSigOpCount(false);
+    }
+    return nSigOps;
+}
+
+unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
+{
+    if (tx.IsCoinBase())
+        return 0;
+
+    unsigned int nSigOps = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        // Peg-in inputs are segwit-only
+        if (tx.vin[i].m_is_pegin) {
+            continue;
+        }
+        const CTxOut &prevout = inputs.GetOutputFor(tx.vin[i]);
+        if (prevout.scriptPubKey.IsPayToScriptHash())
+            nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
+    }
+    return nSigOps;
+}
+
+int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags)
+{
+    int64_t nSigOps = GetLegacySigOpCount(tx) * WITNESS_SCALE_FACTOR;
+
+    if (tx.IsCoinBase())
+        return nSigOps;
+
+    if (flags & SCRIPT_VERIFY_P2SH) {
+        nSigOps += GetP2SHSigOpCount(tx, inputs) * WITNESS_SCALE_FACTOR;
+    }
+
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        if (tx.vin[i].m_is_pegin && (tx.wit.vtxinwit.size() <= i || !IsValidPeginWitness(tx.wit.vtxinwit[i].m_pegin_witness, tx.vin[i].prevout))) {
+            continue;
+        }
+        const CTxOut &prevout = tx.vin[i].m_is_pegin ? GetPeginOutputFromWitness(tx.wit.vtxinwit[i].m_pegin_witness) : inputs.GetOutputFor(tx.vin[i]);
+        nSigOps += CountWitnessSigOps(tx.vin[i].scriptSig, prevout.scriptPubKey, tx.wit.vtxinwit.size() > i ? &tx.wit.vtxinwit[i].scriptWitness : NULL, flags);
+    }
+    return nSigOps;
+}
+
+
+
+
+
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
+{
+    // Basic checks that don't depend on any context
+    if (tx.vin.empty())
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
+    if (tx.vout.empty())
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
+    // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BLOCK_BASE_SIZE)
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
+
+    // Check for negative or overflow output values
+    for (const auto& txout : tx.vout)
+    {
+        if (!txout.nValue.IsValid())
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-amount-invalid");
+        if (!txout.nValue.IsExplicit())
+            continue;
+        // Each output is turned into a value commitment, no overflow detection needed
+        if (!MoneyRange(txout.nValue.GetAmount()))
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
+    }
+
+    // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
+    if (fCheckDuplicateInputs) {
+        std::set<COutPoint> vInOutPoints;
+        for (const auto& txin : tx.vin)
+        {
+            if (!vInOutPoints.insert(txin.prevout).second)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+        }
+    }
+
+    if (tx.IsCoinBase())
+    {
+        // Coinbase transactions may not have eccessive scriptSigs or any fee outputs
+        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
+
+        for (unsigned int i = 0; i < tx.vout.size(); i++)
+            if (tx.vout[i].IsFee())
+                return state.DoS(100, false, REJECT_INVALID, "bad-cb-fee");
+    }
+    else
+    {
+        for (const auto& txin : tx.vin)
+            if (txin.prevout.IsNull())
+                return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
+    }
+
+    return true;
+}
+
+namespace {
+
+static secp256k1_context* secp256k1_ctx_verify_amounts;
+
+class Secp256k1Ctx
+{
+public:
+    Secp256k1Ctx() {
+        assert(secp256k1_ctx_verify_amounts == NULL);
+        secp256k1_ctx_verify_amounts = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_SIGN);
+        assert(secp256k1_ctx_verify_amounts != NULL);
+    }
+
+    ~Secp256k1Ctx() {
+        assert(secp256k1_ctx_verify_amounts != NULL);
+        secp256k1_context_destroy(secp256k1_ctx_verify_amounts);
+        secp256k1_ctx_verify_amounts = NULL;
+    }
+};
+static Secp256k1Ctx instance_of_secp256k1ctx;
+
+/** Closure representing one output range check. */
+class CRangeCheck : public CCheck
+{
+private:
+    const CConfidentialValue* val;
+    const std::vector<unsigned char>& rangeproof;
+    // *Must* be a commitment, not an explicit value
+    const std::vector<unsigned char> assetCommitment;
+    const CScript scriptPubKey;
+    const bool store;
+
+public:
+    CRangeCheck(const CConfidentialValue* val_, const std::vector<unsigned char>& rangeproof_, const std::vector<unsigned char>& assetCommitment_, const CScript& scriptPubKey_, const bool storeIn) : val(val_), rangeproof(rangeproof_), assetCommitment(assetCommitment_), scriptPubKey(scriptPubKey_), store(storeIn) {}
+
+    bool operator()();
+};
+
+/** Closure representing a transaction amount balance check. */
+class CBalanceCheck : public CCheck
+{
+private:
+    std::vector<secp256k1_pedersen_commitment> vData;
+    std::vector<secp256k1_pedersen_commitment *> vpCommitsIn, vpCommitsOut;
+
+public:
+    CBalanceCheck(std::vector<secp256k1_pedersen_commitment>& vData_, std::vector<secp256k1_pedersen_commitment*>& vpCommitsIn_, std::vector<secp256k1_pedersen_commitment*>& vpCommitsOut_)  {
+        vData.swap(vData_);
+        vpCommitsIn.swap(vpCommitsIn_);
+        vpCommitsOut.swap(vpCommitsOut_);
+    }
+
+    bool operator()();
+};
+
+class CSurjectionCheck : public CCheck
+{
+private:
+    secp256k1_surjectionproof proof;
+    std::vector<secp256k1_generator> vTags;
+    secp256k1_generator gen;
+    uint256 wtxid;
+    const bool store;
+public:
+    CSurjectionCheck(secp256k1_surjectionproof& proof_in, std::vector<secp256k1_generator>& tags_in, secp256k1_generator& gen_in, uint256& wtxid_in, const bool store_in) : proof(proof_in), vTags(tags_in), gen(gen_in), wtxid(wtxid_in), store(store_in) {}
+
+    bool operator()();
+};
+
+// Destroys the check in the case of no queue, or passes its ownership to the queue.
+static inline ScriptError QueueCheck(std::vector<CCheck*>* queue, CCheck* check)
+{
+    if (queue != NULL) {
+        queue->push_back(check);
+        return SCRIPT_ERR_OK;
+    }
+    bool success = (*check)();
+    ScriptError err = check->GetScriptError();
+    delete check;
+    return success ? SCRIPT_ERR_OK : err;
+}
+
+
+bool CRangeCheck::operator()()
+{
+    if (val->IsExplicit()) {
+        return true;
+    }
+
+    if (!CachingRangeProofChecker(store).VerifyRangeProof(rangeproof, val->vchCommitment, assetCommitment, scriptPubKey, secp256k1_ctx_verify_amounts)) {
+        error = SCRIPT_ERR_RANGEPROOF;
+        return false;
+    }
+
+    return true;
+};
+
+bool CBalanceCheck::operator()()
+{
+    if (!secp256k1_pedersen_verify_tally(secp256k1_ctx_verify_amounts, vpCommitsIn.data(), vpCommitsIn.size(), vpCommitsOut.data(), vpCommitsOut.size())) {
+        fAmountError = true;
+        error = SCRIPT_ERR_PEDERSEN_TALLY;
+        return false;
+    }
+
+    return true;
+}
+
+bool CSurjectionCheck::operator()()
+{
+    return CachingSurjectionProofChecker(store).VerifySurjectionProof(proof, vTags, gen, secp256k1_ctx_verify_amounts, wtxid);
+}
+
+} // namespace
+
+size_t GetNumIssuances(const CTransaction& tx)
+{
+    unsigned int numIssuances = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        if (!tx.vin[i].assetIssuance.IsNull()) {
+            if (!tx.vin[i].assetIssuance.nAmount.IsNull()) {
+                numIssuances++;
+            }
+            if (!tx.vin[i].assetIssuance.nInflationKeys.IsNull()) {
+                numIssuances++;
+            }
+        }
+    }
+    return numIssuances;
+}
+
+// Helper function for VerifyAmount(), not exported
+static bool VerifyIssuanceAmount(secp256k1_pedersen_commitment& commit, secp256k1_generator& gen,
+                    const CAsset& asset, const CConfidentialValue& value, const std::vector<unsigned char>& vchRangeproof,
+                    std::vector<CCheck*>* pvChecks, const bool cacheStore)
+{
+    // This is used to add in the explicit values
+    unsigned char explBlinds[32];
+    memset(explBlinds, 0, sizeof(explBlinds));
+    int ret;
+
+    assert(value.IsValid());
+
+    // Generate asset generator
+    ret = secp256k1_generator_generate(secp256k1_ctx_verify_amounts, &gen, asset.begin());
+    assert(ret == 1);
+
+    // Build value commitment
+    if (value.IsExplicit()) {
+        if (!MoneyRange(value.GetAmount()) || value.GetAmount() == 0) {
+            return false;
+        }
+        if (!vchRangeproof.empty()) {
+            return false;
+        }
+
+
+        ret = secp256k1_pedersen_commit(secp256k1_ctx_verify_amounts, &commit, explBlinds, value.GetAmount(), &gen);
+        // The explBlinds are all 0, and the amount is not 0. So secp256k1_pedersen_commit does not fail.
+        assert(ret == 1);
+    }
+    else {
+        assert(value.IsCommitment());
+        // Verify range proof
+        std::vector<unsigned char> vchAssetCommitment(CConfidentialAsset::nExplicitSize);
+        secp256k1_generator_serialize(secp256k1_ctx_verify_amounts, &vchAssetCommitment[0], &gen);
+        if (QueueCheck(pvChecks, new CRangeCheck(&value, vchRangeproof, vchAssetCommitment, CScript(), cacheStore)) != SCRIPT_ERR_OK) {
+            return false;
+        }
+
+        // Here we have value.IsCommitment() == true
+        if (secp256k1_pedersen_commitment_parse(secp256k1_ctx_verify_amounts, &commit, &value.vchCommitment[0]) != 1) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool VerifyAmounts(const CCoinsViewCache& cache, const CTransaction& tx, std::vector<CCheck*>* pvChecks, const bool cacheStore)
+{
+    assert(!tx.IsCoinBase());
+
+    std::vector<secp256k1_pedersen_commitment> vData;
+    std::vector<secp256k1_pedersen_commitment *> vpCommitsIn, vpCommitsOut;
+
+    vData.reserve((tx.vin.size() + tx.vout.size() + GetNumIssuances(tx)));
+    secp256k1_pedersen_commitment *p = vData.data();
+    secp256k1_pedersen_commitment commit;
+    secp256k1_generator gen, gencmp;
+    // This is used to add in the explicit values
+    unsigned char explBlinds[32];
+    memset(explBlinds, 0, sizeof(explBlinds));
+    int ret;
+
+    uint256 wtxid(tx.GetHashWithWitness());
+
+    // This list is used to verify surjection proofs.
+    // Proofs must be constructed with the list being in
+    // order of input and non-null issuance pseudo-inputs, with
+    // input first, asset issuance second, reissuance token third.
+    std::vector<secp256k1_generator> targetGenerators;
+    targetGenerators.reserve(tx.vin.size() + GetNumIssuances(tx));
+
+    // Tally up value commitments, check balance
+    for (size_t i = 0; i < tx.vin.size(); ++i)
+    {
+        // Assumes IsValidPeginWitness has been called successfully
+        const CTxOut out = tx.vin[i].m_is_pegin ? GetPeginOutputFromWitness(tx.wit.vtxinwit[i].m_pegin_witness) : cache.GetOutputFor(tx.vin[i]);
+        const CConfidentialValue& val = out.nValue;
+        const CConfidentialAsset& asset = out.nAsset;
+
+        if (val.IsNull() || asset.IsNull())
+            return false;
+
+        if (asset.IsExplicit()) {
+            ret = secp256k1_generator_generate(secp256k1_ctx_verify_amounts, &gen, asset.GetAsset().begin());
+            assert(ret != 0);
+        }
+        else if (asset.IsCommitment()) {
+            if (secp256k1_generator_parse(secp256k1_ctx_verify_amounts, &gen, &asset.vchCommitment[0]) != 1)
+                return false;
+        }
+        else {
+            return false;
+        }
+
+        targetGenerators.push_back(gen);
+
+        if (val.IsExplicit()) {
+            if (!MoneyRange(val.GetAmount()))
+                return false;
+
+            // Fails if val.GetAmount() == 0
+            if (secp256k1_pedersen_commit(secp256k1_ctx_verify_amounts, &commit, explBlinds, val.GetAmount(), &gen) != 1)
+                return false;
+        } else if (val.IsCommitment()) {
+            if (secp256k1_pedersen_commitment_parse(secp256k1_ctx_verify_amounts, &commit, &val.vchCommitment[0]) != 1)
+                return false;
+        } else {
+                return false;
+        }
+
+        vData.push_back(commit);
+        vpCommitsIn.push_back(p);
+        p++;
+
+        // Each transaction input may have up to two "pseudo-inputs" to add to the LHS
+        // for (re)issuance and may require up to two rangeproof checks:
+        // blinded value of the new assets being made
+        // blinded value of the issuance tokens being made (only for initial issuance)
+        const CAssetIssuance& issuance = tx.vin[i].assetIssuance;
+
+        // No issuances to process, continue to next input
+        if (issuance.IsNull()) {
+            continue;
+        }
+
+        CAsset assetID;
+        CAsset assetTokenID;
+
+        // First construct the assets of the issuances and reissuance token
+        // These are calculated differently depending on if initial issuance or followup
+
+        // New issuance, compute the asset ids
+        if (issuance.assetBlindingNonce.IsNull()) {
+            uint256 entropy;
+            GenerateAssetEntropy(entropy, tx.vin[i].prevout, issuance.assetEntropy);
+            CalculateAsset(assetID, entropy);
+            // Null nAmount is considered explicit 0, so just check for commitment
+            CalculateReissuanceToken(assetTokenID, entropy, issuance.nAmount.IsCommitment());
+        } else {
+        // Re-issuance
+            // hashAssetIdentifier doubles as the entropy on reissuance
+            CalculateAsset(assetID, issuance.assetEntropy);
+            CalculateReissuanceToken(assetTokenID, issuance.assetEntropy, issuance.nAmount.IsCommitment());
+
+            // Must check that prevout is the blinded issuance token
+            // prevout's asset tag = assetTokenID + assetBlindingNonce
+
+            if (secp256k1_generator_generate_blinded(secp256k1_ctx_verify_amounts, &gen, assetTokenID.begin(), issuance.assetBlindingNonce.begin()) != 1)
+                return false;
+            if (secp256k1_generator_parse(secp256k1_ctx_verify_amounts, &gencmp, &asset.vchCommitment[0]) != 1)
+                return false;
+            if (memcmp(&gen, &gencmp, 33))
+                return false;
+        }
+
+        // Process issuance of asset
+
+        if (!issuance.nAmount.IsValid()) {
+            return false;
+        }
+        if (!issuance.nAmount.IsNull()) {
+            if (i >= tx.wit.vtxinwit.size()) {
+                return false;
+            }
+            if (!VerifyIssuanceAmount(commit, gen, assetID, issuance.nAmount, tx.wit.vtxinwit[i].vchIssuanceAmountRangeproof, pvChecks, cacheStore)) {
+                return false;
+            }
+            targetGenerators.push_back(gen);
+            vData.push_back(commit);
+            vpCommitsIn.push_back(p);
+            p++;
+        }
+
+        if (!issuance.nAmount.IsValid()) {
+            return false;
+        }
+
+        // Process issuance of reissuance tokens
+
+        if (!issuance.nInflationKeys.IsValid()) {
+            return false;
+        }
+        if (!issuance.nInflationKeys.IsNull()) {
+            // Only initial issuance can have reissuance tokens
+            if (!issuance.assetBlindingNonce.IsNull()) {
+                return false;
+            }
+
+            if (i >= tx.wit.vtxinwit.size()) {
+                return false;
+            }
+            if (!VerifyIssuanceAmount(commit, gen, assetTokenID, issuance.nInflationKeys, tx.wit.vtxinwit[i].vchInflationKeysRangeproof, pvChecks, cacheStore)) {
+                return false;
+            }
+            targetGenerators.push_back(gen);
+            vData.push_back(commit);
+            vpCommitsIn.push_back(p);
+            p++;
+        }
+    }
+
+    for (size_t i = 0; i < tx.vout.size(); ++i)
+    {
+        const CConfidentialValue& val = tx.vout[i].nValue;
+        const CConfidentialAsset& asset = tx.vout[i].nAsset;
+        if (!asset.IsValid())
+            return false;
+        if (!val.IsValid())
+            return false;
+        if (!tx.vout[i].nNonce.IsValid())
+            return false;
+
+        if (asset.IsExplicit()) {
+            ret = secp256k1_generator_generate(secp256k1_ctx_verify_amounts, &gen, asset.GetAsset().begin());
+            assert(ret != 0);
+        }
+        else if (asset.IsCommitment()) {
+            if (secp256k1_generator_parse(secp256k1_ctx_verify_amounts, &gen, &asset.vchCommitment[0]) != 1)
+                return false;
+        }
+        else {
+            return false;
+        }
+
+        if (val.IsExplicit()) {
+            if (!MoneyRange(val.GetAmount()))
+                return false;
+
+            if (val.GetAmount() == 0) {
+                if (tx.vout[i].scriptPubKey.IsUnspendable()) {
+                    continue;
+                } else {
+                    // No spendable 0-value outputs
+                    // Reason: A spendable output of 0 reissuance tokens would allow reissuance without reissuance tokens.
+                    return false;
+                }
+            }
+
+            ret = secp256k1_pedersen_commit(secp256k1_ctx_verify_amounts, &commit, explBlinds, val.GetAmount(), &gen);
+            // The explBlinds are all 0, and the amount is not 0. So secp256k1_pedersen_commit does not fail.
+            assert(ret == 1);
+        }
+        else if (val.IsCommitment()) {
+            if (secp256k1_pedersen_commitment_parse(secp256k1_ctx_verify_amounts, &commit, &val.vchCommitment[0]) != 1)
+                return false;
+        } else {
+            return false;
+        }
+
+        vData.push_back(commit);
+        vpCommitsOut.push_back(p);
+        p++;
+    }
+
+    // Check balance
+    if (QueueCheck(pvChecks, new CBalanceCheck(vData, vpCommitsIn, vpCommitsOut)) != SCRIPT_ERR_OK) {
+        return false;
+    }
+
+    // Range proofs
+    for (size_t i = 0; i < tx.vout.size(); i++) {
+        const CConfidentialValue& val = tx.vout[i].nValue;
+        const CConfidentialAsset& asset = tx.vout[i].nAsset;
+        std::vector<unsigned char> vchAssetCommitment = asset.vchCommitment;
+        const CTxOutWitness* ptxoutwit = tx.wit.vtxoutwit.size() <= i? NULL: &tx.wit.vtxoutwit[i];
+        if (val.IsExplicit())
+        {
+            if (ptxoutwit && !ptxoutwit->vchRangeproof.empty())
+                return false;
+            continue;
+        }
+        if (asset.IsExplicit()) {
+            int ret = secp256k1_generator_generate(secp256k1_ctx_verify_amounts, &gen, asset.GetAsset().begin());
+            assert(ret != 0);
+            secp256k1_generator_serialize(secp256k1_ctx_verify_amounts, &vchAssetCommitment[0], &gen);
+        }
+        if (!ptxoutwit) {
+            return false;
+        }
+        if (QueueCheck(pvChecks, new CRangeCheck(&val, ptxoutwit->vchRangeproof, vchAssetCommitment, tx.vout[i].scriptPubKey, cacheStore)) != SCRIPT_ERR_OK) {
+            return false;
+        }
+    }
+
+    // Surjection proofs
+    for (size_t i = 0; i < tx.vout.size(); i++)
+    {
+        const CConfidentialAsset& asset = tx.vout[i].nAsset;
+        const CTxOutWitness* ptxoutwit = tx.wit.vtxoutwit.size() <= i? NULL: &tx.wit.vtxoutwit[i];
+        // No need for surjection proof
+        if (asset.IsExplicit()) {
+            if (ptxoutwit && !ptxoutwit->vchSurjectionproof.empty()) {
+                return false;
+            }
+            continue;
+        }
+        if (!ptxoutwit)
+            return false;
+        if (secp256k1_generator_parse(secp256k1_ctx_verify_amounts, &gen, &asset.vchCommitment[0]) != 1)
+            return false;
+
+        secp256k1_surjectionproof proof;
+        if (secp256k1_surjectionproof_parse(secp256k1_ctx_verify_amounts, &proof, &ptxoutwit->vchSurjectionproof[0], ptxoutwit->vchSurjectionproof.size()) != 1)
+            return false;
+
+        if (QueueCheck(pvChecks, new CSurjectionCheck(proof, targetGenerators, gen, wtxid, cacheStore)) != SCRIPT_ERR_OK) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool VerifyCoinbaseAmount(const CTransaction& tx, const CAmountMap& mapFees)
+{
+    assert(tx.IsCoinBase());
+    CAmountMap remaining = mapFees;
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        const CTxOut& out = tx.vout[i];
+        if (!out.nValue.IsExplicit() || !out.nAsset.IsExplicit()) {
+            return false;
+        }
+        if (!MoneyRange(out.nValue.GetAmount()) || (out.nValue.GetAmount() == 0 && !out.scriptPubKey.IsUnspendable())) {
+            return false;
+        }
+        remaining[out.nAsset.GetAsset()] -= out.nValue.GetAmount();
+    }
+    return MoneyRange(remaining);
 }
 
 /** Convert CValidationState to a human-readable message for logging */
@@ -573,7 +1256,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
-    if (fRequireStandard && !IsStandardTx(tx, reason, witnessEnabled))
+    if (fRequireStandard && !IsStandardTx(tx, reason))
         return state.DoS(0, false, REJECT_NONSTANDARD, reason);
 
     // Do not work on transactions that are too small.
@@ -633,12 +1316,15 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
                 setConflicts.insert(ptxConflicting->GetHash());
             }
+
+            //setConflicts.insert(itConflicting->second->GetHash());
         }
     }
 
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
+        std::set<std::pair<uint256, COutPoint> > setPeginsSpent;
 
         LockPoints lp;
         CCoinsViewMemPool viewMemPool(pcoinsTip.get(), pool);
@@ -646,6 +1332,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
         // do all inputs exist?
         for (const CTxIn txin : tx.vin) {
+            if (txin.m_is_pegin) {
+                continue;
+            }
             if (!pcoinsTip->HaveCoinInCache(txin.prevout)) {
                 coins_to_uncache.push_back(txin.prevout);
             }
@@ -662,6 +1351,26 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     *pfMissingInputs = true;
                 }
                 return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
+            }
+        }
+
+        // are the actual inputs available?
+        if (!view.HaveInputs(tx))
+            return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
+
+        // Extract peg-in inputs, pass set to mempool entry. Validity of pegins checked in CheckInputs
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            if (tx.vin[i].m_is_pegin) {
+                // Quick check of pegin witness and prevout to extract db entry
+                if (tx.wit.vtxinwit.size() <= i || tx.wit.vtxinwit[i].m_pegin_witness.stack.size() < 6 || uint256(tx.wit.vtxinwit[i].m_pegin_witness.stack[2]).IsNull() || tx.vin[i].prevout.hash.IsNull()) {
+                    return state.Invalid(false, REJECT_INVALID, "pegin-no-witness");
+                }
+                std::pair<uint256, COutPoint> pegin = std::make_pair(uint256(tx.wit.vtxinwit[i].m_pegin_witness.stack[2]), tx.vin[i].prevout);
+                // This assumes non-null prevout and genesis block hash
+                if (view.IsWithdrawSpent(pegin)) {
+                    return state.Invalid(false, REJECT_CONFLICT, "pegin-already-claimed");
+                }
+                setPeginsSpent.insert(pegin);
             }
         }
 
@@ -693,15 +1402,28 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-witness-nonstandard", true);
 
         int64_t nSigOpsCost = GetTransactionSigOpCost(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);
+        // nModifiedFees includes any fee deltas from PrioritiseTransaction
+        if (!tx.HasValidFee())
+            return state.DoS(0, false, REJECT_INVALID, "bad-fees");
+        CAmount nFees = tx.GetFee()[policyAsset];
 
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
         CAmount nModifiedFees = nFees;
-        pool.ApplyDelta(hash, nModifiedFees);
+        double nPriorityDummy = 0;
+        pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
+
+        // Neuter priority in mempool
+        CAmount inChainInputValue = 0;
+        double dPriority = 0;
 
         // Keep track of transactions that spend a coinbase, which we re-scan
         // during reorgs to ensure COINBASE_MATURITY is still met.
+        // Also track withdraw lock spends to allow them through free relay
         bool fSpendsCoinbase = false;
         for (const CTxIn &txin : tx.vin) {
+            if (txin.m_is_pegin) {
+                continue;
+            }
             const Coin &coin = view.AccessCoin(txin.prevout);
             if (coin.IsCoinBase()) {
                 fSpendsCoinbase = true;
@@ -709,8 +1431,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             }
         }
 
-        CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, chainActive.Height(),
-                              fSpendsCoinbase, nSigOpsCost, lp);
+        CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, dPriority, chainActive.Height(),
+                              inChainInputValue, fSpendsCoinbase, nSigOpsCost, lp, setPeginsSpent);
         unsigned int nSize = entry.GetTxSize();
 
         // Check that the transaction doesn't have an excessive number of
@@ -728,7 +1450,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         }
 
         // No transactions are allowed below minRelayTxFee except from disconnected blocks
-        if (!bypass_limits && nModifiedFees < ::minRelayTxFee.GetFee(nSize)) {
+        if (fLimitFree && nModifiedFees < ::minRelayTxFee.GetFee(nSize))
+        {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "min relay fee not met");
         }
 
@@ -896,18 +1619,24 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             scriptVerifyFlags = gArgs.GetArg("-promiscuousmempoolflags", scriptVerifyFlags);
         }
 
+        std::set<std::pair<uint256, COutPoint> > setPeginsSpent2;
+
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         PrecomputedTransactionData txdata(tx);
-        if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, false, txdata)) {
+        if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, txdata, setPeginsSpent2)) {
             // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
             // need to turn both off, and compare against just turning off CLEANSTACK
             // to see if the failure is specifically due to witness validation.
+            setPeginsSpent2.clear();
             CValidationState stateDummy; // Want reported failures to be from first CheckInputs
-            if (!tx.HasWitness() && CheckInputs(tx, stateDummy, view, true, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, false, txdata) &&
-                !CheckInputs(tx, stateDummy, view, true, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, false, txdata)) {
+            if (!tx.HasWitness() && CheckInputs(tx, stateDummy, view, true, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, txdata, setPeginsSpent2)) {
+                setPeginsSpent2.clear();
+                if (!CheckInputs(tx, stateDummy, view, true, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, txdata, setPeginsSpent2)) {
+                setPeginsSpent2.clear();
                 // Only the witness is missing, so the transaction itself may be fine.
-                state.SetCorruptionPossible();
+                    state.SetCorruptionPossible();
+                }
             }
             return false; // state filled in by CheckInputs
         }
@@ -920,15 +1649,19 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // misses on soft-fork activation.
         //
         // This is also useful in case of bugs in the standard flags that cause
+        assert(setPeginsSpent2 == setPeginsSpent);
+        setPeginsSpent2.clear();
+
+        // Check again against just the consensus-critical mandatory script
+        // verification flags, in case of bugs in the standard flags that cause
         // transactions to pass as valid when they're actually invalid. For
         // instance the STRICTENC flag was incorrectly allowing certain
         // CHECKSIG NOT scripts to pass, even though they were invalid.
         //
         // There is a similar check in CreateNewBlock() to prevent creating
-        // invalid blocks (using TestBlockValidity), however allowing such
-        // transactions into the mempool can be exploited as a DoS attack.
-        unsigned int currentBlockScriptVerifyFlags = GetBlockScriptFlags(chainActive.Tip(), Params().GetConsensus());
-        if (!CheckInputsFromMempoolAndCache(tx, state, view, pool, currentBlockScriptVerifyFlags, true, txdata))
+        // invalid blocks, however allowing such transactions into the mempool
+        // can be exploited as a DoS attack.
+        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true, txdata, setPeginsSpent2))
         {
             // If we're using promiscuousmempoolflags, we may hit this normally
             // Check if current block has some flags that scriptVerifyFlags
@@ -945,6 +1678,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 }
             }
         }
+
+        assert(setPeginsSpent2 == setPeginsSpent);
 
         // Remove conflicting transactions from the mempool
         for (const CTxMemPool::txiter it : allConflicting)
@@ -1070,11 +1805,6 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
     return false;
 }
 
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // CBlock and CBlockIndex
@@ -1119,7 +1849,8 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (!CheckProof(block, consensusParams) &&
+        block.GetHash() != consensusParams.hashGenesisBlock)
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -1143,6 +1874,13 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+    if (nHeight == 0)
+        return MAX_MONEY;
+    else
+        return 0;
+
+    //////////////////////////////////////////////////////
+
     if(nHeight <= consensusParams.zuzPremineChainHeight)
     {
         //Premining subsidy
@@ -1347,10 +2085,35 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
-        for (const CTxIn &txin : tx.vin) {
+       /* for (const CTxIn &txin : tx.vin) {
             txundo.vprevout.emplace_back();
             bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
-            assert(is_spent);
+            assert(is_spent);*/
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            const CTxIn &txin = tx.vin[i];
+            if (txin.m_is_pegin) {
+                    std::pair<uint256, COutPoint> outpoint = std::make_pair(uint256(tx.wit.vtxinwit[i].m_pegin_witness.stack[2]), txin.prevout);
+                    inputs.SetWithdrawSpent(outpoint, true);
+                    // Dummy undo
+                    txundo.vprevout.push_back(CTxInUndo());
+
+            } else {
+                CCoinsModifier coins = inputs.ModifyCoins(txin.prevout.hash);
+                unsigned nPos = txin.prevout.n;
+
+                if (nPos >= coins->vout.size() || coins->vout[nPos].IsNull())
+                    assert(false);
+
+                // mark an outpoint spent, and construct undo information
+                txundo.vprevout.push_back(CTxInUndo(coins->vout[nPos]));
+                coins->Spend(nPos);
+                if (coins->vout.size() == 0) {
+                    CTxInUndo& undo = txundo.vprevout.back();
+                    undo.nHeight = coins->nHeight;
+                    undo.fCoinBase = coins->fCoinBase;
+                    undo.nVersion = coins->nVersion;
+                }
+            }
         }
     }
     // add outputs
@@ -1365,7 +2128,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
+    const CScriptWitness *witness = (nIn < ptxTo->wit.vtxinwit.size()) ? &ptxTo->wit.vtxinwit[nIn].scriptWitness : NULL;
     return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
 }
 
@@ -1389,6 +2152,58 @@ void InitScriptExecutionCache() {
             (nElems*sizeof(uint256)) >>20, (nMaxCacheSize*2)>>20, nElems);
 }
 
+namespace Consensus {
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, std::set<std::pair<uint256, COutPoint> >& setPeginsSpent, std::vector<CCheck*> *pvChecks, const bool cacheStore, bool fScriptChecks)
+{
+        // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
+        // for an attacker to attempt to split the network.
+        if (!inputs.HaveInputs(tx))
+            return state.Invalid(false, 0, "", "Inputs unavailable");
+
+        for (unsigned int i = 0; i < tx.vin.size(); i++)
+        {
+            const COutPoint &prevout = tx.vin[i].prevout;
+            if (tx.vin[i].m_is_pegin) {
+                // Check existence and validity of pegin witness
+                if (tx.wit.vtxinwit.size() <= i || !IsValidPeginWitness(tx.wit.vtxinwit[i].m_pegin_witness, prevout)) {
+                    return state.DoS(0, false, REJECT_PEGIN, "bad-pegin-witness");
+                }
+                std::pair<uint256, COutPoint> pegin = std::make_pair(uint256(tx.wit.vtxinwit[i].m_pegin_witness.stack[2]), prevout);
+                if (inputs.IsWithdrawSpent(pegin)) {
+                    return state.Invalid(false, REJECT_INVALID, "bad-txns-double-withdraw", strprintf("Double-withdraw of %s:%d", prevout.hash.ToString(), prevout.n));
+                }
+                if (setPeginsSpent.count(pegin)) {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-double-withdraw-in-obj", false,
+                        strprintf("Double-withdraw of %s:%d in single tx/block", prevout.hash.ToString(), prevout.n));
+                }
+                setPeginsSpent.insert(pegin);
+            } else {
+                const CCoins *coins = inputs.AccessCoins(prevout.hash);
+                assert(coins);
+
+                // If prev is coinbase, check that it's matured
+                if (coins->IsCoinBase()) {
+                    if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
+                        return state.Invalid(false,
+                            REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
+                            strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
+                }
+            }
+
+        }
+
+        // Tally transaction fees
+        if (!tx.HasValidFee()) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+        }
+        if (fScriptChecks && !VerifyAmounts(inputs, tx, pvChecks, cacheStore)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-ne-out", false, "value in != value out");
+        }
+
+    return true;
+}
+}
+
 /**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
  * This does not modify the UTXO set.
@@ -1403,10 +2218,13 @@ void InitScriptExecutionCache() {
  *
  * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
  */
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, std::set<std::pair<uint256, COutPoint> >& setPeginsSpent, std::vector<CCheck*> *pvChecks)
 {
     if (!tx.IsCoinBase())
     {
+        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), setPeginsSpent, pvChecks, cacheStore, fScriptChecks))
+            return false;
+
         if (pvChecks)
             pvChecks->reserve(tx.vin.size());
 
@@ -1437,8 +2255,22 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
-                const Coin& coin = inputs.AccessCoin(prevout);
-                assert(!coin.IsSpent());
+                
+                CCoins pegin_coin;
+                if (tx.vin[i].m_is_pegin) {
+                    CMutableTransaction mtx;
+                    mtx.vout.resize(prevout.n);
+                    mtx.vout.push_back(GetPeginOutputFromWitness(tx.wit.vtxinwit[i].m_pegin_witness));
+                    CTransaction tx(mtx);
+                    // Height of "output" in script evaluation will be 0
+                    pegin_coin.FromTx(tx, 0);
+                }
+
+                // from m_pegin_witness
+                const CCoins* coins = tx.vin[i].m_is_pegin ? &pegin_coin : inputs.AccessCoins(prevout.hash);
+                assert(coins);
+                //const Coin& coin = inputs.AccessCoin(prevout);
+                //assert(!coin.IsSpent());
 
                 // We very carefully only pass in things to CScriptCheck which
                 // are clearly committed to by tx' witness hash. This provides
@@ -1452,6 +2284,12 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
                 } else if (!check()) {
+                // If input is peg-in, create "coin" to evaluate against
+
+                // Verify signature
+                //CCheck* check = new CScriptCheck(*coins, tx, i, flags, cacheStore, &txdata);
+                //ScriptError serror = QueueCheck(pvChecks, check);
+                //if (serror != SCRIPT_ERR_OK) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
@@ -1462,7 +2300,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                         CScriptCheck check2(coin.out, tx, i,
                                 flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
                         if (check2())
-                            return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
+                            return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(serror)));
                     }
                     // Failures of other flags indicate a transaction that is
                     // invalid in new blocks, e.g. an invalid P2SH. We DoS ban
@@ -1471,7 +2309,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     // as to the correct behavior - we may want to continue
                     // peering with non-upgraded nodes even after soft-fork
                     // super-majority signaling has occurred.
-                    return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
+                    return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(serror)));
                 }
             }
 
@@ -1573,32 +2411,84 @@ bool AbortNode(CValidationState& state, const std::string& strMessage, const std
  * @param out The out point that corresponds to the tx input.
  * @return A DisconnectResult as an int
  */
-int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
-{
-    bool fClean = true;
 
-    if (view.HaveCoin(out)) fClean = false; // overwriting transaction output
+//int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
+//{
+//    bool fClean = true;
 
-    if (undo.nHeight == 0) {
-        // Missing undo metadata (height and coinbase). Older versions included this
-        // information only in undo records for the last spend of a transactions'
-        // outputs. This implies that it must be present for some other output of the same tx.
-        const Coin& alternate = AccessByTxid(view, out.hash);
-        if (!alternate.IsSpent()) {
-            undo.nHeight = alternate.nHeight;
-            undo.fCoinBase = alternate.fCoinBase;
-        } else {
-            return DISCONNECT_FAILED; // adding output for transaction without known metadata
-        }
-    }
-    // The potential_overwrite parameter to AddCoin is only allowed to be false if we know for
-    // sure that the coin did not already exist in the cache. As we have queried for that above
-    // using HaveCoin, we don't need to guess. When fClean is false, a coin already existed and
-    // it is an overwrite.
-    view.AddCoin(out, std::move(undo), !fClean);
+//    if (view.HaveCoin(out)) fClean = false; // overwriting transaction output
 
-    return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
-}
+//    if (undo.nHeight == 0) {
+//        // Missing undo metadata (height and coinbase). Older versions included this
+//        // information only in undo records for the last spend of a transactions'
+//        // outputs. This implies that it must be present for some other output of the same tx.
+//        const Coin& alternate = AccessByTxid(view, out.hash);
+//        if (!alternate.IsSpent()) {
+//            undo.nHeight = alternate.nHeight;
+//            undo.fCoinBase = alternate.fCoinBase;
+//        } else {
+//            return DISCONNECT_FAILED; // adding output for transaction without known metadata
+//        }
+//    }
+//    // The potential_overwrite parameter to AddCoin is only allowed to be false if we know for
+//    // sure that the coin did not already exist in the cache. As we have queried for that above
+//    // using HaveCoin, we don't need to guess. When fClean is false, a coin already existed and
+//    // it is an overwrite.
+//    view.AddCoin(out, std::move(undo), !fClean);
+
+//    return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
+//}
+
+//bool ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const COutPoint& out, const CTxIn& txin, const CScriptWitness& pegin_witness)
+//{
+//    bool fClean = true;
+
+//    if (!txin.m_is_pegin) {
+//        CCoinsModifier coins = view.ModifyCoins(out.hash);
+//        if (undo.nHeight != 0 ||
+//                // Special-case genesis since nHeight is always 0, assume DB is clean
+//                (Params().GenesisBlock().vtx[0]->GetHash() == out.hash && coins->IsPruned()) ||
+//                // Special-case for initial issuance since being a single output nHeight is always 0
+//                (Params().GenesisBlock().vtx.size() > 1 && [&]() {
+//                                                            for (const auto& tx : Params().GenesisBlock().vtx) {
+//                                                                if (tx->GetHash() == out.hash) {
+//                                                                    return true;
+//                                                                }
+//                                                            }
+//                                                            return false;
+//                                                        }() && coins->IsPruned())) {
+//            // undo data contains height: this is the last output of the prevout tx being spent
+//            if (!coins->IsPruned())
+//                fClean = fClean && error("%s: undo data overwriting existing transaction", __func__);
+//            coins->Clear();
+//            coins->fCoinBase = undo.fCoinBase;
+//            coins->nHeight = undo.nHeight;
+//            coins->nVersion = undo.nVersion;
+//        } else {
+//            if (coins->IsPruned())
+//                fClean = fClean && error("%s: undo data adding output to missing transaction", __func__);
+//        }
+//        if (coins->IsAvailable(out.n))
+//            fClean = fClean && error("%s: undo data overwriting existing output", __func__);
+//        if (coins->vout.size() < out.n+1)
+//            coins->vout.resize(out.n+1);
+//        coins->vout[out.n] = undo.txout;
+//    } else {
+//        if (!IsValidPeginWitness(pegin_witness, txin.prevout)) {
+//            fClean = fClean && error("%s: peg-in occurred without proof", __func__);
+//        } else {
+//            std::pair<uint256, COutPoint> outpoint = std::make_pair(uint256(pegin_witness.stack[2]), txin.prevout);
+//            bool fSpent = view.IsWithdrawSpent(outpoint);
+//            if (!fSpent) {
+//                fClean = fClean && error("%s: peg-in bitcoin txid not marked spent", __func__);
+//            } else {
+//                view.SetWithdrawSpent(outpoint, false);
+//            }
+//        }
+//    }
+
+//    return fClean;
+//}
 
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
@@ -1645,9 +2535,13 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             }
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
-                int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
-                if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
-                fClean = fClean && res != DISCONNECT_UNCLEAN;
+  //              int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
+  //              if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
+  //              fClean = fClean && res != DISCONNECT_UNCLEAN;
+                const CTxInUndo &undo = txundo.vprevout[j];
+                const CScriptWitness &pegin_wit = tx.wit.vtxinwit.size() > j ? tx.wit.vtxinwit[j].m_pegin_witness : CScriptWitness();
+                if (!ApplyTxInUndo(undo, view, out, tx.vin[j], pegin_wit))
+                    fClean = false;
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
@@ -1723,11 +2617,413 @@ static bool WriteTxIndexDataForBlock(const CBlock& block, CValidationState& stat
     return true;
 }
 
-static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+static CCheckQueue<CCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
     RenameThread("zuzcoin-scriptch");
     scriptcheckqueue.Thread();
+}
+
+/* This function has two major purposes:
+ * 1) Checks that the RPC connection to the parent chain node
+ * can be attained, and is returning back reasonable answers.
+ * 2) Re-evaluates a list of blocks that have been deemed "bad"
+ * from the perspective of peg-in witness validation. Blocks are
+ * added to this queue in ConnectTip based on the error code returned.
+ */
+bool BitcoindRPCCheck(const bool init)
+{
+    //First, we can clear out any blocks thatsomehow are now deemed valid
+    //eg reconsiderblock rpc call manually
+    std::vector<uint256> vblocksToReconsider;
+    pblocktree->ReadInvalidBlockQueue(vblocksToReconsider);
+    std::vector<uint256> vblocksToReconsiderAgain;
+    BOOST_FOREACH(uint256& blockhash, vblocksToReconsider) {
+        LOCK(cs_main);
+        if (mapBlockIndex.count(blockhash)) {
+            CBlockIndex* pblockindex = mapBlockIndex[blockhash];
+            if ((pblockindex->nStatus & BLOCK_FAILED_MASK)) {
+                vblocksToReconsiderAgain.push_back(blockhash);
+            }
+        }
+    }
+    vblocksToReconsider = vblocksToReconsiderAgain;
+    vblocksToReconsiderAgain.clear();
+    pblocktree->WriteInvalidBlockQueue(vblocksToReconsider);
+
+    // Next, check for working and valid rpc
+    if (GetBoolArg("-validatepegin", DEFAULT_VALIDATE_PEGIN)) {
+        // During init try until a non-RPC_IN_WARMUP result
+        while (true) {
+            try {
+                // The first thing we have to check is the version of the node.
+                UniValue params(UniValue::VARR);
+                UniValue reply = CallRPC("getnetworkinfo", params, true);
+                UniValue error = reply["error"];
+                if (!error.isNull()) {
+                    // On the first call, it's possible to node is still in 
+                    // warmup; in that case, just wait and retry.
+                    if (error["code"].get_int() == RPC_IN_WARMUP) {
+                        MilliSleep(1000);
+                        continue;
+                    }
+                    else {
+                        LogPrintf("ERROR: Bitcoind RPC check returned 'error' response.\n");
+                        return false;
+                    }
+                }
+                UniValue result = reply["result"];
+                if (!result.isObject() || !result.get_obj()["version"].isNum() ||
+                        result.get_obj()["version"].get_int() < MIN_PARENT_NODE_VERSION) {
+                    LogPrintf("ERROR: Parent chain daemon too old; "
+                            "need Bitcoin Core version 0.16.3 or newer.\n");
+                    return false;
+                }
+
+                // Then check the genesis block to correspond to parent chain.
+                params.push_back(UniValue(0));
+                reply = CallRPC("getblockhash", params, true);
+                error = reply["error"];
+                if (!error.isNull()) {
+                    LogPrintf("ERROR: Bitcoind RPC check returned 'error' response.\n");
+                    return false;
+                }
+                result = reply["result"];
+                if (!result.isStr() || result.get_str() != Params().ParentGenesisBlockHash().GetHex()) {
+                    LogPrintf("ERROR: Invalid parent genesis block hash response via RPC. Contacting wrong parent daemon?\n");
+                    return false;
+                }
+            } catch (const std::runtime_error& re) {
+                std::string totalErr = "ERROR: Failure connecting to bitcoind RPC: ";
+                totalErr += std::string(re.what()) + "\n";
+                LogPrintf(totalErr.c_str());
+                return false;
+            }
+            // Success
+            break;
+        }
+    }
+
+    //Sanity startup check won't reconsider queued blocks
+    if (init) {
+       return true;
+    }
+
+    /* Getting this far means we either aren't validating pegins(so let's make sure that's why
+       it failed previously) or we successfully connected to bitcoind
+       Time to reconsider blocks
+    */
+    if (vblocksToReconsider.size() > 0) {
+        CValidationState state;
+        BOOST_FOREACH(const uint256& blockhash, vblocksToReconsider) {
+            {
+                LOCK(cs_main);
+                if (mapBlockIndex.count(blockhash) == 0)
+                    continue;
+                CBlockIndex* pblockindex = mapBlockIndex[blockhash];
+                ResetBlockFailureFlags(pblockindex);
+            }
+        }
+
+        //All blocks are now being reconsidered
+        ActivateBestChain(state, Params());
+        //This simply checks for DB errors
+        if (!state.IsValid()) {
+            //Something scary?
+        }
+
+        //Now to clear out now-valid blocks
+        BOOST_FOREACH(const uint256& blockhash, vblocksToReconsider) {
+            LOCK(cs_main);
+            if (mapBlockIndex.count(blockhash)) {
+                CBlockIndex* pblockindex = mapBlockIndex[blockhash];
+
+                //Marked as invalid still, put back into queue
+                if((pblockindex->nStatus & BLOCK_FAILED_MASK)) {
+                    vblocksToReconsiderAgain.push_back(blockhash);
+                }
+            }
+        }
+
+        //Write back remaining blocks
+        pblocktree->WriteInvalidBlockQueue(vblocksToReconsiderAgain);
+    }
+    return true;
+}
+
+/* Takes federation redeeem script and adds HMAC_SHA256(pubkey, scriptPubKey) as a tweak to each pubkey */
+CScript calculate_contract(const CScript& federationRedeemScript, const CScript& scriptPubKey) {
+    CScript scriptDestination(federationRedeemScript);
+    txnouttype type;
+    std::vector<std::vector<unsigned char> > solutions;
+    // Sanity check fedRedeemScript
+    if (!Solver(federationRedeemScript, type, solutions) || (type != TX_MULTISIG && type != TX_TRUE)) {
+       assert(false);
+    }
+
+    {
+        CScript::iterator sdpc = scriptDestination.begin();
+        std::vector<unsigned char> vch;
+        opcodetype opcodeTmp;
+        while (scriptDestination.GetOp(sdpc, opcodeTmp, vch))
+        {
+            if (vch.size() == 33)
+            {
+
+                unsigned char tweak[32];
+                size_t pub_len = 33;
+                int ret;
+                unsigned char *pub_start = &(*(sdpc - pub_len));
+                CHMAC_SHA256(pub_start, pub_len).Write(scriptPubKey.data(), scriptPubKey.size()).Finalize(tweak);
+                secp256k1_pubkey watchman;
+                secp256k1_pubkey tweaked;
+                ret = secp256k1_ec_pubkey_parse(secp256k1_ctx_verify_amounts, &watchman, pub_start, pub_len);
+                assert(ret == 1);
+                ret = secp256k1_ec_pubkey_parse(secp256k1_ctx_verify_amounts, &tweaked, pub_start, pub_len);
+                assert(ret == 1);
+                // If someone creates a tweak that makes this fail, they broke SHA256
+                ret = secp256k1_ec_pubkey_tweak_add(secp256k1_ctx_verify_amounts, &tweaked, tweak);
+                assert(ret == 1);
+                ret = secp256k1_ec_pubkey_serialize(secp256k1_ctx_verify_amounts, pub_start, &pub_len, &tweaked, SECP256K1_EC_COMPRESSED);
+                assert(ret == 1);
+                assert(pub_len == 33);
+
+                // Sanity checks to reduce pegin risk. If the tweaked
+                // value flips a bit, we may lose pegin funds irretrievably.
+                // We take the tweak, derive its pubkey and check that
+                // `tweaked - watchman = tweak` to check the computation
+                // two different ways
+                secp256k1_pubkey tweaked2;
+                ret = secp256k1_ec_pubkey_create(secp256k1_ctx_verify_amounts, &tweaked2, tweak);
+                assert(ret);
+                ret = secp256k1_ec_pubkey_negate(secp256k1_ctx_verify_amounts, &watchman);
+                assert(ret);
+                secp256k1_pubkey* pubkey_combined[2];
+                pubkey_combined[0] = &watchman;
+                pubkey_combined[1] = &tweaked;
+                secp256k1_pubkey maybe_tweaked2;
+                ret = secp256k1_ec_pubkey_combine(secp256k1_ctx_verify_amounts, &maybe_tweaked2, pubkey_combined, 2);
+                assert(ret);
+                assert(!memcmp(&maybe_tweaked2, &tweaked2, 64));
+            }
+        }
+    }
+
+    return scriptDestination;
+}
+
+bool GetAmountFromParentChainPegin(CAmount& amount, const Sidechain::Bitcoin::CTransaction& txBTC, unsigned int nOut)
+{
+    amount = txBTC.vout[nOut].nValue;
+    return true;
+}
+
+bool GetAmountFromParentChainPegin(CAmount& amount, const CTransaction& txBTC, unsigned int nOut)
+{
+    if (!txBTC.vout[nOut].nValue.IsExplicit()) {
+        return false;
+    }
+    if (!txBTC.vout[nOut].nAsset.IsExplicit()) {
+        return false;
+    }
+    if (txBTC.vout[nOut].nAsset.GetAsset() != Params().GetConsensus().parent_pegged_asset) {
+        return false;
+    }
+    amount = txBTC.vout[nOut].nValue.GetAmount();
+    return true;
+}
+
+template<typename T>
+static bool GetBlockAndTxFromMerkleBlock(uint256& block_hash, uint256& tx_hash, T& merkle_block, const std::vector<unsigned char>& merkle_block_raw)
+{
+    try {
+        std::vector<uint256> tx_hashes;
+        std::vector<unsigned int> tx_indices;
+        CDataStream merkle_block_stream(merkle_block_raw, SER_NETWORK, PROTOCOL_VERSION);
+        merkle_block_stream >> merkle_block;
+        block_hash = merkle_block.header.GetHash();
+
+        if (!merkle_block_stream.empty()) {
+           return false;
+        }
+        if (merkle_block.txn.ExtractMatches(tx_hashes, tx_indices) != merkle_block.header.hashMerkleRoot || tx_hashes.size() != 1) {
+            return false;
+        }
+        tx_hash = tx_hashes[0];
+    } catch (std::exception& e) {
+        // Invalid encoding of merkle block
+        return false;
+    }
+    return true;
+}
+
+template<typename T>
+static bool CheckPeginTx(const std::vector<unsigned char>& tx_data, T& pegtx, const COutPoint& prevout, const CAmount claim_amount, const CScript& claim_script)
+{
+    try {
+        CDataStream pegtx_stream(tx_data, SER_NETWORK, PROTOCOL_VERSION);
+        pegtx_stream >> pegtx;
+        if (!pegtx_stream.empty()) {
+            return false;
+        }
+    } catch (std::exception& e) {
+        // Invalid encoding of transaction
+        return false;
+    }
+
+    // Check that transaction matches txid
+    if (pegtx->GetHash() != prevout.hash) {
+        return false;
+    }
+
+    if (prevout.n >= pegtx->vout.size()) {
+        return false;
+    }
+    CAmount amount = 0;
+    if (!GetAmountFromParentChainPegin(amount, *pegtx, prevout.n)) {
+        return false;
+    }
+    // Check the transaction nout/value matches
+    if (claim_amount != amount) {
+        return false;
+    }
+
+    // Check that the witness program matches the p2ch on the p2sh-p2wsh transaction output
+    CScript tweaked_fedpegscript = calculate_contract(Params().GetConsensus().fedpegScript, claim_script);
+    CScript witness_output(GetScriptForWitness(tweaked_fedpegscript));
+    CScript expected_script(CScript() << OP_HASH160 << ToByteVector(CScriptID(witness_output)) << OP_EQUAL);
+    if (pegtx->vout[prevout.n].scriptPubKey != expected_script) {
+        return false;
+    }
+
+    return true;
+}
+
+bool IsValidPeginWitness(const CScriptWitness& pegin_witness, const COutPoint& prevout, bool check_depth) {
+
+    // 0) Return false if !consensus.has_parent_chain
+    if (!Params().GetConsensus().has_parent_chain) {
+        return false;
+    }
+
+    // Format on stack is as follows:
+    // 1) value - the value of the pegin output
+    // 2) asset type - the asset type being pegged in
+    // 3) genesis blockhash - genesis block of the parent chain
+    // 4) claim script - script to be evaluated for spend authorization
+    // 5) serialized transaction - serialized bitcoin transaction
+    // 6) txout proof - merkle proof connecting transaction to header
+    //
+    // First 4 values(plus prevout) are enough to validate a peg-in without any internal knowledge
+    // of Bitcoin serialization. This is useful for further abstraction by outsourcing
+    // the other validity checks to RPC calls.
+
+    const std::vector<std::vector<unsigned char> >& stack = pegin_witness.stack;
+    // Must include all elements
+    if (stack.size() != 6) {
+        return false;
+    }
+
+    CDataStream stream(stack[0], SER_NETWORK, PROTOCOL_VERSION);
+    CAmount value;
+    try {
+        stream >> value;
+    } catch (...) {
+        return false;
+    }
+
+    if (!MoneyRange(value)) {
+        return false;
+    }
+
+    // Get asset type
+    if (stack[1].size() != 32) {
+        return false;
+    }
+    CAsset asset(stack[1]);
+
+    // Get genesis blockhash
+    if (stack[2].size() != 32) {
+        return false;
+    }
+    uint256 gen_hash(stack[2]);
+
+    // Get claim_script, sanity check size
+    CScript claim_script(stack[3].begin(), stack[3].end());
+    if (claim_script.size() > 100) {
+        return false;
+    }
+
+    uint256 block_hash;
+    uint256 tx_hash;
+    int num_txs;
+    // Get txout proof
+    if (Params().GetConsensus().ParentChainHasPow()) {
+
+        Sidechain::Bitcoin::CMerkleBlock merkle_block_pow;
+        if (!GetBlockAndTxFromMerkleBlock(block_hash, tx_hash, merkle_block_pow, stack[5])) {
+            return false;
+        }
+        if (!CheckBitcoinProof(block_hash, merkle_block_pow.header.nBits)) {
+            return false;
+        }
+
+        Sidechain::Bitcoin::CTransactionRef pegtx;
+        if (!CheckPeginTx(stack[4], pegtx, prevout, value, claim_script)) {
+            return false;
+        }
+
+        num_txs = merkle_block_pow.txn.GetNumTransactions();
+    } else {
+
+        CMerkleBlock merkle_block;
+        if (!GetBlockAndTxFromMerkleBlock(block_hash, tx_hash, merkle_block, stack[5])) {
+            return false;
+        }
+
+        if (!CheckProofSignedParent(merkle_block.header, Params().GetConsensus())) {
+            return false;
+        }
+
+        CTransactionRef pegtx;
+        if (!CheckPeginTx(stack[4], pegtx, prevout, value, claim_script)) {
+            return false;
+        }
+
+        num_txs = merkle_block.txn.GetNumTransactions();
+    }
+
+    // Check that the merkle proof corresponds to the txid
+    if (prevout.hash != tx_hash) {
+        return false;
+    }
+
+    // Check the genesis block corresponds to a valid peg (only one for now)
+    if (gen_hash != Params().ParentGenesisBlockHash()) {
+        return false;
+    }
+
+    // Check the asset type corresponds to a valid pegged asset (only one for now)
+    if (asset != Params().GetConsensus().pegged_asset) {
+        return false;
+    }
+
+    // Finally, validate peg-in via rpc call
+    if (check_depth && GetBoolArg("-validatepegin", DEFAULT_VALIDATE_PEGIN)) {
+        if (!IsConfirmedBitcoinBlock(block_hash, Params().GetConsensus().pegin_min_depth, num_txs)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Constructs unblinded output to be used in amount and scriptpubkey checks during pegin
+CTxOut GetPeginOutputFromWitness(const CScriptWitness& pegin_witness) {
+	CDataStream stream(pegin_witness.stack[0], SER_NETWORK, PROTOCOL_VERSION);
+    CAmount value;
+    stream >> value;
+
+	return CTxOut(CAsset(pegin_witness.stack[1]), value, CScript(pegin_witness.stack[3].begin(), pegin_witness.stack[3].end()));
 }
 
 // Protected by cs_main
@@ -1820,11 +3116,12 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
+
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck)
+                  CCoinsViewCache& view, const CChainParams& chainparams, std::set<std::pair<uint256, COutPoint> >* setPeginsSpent, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -1853,15 +3150,43 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
 
-    // Special case for the genesis block, skipping connection of its transactions
-    // (its coinbase is unspendable)
+    // Add genesis outputs. The assumption made here is that there are no real spends
+    // occurring in this block.
     if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
-        if (!fJustCheck)
+        if (!fJustCheck) {
+            assert(block.nHeight == 0);
+            std::vector<std::pair<uint256, CDiskTxPos> > vPos;
+            CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
+            for (const auto& tx : block.vtx) {
+
+                // Directly add new coins to DB
+                view.ModifyNewCoins(tx->GetHash(), tx->IsCoinBase())->FromTx(*tx, pindex->nHeight);
+                vPos.push_back(std::make_pair(tx->GetHash(), pos));
+                pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
+            }
             view.SetBestBlock(pindex->GetBlockHash());
+            if (fTxIndex) {
+                if (!pblocktree->WriteTxIndex(vPos)) {
+                    return AbortNode(state, "Failed to write transaction index");
+                }
+            }
+        }
         return true;
     }
 
     nBlocksTotal++;
+    // Check it again in case a previous version let a bad block in
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
+        return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
+
+    // Check that all non-zero coinbase outputs pay to the required destination
+    if (chainparams.GetConsensus().mandatory_coinbase_destination != CScript()) {
+        BOOST_FOREACH(const CTxOut& txout, block.vtx[0]->vout) {
+            if (txout.scriptPubKey != chainparams.GetConsensus().mandatory_coinbase_destination && !(txout.nValue.IsExplicit() && txout.nValue.GetAmount() == 0))
+                return state.DoS(100, error("ConnectBlock(): Coinbase outputs didnt match required scriptPubKey"),
+                                 REJECT_INVALID, "bad-coinbase-txos");
+        }
+    }
 
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {
@@ -1930,6 +3255,15 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         }
     }
 
+    //P2SH is a requirement for segwit + CT
+    unsigned int flags = SCRIPT_VERIFY_P2SH;
+
+    // Start enforcing the DERSIG (BIP66) rule
+    flags |= SCRIPT_VERIFY_DERSIG;
+
+    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
+    flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     int nLockTimeFlags = 0;
     if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
@@ -1947,12 +3281,16 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
 
     std::vector<int> prevheights;
-    CAmount nFees = 0;
+    CAmountMap mapFees;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
+
+    // Used when ConnectBlock() results are unneeded for mempool ejection
+    std::set<std::pair<uint256, COutPoint> > setPeginsSpentDummy;
+
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -1976,7 +3314,11 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             // be in ConnectBlock because they require the UTXO set
             prevheights.resize(tx.vin.size());
             for (size_t j = 0; j < tx.vin.size(); j++) {
-                prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
+                if (tx.vin[j].m_is_pegin) {
+                    prevheights[j] = -1;
+                } else {
+                    prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
+                }
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
@@ -1999,7 +3341,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         {
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, txdata[i], setPeginsSpent == NULL ? setPeginsSpentDummy : *setPeginsSpent, nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
@@ -2010,15 +3352,26 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             blockundo.vtxundo.push_back(CTxUndo());
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+
+        vPos.push_back(std::make_pair(tx.GetHash(), pos));
+        pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
+
+        if (!tx.HasValidFee())
+            return state.DoS(100, error("ConnectBlock(): transaction fee overflowed"), REJECT_INVALID, "bad-fee-outofrange");
+        mapFees += tx.GetFee();
+        if (!MoneyRange(mapFees))
+            return state.DoS(100, error("ConnectBlock(): total block reward overflowed"), REJECT_INVALID, "bad-blockreward-outofrange");
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-    if (block.vtx[0]->GetValueOut() > blockReward)
+    CAmountMap blockReward = mapFees;
+    if (!MoneyRange(blockReward))
+        return state.DoS(100, error("ConnectBlock(): total block reward overflowed"), REJECT_INVALID, "bad-blockreward-outofrange");
+    if (!VerifyCoinbaseAmount(*(block.vtx[0]), blockReward))
         return state.DoS(100,
-                         error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0]->GetValueOut(), blockReward),
+                         error("ConnectBlock(): coinbase pays too much (limit=%d)",
+                               blockReward[policyAsset]),
                                REJECT_INVALID, "bad-cb-amount");
 
     if (!control.Wait())
@@ -2158,7 +3511,9 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
     }
     if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
         // Update best block in wallet (so we can detect restored wallets).
-        GetMainSignals().SetBestChain(chainActive.GetLocator());
+        if (!GetMainSignals().SetBestChain.empty()) {
+            GetMainSignals().SetBestChain(chainActive.GetLocator());
+        }
         nLastSetChain = nNow;
     }
     } catch (const std::runtime_error& e) {
@@ -2394,13 +3749,38 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
+    // For mempool removal with pegin conflicts
+    std::set<std::pair<uint256, COutPoint> > setPeginsSpent;
     {
         CCoinsViewCache view(pcoinsTip.get());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, &setPeginsSpent);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
-            if (state.IsInvalid())
+            if (state.IsInvalid()) {
                 InvalidBlockFound(pindexNew, state);
+                // Possibly result of RPC to bitcoind failure
+                // or unseen Bitcoin blocks.
+                // These blocks are later re-evaluated at an interval
+                // set by `-recheckpeginblockinterval`.
+                if (state.GetRejectCode() == REJECT_PEGIN) {
+                    //Write queue of invalid blocks that
+                    //must be cleared to continue operation
+                    std::vector<uint256> vinvalidBlocks;
+                    pblocktree->ReadInvalidBlockQueue(vinvalidBlocks);
+                    bool blockAlreadyInvalid = false;
+                    BOOST_FOREACH(uint256& hash, vinvalidBlocks) {
+                        if (hash == blockConnecting.GetHash()) {
+                            blockAlreadyInvalid = true;
+                            break;
+                        }
+                    }
+                    if (!blockAlreadyInvalid) {
+                        vinvalidBlocks.push_back(blockConnecting.GetHash());
+                        pblocktree->WriteInvalidBlockQueue(vinvalidBlocks);
+                    }
+                }
+            }
+
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
@@ -2416,7 +3796,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
     // Remove conflicting transactions from the mempool.;
-    mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
+    mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight, setPeginsSpent);
     disconnectpool.removeForBlock(blockConnecting.vtx);
     // Update chainActive & related variables.
     chainActive.SetTip(pindexNew);
@@ -3020,8 +4400,14 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+    if (fCheckPOW && !CheckProof(block, Params().GetConsensus()))
+        return state.DoS(50, error("CheckBlockHeader(): block proof invalid"),
+                         REJECT_INVALID, "block-proof-invalid", true);
+
+    // Check timestamp
+    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+        return state.Invalid(error("CheckBlockHeader(): block timestamp too far in the future"),
+                             REJECT_INVALID, "time-too-new");
 
     return true;
 }
@@ -3077,7 +4463,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Check transactions
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, false))
+        if (!CheckTransaction(*tx, state, true))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
@@ -3122,8 +4508,9 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
     static const std::vector<unsigned char> nonce(32, 0x00);
     if (commitpos != -1 && IsWitnessEnabled(pindexPrev, consensusParams) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
-        tx.vin[0].scriptWitness.stack.resize(1);
-        tx.vin[0].scriptWitness.stack[0] = nonce;
+        tx.wit.vtxinwit.resize(1);
+        tx.wit.vtxinwit[0].scriptWitness.stack.resize(1);
+        tx.wit.vtxinwit[0].scriptWitness.stack[0] = nonce;
         block.vtx[0] = MakeTransactionRef(std::move(tx));
     }
 }
@@ -3135,10 +4522,14 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
     std::vector<unsigned char> ret(32, 0x00);
     if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         if (commitpos == -1) {
+            CMutableTransaction tx0(*block.vtx[0]);
+            tx0.vout.push_back(CTxOut());
+            block.vtx[0] = MakeTransactionRef(std::move(tx0));
             uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
             CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
             CTxOut out;
             out.nValue = 0;
+            out.nAsset = policyAsset;
             out.scriptPubKey.resize(38);
             out.scriptPubKey[0] = OP_RETURN;
             out.scriptPubKey[1] = 0x24;
@@ -3149,7 +4540,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
             commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
             CMutableTransaction tx(*block.vtx[0]);
-            tx.vout.push_back(out);
+            tx.vout[tx.vout.size()-1] = out;
             block.vtx[0] = MakeTransactionRef(std::move(tx));
         }
     }
@@ -3168,12 +4559,11 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
  */
 static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
 {
-    assert(pindexPrev != nullptr);
-    const int nHeight = pindexPrev->nHeight + 1;
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+    // Check proof of work
+    if (!CheckChallenge(block, *pindexPrev, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 
     // Check against checkpoints
@@ -3190,17 +4580,20 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
+    // Check height in header against prev
+    if ((uint32_t)pindexPrev->nHeight + 1 != block.nHeight)
+        return state.Invalid(error("%s: block height in header is incorrect", __func__),
+                             REJECT_INVALID, "bad-header-height");
+
     // Check timestamp
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
-    // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
-       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
-            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
+    // Reject outdated version blocks
+    if (block.nVersion < 4) {
+        return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
+    }
 
     return true;
 }
@@ -3233,7 +4626,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    if (block.nVersion >= 2)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
@@ -3277,15 +4670,13 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
-            bool malleated = false;
-            uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
-            // The malleation check is ignored; as the transaction tree itself
-            // already does not permit it, it is impossible to trigger in the
-            // witness tree.
-            if (block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 || block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
+            uint256 hashWitness = BlockWitnessMerkleRoot(block);
+            if (block.vtx[0]->wit.vtxinwit.empty()
+                || block.vtx[0]->wit.vtxinwit[0].scriptWitness.stack.size() != 1
+                || block.vtx[0]->wit.vtxinwit[0].scriptWitness.stack[0].size() != 32) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-witness-nonce-size", true, strprintf("%s : invalid witness nonce size", __func__));
             }
-            CHash256().Write(hashWitness.begin(), 32).Write(&block.vtx[0]->vin[0].scriptWitness.stack[0][0], 32).Finalize(hashWitness.begin());
+            CHash256().Write(hashWitness.begin(), 32).Write(&block.vtx[0]->wit.vtxinwit[0].scriptWitness.stack[0][0], 32).Finalize(hashWitness.begin());
             if (memcmp(hashWitness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
             }
@@ -3425,6 +4816,13 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
+    //Never process blocks if RPC to bitcoind failure has triggered a failed block
+    std::vector<uint256> lockdown;
+    if (pblocktree->ReadInvalidBlockQueue(lockdown) && lockdown.size() > 0) {
+        LogPrintf("Block with hash %s was received, but unable to process due to bitcoind pegin validation failure.", block.GetHash().GetHex());
+        return false;
+    }
+
     if (!AcceptBlockHeader(block, state, chainparams, &pindex))
         return false;
 
@@ -3461,8 +4859,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     }
     if (fNewBlock) *fNewBlock = true;
 
-    if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
-        !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
+    if ((block.GetHash() != chainparams.GetConsensus().hashGenesisBlock) &&
+        (!CheckBlock(block, state, chainparams.GetConsensus()) ||
+        !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev))) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
@@ -3545,7 +4944,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
-    if (!g_chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
+    if (!g_chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, NULL, true))
         return false;
     assert(state.IsValid());
 

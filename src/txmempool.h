@@ -32,6 +32,20 @@ class CBlockIndex;
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
+inline double AllowFreeThreshold()
+{
+    return CENT * 1 / 250;
+}
+
+inline bool AllowFree(double dPriority)
+{
+    // Large (in bytes) low-priority (new, small-coin) transactions
+    // need a fee.
+    return dPriority > AllowFreeThreshold();
+}
+
+/** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
+
 struct LockPoints
 {
     // Will be set to the blockchain height and median time past
@@ -89,10 +103,11 @@ private:
     int64_t nSigOpCostWithAncestors;
 
 public:
+    std::set<std::pair<uint256, COutPoint> > setPeginsSpent;
     CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
-                    int64_t _nTime, unsigned int _entryHeight,
-                    bool spendsCoinbase,
-                    int64_t nSigOpsCost, LockPoints lp);
+                    int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
+                    CAmount _inChainInputValue, bool spendsCoinbase,
+                    int64_t nSigOpsCost, LockPoints lp, std::set<std::pair<uint256, COutPoint> >& setPeginsSpent);
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
@@ -219,6 +234,14 @@ public:
             return a.GetTime() >= b.GetTime();
         }
         return f1 < f2;
+    }
+
+    // Calculate which score to use for an entry (avoiding division).
+    bool UseDescendantScore(const CTxMemPoolEntry &a) const
+    {
+        double f1 = (double)a.GetModifiedFee() * a.GetSizeWithDescendants();
+        double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxSize();
+        return f2 > f1;
     }
 
     // Return the fee/size we're using for sorting this entry.
@@ -494,6 +517,8 @@ public:
 
     const setEntries & GetMemPoolParents(txiter entry) const;
     const setEntries & GetMemPoolChildren(txiter entry) const;
+
+    std::map<std::pair<uint256, COutPoint>, uint256> mapWithdrawsSpentToTxid;
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
@@ -540,8 +565,8 @@ public:
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
     void removeConflicts(const CTransaction &tx);
-    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight);
-
+    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight,
+                        const std::set<std::pair<uint256, COutPoint> >& setPeginsSpent);
     void clear();
     void _clear(); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
@@ -703,6 +728,9 @@ protected:
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    //bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    //bool HaveCoins(const uint256 &txid) const;
+    bool IsWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const;
 };
 
 /**

@@ -33,6 +33,102 @@
 
 #include <univalue.h>
 
+using namespace std;
+UniValue PushAssetBalance(CAmountMap& balance, CWallet* wallet, std::string strasset);
+
+/**
+ * @note Do not add or change anything in the information returned by this
+ * method. `getinfo` exists for backwards-compatibility only. It combines
+ * information from wildly different sources in the program, which is a mess,
+ * and is thus planned to be deprecated eventually.
+ *
+ * Based on the source of the information, new information should be added to:
+ * - `getblockchaininfo`,
+ * - `getnetworkinfo` or
+ * - `getwalletinfo`
+ *
+ * Or alternatively, create a specific query method for the information.
+ **/
+UniValue getinfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+            "getinfo\n"
+            "\nDEPRECATED. Returns an object containing various state info.\n"
+#ifdef ENABLE_WALLET
+            "\nArguments:\n"
+            "1. \"assetlabel\"               (string, optional) Hex asset id or asset label for balance. \"*\" retrieves all known asset balances.\n"
+#endif
+            "\nResult:\n"
+            "{\n"
+            "  \"version\": xxxxx,           (numeric) the server version\n"
+            "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
+            "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
+            "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
+            "  \"connections\": xxxxx,       (numeric) the number of connections\n"
+            "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
+            "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
+            "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
+            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest pre-generated key in the key pool\n"
+            "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
+            "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
+            "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee set in " + CURRENCY_UNIT + "/kB\n"
+            "  \"relayfee\": x.xxxx,         (numeric) minimum relay fee for non-free transactions in " + CURRENCY_UNIT + "/kB\n"
+            "  \"errors\": \"...\"           (string) any error messages\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getinfo", "")
+            + HelpExampleRpc("getinfo", "")
+        );
+
+#ifdef ENABLE_WALLET
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#else
+    LOCK(cs_main);
+#endif
+
+    proxyType proxy;
+    GetProxy(NET_IPV4, proxy);
+
+    UniValue obj(UniValue::VOBJ);
+    obj.push_back(Pair("version", CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
+#ifdef ENABLE_WALLET
+    if (pwalletMain) {
+        obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
+        CAmountMap balance = pwalletMain->GetBalance();
+        std::string strasset = "";
+        if (request.params.size() > 0) {
+            strasset = request.params[0].get_str();
+        }
+        obj.push_back(Pair("balance", PushAssetBalance(balance, pwalletMain, strasset)));
+    }
+    else {
+        if (!request.params[0].isNull())
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet must be enabled to list asset balances.");
+    }
+#endif
+    obj.push_back(Pair("blocks",        (int)chainActive.Height()));
+    obj.push_back(Pair("timeoffset",    GetTimeOffset()));
+    if(g_connman)
+        obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
+    obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string())));
+    obj.push_back(Pair("chain",         Params().NetworkIDString()));
+#ifdef ENABLE_WALLET
+    if (pwalletMain) {
+        obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
+        obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
+    }
+    if (pwalletMain && pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
+#endif
+    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    return obj;
+}
 #ifdef ENABLE_WALLET
 class DescribeAddressVisitor : public boost::static_visitor<UniValue>
 {
@@ -186,6 +282,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
             "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
             "  \"account\" : \"account\"         (string) DEPRECATED. The account associated with the address, \"\" is the default account\n"
             "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"unconfidential\" : \"address\"  (string) The address without confidentiality key\n"
+            "  \"confidential\" : \"address\"    (string) Confidential version of the address, only if it is yours and unconfidential\n"
             "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
             "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
             "}\n"
@@ -215,11 +313,27 @@ UniValue validateaddress(const JSONRPCRequest& request)
         CScript scriptPubKey = GetScriptForDestination(dest);
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
+        if (address.IsBlinded()) {
+            CPubKey key = address.GetBlindingKey();
+            ret.push_back(Pair("confidential_key", HexStr(key.begin(), key.end())));
+            ret.push_back(Pair("unconfidential", address.GetUnblinded().ToString()));
+        } else {
+            ret.push_back(Pair("confidential_key", ""));
+            ret.push_back(Pair("unconfidential", currentAddress));
+        }
+
 #ifdef ENABLE_WALLET
-        isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
-        ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
-        ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
-        UniValue detail = boost::apply_visitor(DescribeAddressVisitor(pwallet), dest);
+        isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : ISMINE_NO;
+        if (mine != ISMINE_NO && address.IsBlinded() && address.GetBlindingKey() != pwalletMain->GetBlindingPubKey(GetScriptForDestination(dest))) {
+            // Note: this will fail to return ismine for deprecated static blinded addresses.
+            mine = ISMINE_NO;
+        }
+        ret.push_back(Pair("ismine", (mine & ISMINE_SPENDABLE) ? true : false));
+        ret.push_back(Pair("iswatchonly", (mine & ISMINE_WATCH_ONLY) ? true: false));
+        if (!address.IsBlinded() && mine != ISMINE_NO) {
+            ret.push_back(Pair("confidential", address.AddBlindingKey(pwalletMain->GetBlindingPubKey(GetScriptForDestination(dest))).ToString()));
+        }
+        UniValue detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
         ret.pushKVs(detail);
         if (pwallet && pwallet->mapAddressBook.count(dest)) {
             ret.push_back(Pair("account", pwallet->mapAddressBook[dest].name));
@@ -318,6 +432,48 @@ UniValue createmultisig(const JSONRPCRequest& request)
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
     return result;
+}
+
+UniValue createblindedaddress(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+    {
+        string msg = "createblindedaddress address blinding_key\n"
+            "\nCreates a blinded address using the provided blinding key.\n"
+            "\nArguments:\n"
+            "1. \"address\"        (string, required) The unblinded address to be blinded.\n"
+            "2. \"key\"            (string, required) The blinding public key. This can be obtained for a given address using `validateaddress`.\n"
+            "\nResult:\n"
+            "\"blinded_address\"   (string) The blinded address.\n"
+            "\nExamples:\n"
+            "\nCreate a multisig address from 2 addresses\n"
+            + HelpExampleCli("createblindedaddress", "HEZk3iQi1jC49bxUriTtynnXgWWWdAYx16 ec09811118b6febfa5ebe68642e5091c418fbace07e655da26b4a845a691fc2d") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("createblindedaddress", "HEZk3iQi1jC49bxUriTtynnXgWWWdAYx16, ec09811118b6febfa5ebe68642e5091c418fbace07e655da26b4a845a691fc2d")
+        ;
+        throw runtime_error(msg);
+    }
+
+    CBitcoinAddress address(request.params[0].get_str());
+    if (!address.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+    }
+    if (address.IsBlinded()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not an unblinded address");
+    }
+
+    if (!IsHex(request.params[1].get_str())) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid hexadecimal for key");
+    }
+    std::vector<unsigned char> keydata = ParseHex(request.params[1].get_str());
+    if (keydata.size() != 33) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid hexadecimal key length, must be length 66.");
+    }
+
+    CPubKey key;
+    key.Set(keydata.begin(), keydata.end());
+
+    return address.AddBlindingKey(key).ToString();
 }
 
 UniValue verifymessage(const JSONRPCRequest& request)
@@ -635,21 +791,58 @@ static UniValue getinfo_deprecated(const JSONRPCRequest& request)
     );
 }
 
+UniValue tweakfedpegscript(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "tweakfedpegscript \"claim_script\"\n"
+            "\nReturns a tweaked fedpegscript.\n"
+            "\nArguments:\n"
+            "1. \"claim_script\"         (string, required) Script to tweak the fedpegscript with. For example obtained as a result of getpeginaddress.\n"
+            "\nResult:\n"
+            "{\n"
+                "\"script\"           (string) The fedpegscript tweaked with claim_script\n"
+                "\"address\"          (string) The address corresponding to the tweaked fedpegscript\n"
+            "}\n"
+        );
+
+
+    if (!IsHex(request.params[0].get_str())) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "the first argument must be a hex string");
+    }
+
+    std::vector<unsigned char> scriptData = ParseHex(request.params[0].get_str());
+    CScript claim_script = CScript(scriptData.begin(), scriptData.end());
+    CScript tweaked_script = calculate_contract(Params().GetConsensus().fedpegScript, claim_script);
+    CParentBitcoinAddress addr(CScriptID(GetScriptForWitness(tweaked_script)));
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("script", HexStr(tweaked_script));
+    ret.pushKV("address", addr.ToString());
+
+    return ret;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
+    { "control",            "getinfo",                &getinfo,                {} }, /* uses wallet if enabled */
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
     { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
+    { "util",               "createblindedaddress",   &createblindedaddress,   {} },
+    { "util",               "tweakfedpegscript",      &tweakfedpegscript,      {"claim_script"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "getinfo",                &getinfo_deprecated,     {}},
+    /* Not shown in help */
+
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)

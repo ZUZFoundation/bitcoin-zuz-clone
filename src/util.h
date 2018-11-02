@@ -48,7 +48,7 @@ public:
 
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
-
+extern bool fPrintToAuditLog;
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
 extern bool fLogIPs;
@@ -123,8 +123,9 @@ std::vector<CLogCategoryActive> ListActiveLogCategories();
 bool GetLogCategory(uint32_t *f, const std::string *str);
 
 /** Send a string to the log output */
-int LogPrintStr(const std::string &str);
-
+int DebugLogPrintStr(const std::string &str);
+/** Send a string to the audit log output */
+int AuditLogPrintStr(const std::string &str);
 /** Get format string from VA_ARGS for error reporting */
 template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, const Args&... args) { return fmt; }
 
@@ -159,7 +160,31 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
         LogPrintf(__VA_ARGS__); \
     } \
 } while(0)
+
 #endif
+
+
+/*
+#define LogPrint(category, ...) do { \
+    if (LogAcceptCategory((category))) { \
+        DebugLogPrintStr(tfm::format(__VA_ARGS__)); \
+    } \
+} while(0)
+
+#define LogPrintf(...) do { \
+    DebugLogPrintStr(tfm::format(__VA_ARGS__)); \
+} while(0)
+*/
+
+#define AuditLogPrint(category, ...) do { \
+    if (LogAcceptCategory((category))) { \
+        AuditLogPrintStr(tfm::format(__VA_ARGS__)); \
+    } \
+} while(0)
+
+#define AuditLogPrintf(...) do { \
+    AuditLogPrintStr(tfm::format(__VA_ARGS__)); \
+} while(0)
 
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
@@ -195,6 +220,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
 fs::path GetDebugLogPath();
 bool OpenDebugLog();
+void OpenAuditLog();
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
 

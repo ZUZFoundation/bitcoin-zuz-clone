@@ -44,19 +44,21 @@ class PreciousTest(ZuzcoinTestFramework):
 
     def run_test(self):
         self.log.info("Ensure submitblock can in principle reorg to a competing chain")
-        self.nodes[0].generate(1)
-        assert_equal(self.nodes[0].getblockcount(), 1)
-        hashZ = self.nodes[1].generate(2)[-1]
-        assert_equal(self.nodes[1].getblockcount(), 2)
+        self.nodes[0].generate(101)
+        self.nodes[1].generate(100)
+        assert_equal(self.nodes[0].getblockcount(), 101)
+        assert_equal(self.nodes[1].getblockcount(), 102)
+        (hashY, hashZ) = self.nodes[1].generate(2)
         node_sync_via_rpc(self.nodes[0:3])
         assert_equal(self.nodes[0].getbestblockhash(), hashZ)
 
         self.log.info("Mine blocks A-B-C on Node 0")
-        hashC = self.nodes[0].generate(3)[-1]
-        assert_equal(self.nodes[0].getblockcount(), 5)
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        (hashA, hashB, hashC) = self.nodes[0].generate(3)
+        assert_equal(self.nodes[0].getblockcount(), 105)
         self.log.info("Mine competing blocks E-F-G on Node 1")
-        hashG = self.nodes[1].generate(3)[-1]
-        assert_equal(self.nodes[1].getblockcount(), 5)
+        (hashE, hashF, hashG) = self.nodes[1].generate(3)
+        assert_equal(self.nodes[1].getblockcount(), 105)
         assert(hashC != hashG)
         self.log.info("Connect nodes and check no reorg occurs")
         # Submit competing blocks via RPC so any reorg should occur before we proceed (no way to wait on inaction for p2p sync)
@@ -85,7 +87,7 @@ class PreciousTest(ZuzcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), hashC)
         self.log.info("Mine another block (E-F-G-)H on Node 0 and reorg Node 1")
         self.nodes[0].generate(1)
-        assert_equal(self.nodes[0].getblockcount(), 6)
+        assert_equal(self.nodes[0].getblockcount(), 106)
         sync_blocks(self.nodes[0:2])
         hashH = self.nodes[0].getbestblockhash()
         assert_equal(self.nodes[1].getbestblockhash(), hashH)
@@ -94,7 +96,7 @@ class PreciousTest(ZuzcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), hashH)
         self.log.info("Mine competing blocks I-J-K-L on Node 2")
         self.nodes[2].generate(4)
-        assert_equal(self.nodes[2].getblockcount(), 6)
+        assert_equal(self.nodes[2].getblockcount(), 106)
         hashL = self.nodes[2].getbestblockhash()
         self.log.info("Connect nodes and check no reorg occurs")
         node_sync_via_rpc(self.nodes[1:3])

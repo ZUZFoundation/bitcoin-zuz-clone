@@ -19,6 +19,7 @@ MIN_BLOCKS_TO_KEEP = 288
 # the manual prune RPC avoids pruning blocks in the same window to be
 # compatible with pruning based on key creation time.
 TIMESTAMP_WINDOW = 2 * 60 * 60
+RESCAN_WINDOW = 2 * 60 * 60
 
 
 def calc_usage(blockdir):
@@ -260,9 +261,16 @@ class PruneTest(ZuzcoinTestFramework):
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
         assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
 
+        # Save block transaction count before pruning, assert value
+        block1_details = node.getblock(node.getblockhash(1))
+        assert_equal(block1_details["nTx"], len(block1_details["tx"]))
+
         # mine 6 blocks so we are at height 1001 (i.e., above PruneAfterHeight)
         node.generate(6)
         assert_equal(node.getblockchaininfo()["blocks"], 1001)
+
+        # Pruned block should still know the number of transactions
+        assert_equal(node.getblockheader(node.getblockhash(1))["nTx"], block1_details["nTx"])
 
         # negative heights should raise an exception
         assert_raises_rpc_error(-8, "Negative", node.pruneblockchain, -10)

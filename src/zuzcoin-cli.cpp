@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "callrpc.h"
 #if defined(HAVE_CONFIG_H)
 #include <config/zuzcoin-config.h>
 #endif
@@ -16,22 +17,18 @@
 #include <utilstrencodings.h>
 
 #include <stdio.h>
-
 #include <event2/buffer.h>
 #include <event2/keyvalq_struct.h>
 #include <support/events.h>
 
 #include <univalue.h>
 
-static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
-static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
-static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
-
 std::string HelpMessageCli()
 {
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
+
     std::string strUsage;
     strUsage += HelpMessageGroup(_("Options:"));
     strUsage += HelpMessageOpt("-?", _("This help message"));
@@ -41,7 +38,9 @@ std::string HelpMessageCli()
     AppendParamsHelpMessages(strUsage);
     strUsage += HelpMessageOpt("-named", strprintf(_("Pass named instead of positional arguments (default: %s)"), DEFAULT_NAMED));
     strUsage += HelpMessageOpt("-rpcconnect=<ip>", strprintf(_("Send commands to node running on <ip> (default: %s)"), DEFAULT_RPCCONNECT));
+
     strUsage += HelpMessageOpt("-rpcport=<port>", strprintf(_("Connect to JSON-RPC on <port> (default: %u or testnet: %u)"), defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()));
+
     strUsage += HelpMessageOpt("-rpcwait", _("Wait for RPC server to start"));
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
@@ -57,20 +56,6 @@ std::string HelpMessageCli()
 //
 // Start
 //
-
-//
-// Exception thrown on connection error.  This error is used to determine
-// when to wait if -rpcwait is given.
-//
-class CConnectionFailed : public std::runtime_error
-{
-public:
-
-    explicit inline CConnectionFailed(const std::string& msg) :
-        std::runtime_error(msg)
-    {}
-
-};
 
 //
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
@@ -111,7 +96,7 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
     }
-    // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
+    // Check for -chain, -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
     try {
         SelectBaseParams(ChainNameFromCommandLine());
     } catch (const std::exception& e) {
@@ -125,7 +110,6 @@ static int AppInitRPC(int argc, char* argv[])
     }
     return CONTINUE_EXECUTION;
 }
-
 
 /** Reply structure for request_done to fill in */
 struct HTTPReply

@@ -9,6 +9,8 @@
 #include <keystore.h>
 #include <script/script.h>
 #include <script/sign.h>
+#include "chainparams.h"
+#include "script/standard.h"
 
 
 typedef std::vector<unsigned char> valtype;
@@ -61,6 +63,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
     case TX_WITNESS_UNKNOWN:
+    case TX_FEE:
         break;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
@@ -144,6 +147,9 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             return ISMINE_SPENDABLE;
         break;
     }
+    case TX_TRUE:
+        if (Params().anyonecanspend_aremine)
+            return ISMINE_SPENDABLE;
     }
 
     if (keystore.HaveWatchOnly(scriptPubKey)) {
