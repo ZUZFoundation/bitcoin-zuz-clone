@@ -18,6 +18,14 @@ class CTxOut;
 
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_WEIGHT = MAX_BLOCK_WEIGHT - 4000;
+/** The sha256 of Bitcoin genesis block, for easy reference **/
+extern CAsset policyAsset;
+
+/** Default for -blockmaxsize, which controls the maximum size of block the mining code will create **/
+static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 1000000;
+/** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = DEFAULT_BLOCK_MAX_SIZE/5;
+/** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 static const unsigned int DEFAULT_BLOCK_MIN_TX_FEE = 1000;
 /** The maximum weight for transactions we're willing to relay/mine */
@@ -79,12 +87,12 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
 bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled = false);
+bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnessEnabled = false);
+bool IsStandardTx(const CTransaction& tx, std::string& reason);
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending

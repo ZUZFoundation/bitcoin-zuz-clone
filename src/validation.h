@@ -30,6 +30,13 @@
 
 #include <atomic>
 
+#include <boost/unordered_map.hpp>
+#include <boost/filesystem/path.hpp>
+
+namespace Sidechain { namespace Bitcoin {
+class CTransaction;
+}}
+
 class CBlockIndex;
 class CBlockTreeDB;
 class CChainParams;
@@ -60,11 +67,11 @@ static const CAmount HIGH_MAX_TX_FEE = 100 * HIGH_TX_FEE_PER_KB;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static const unsigned int DEFAULT_ANCESTOR_LIMIT = 25;
 /** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
-static const unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT = 101;
+static const unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT = 375;
 /** Default for -limitdescendantcount, max number of in-mempool descendants */
 static const unsigned int DEFAULT_DESCENDANT_LIMIT = 25;
 /** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
-static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
+static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 375;
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
 /** Maximum kilobytes for transactions to store for processing during reorg */
@@ -122,6 +129,8 @@ static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
 /** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
 static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
 
+static const unsigned int DEFAULT_LIMITFREERELAY = 15;
+static const bool DEFAULT_RELAYPRIORITY = true;
 static const int64_t DEFAULT_MAX_TIP_AGE = 24 * 60 * 60;
 /** Maximum age of our tip in seconds for us to be considered current for fee estimation */
 static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
@@ -144,7 +153,13 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 /** Maximum number of unconnecting headers announcements before DoS score */
 static const int MAX_UNCONNECTING_HEADERS = 10;
 
-static const bool DEFAULT_PEERBLOOMFILTERS = true;
+static const bool DEFAULT_PEERBLOOMFILTERS = false;
+
+/** The minimum version for the parent chain node.
+ *  We need v0.16.3 to get the nTx field in getblockheader and inflation fix.
+ *  Note that Elements-based parent chains may not have fixes based on this
+ *  version check! */
+static const int MIN_PARENT_NODE_VERSION = 160300; // 0.16.3
 
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
@@ -180,7 +195,6 @@ extern CFeeRate minRelayTxFee;
 extern CAmount maxTxFee;
 /** If the tip is older than this (in seconds), the node is considered to be in initial block download. */
 extern int64_t nMaxTipAge;
-extern bool fEnableReplacement;
 
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */
 extern uint256 hashAssumeValid;
@@ -272,10 +286,20 @@ bool LoadChainTip(const CChainParams& chainparams);
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
+/** Check if bitcoind connection via RPC is correctly working*/
+bool BitcoindRPCCheck(bool init);
+bool GetAmountFromParentChainPegin(CAmount& amount, const Sidechain::Bitcoin::CTransaction& txBTC, unsigned int nOut);
+bool GetAmountFromParentChainPegin(CAmount& amount, const CTransaction& txBTC, unsigned int nOut);
+/** Checks pegin witness for validity */
+bool IsValidPeginWitness(const CScriptWitness& pegin_witness, const COutPoint& prevout, bool check_depth = true);
+/** Extracts an output from pegin witness for evaluation as a normal output */
+CTxOut GetPeginOutputFromWitness(const CScriptWitness& pegin_witness);
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::Params& params, uint256& hashBlock, bool fAllowSlow = false, CBlockIndex* blockIndex = nullptr);
+/** Select Inputs which lock at least nAmount to the given chain */
+bool GetLockedOutputs(const uint256 &genesisHash, const CAmount &nAmount, std::vector<std::pair<COutPoint, CAmount> >& res);
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
@@ -285,6 +309,11 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pin
 
 /** Calculate the amount of disk space the block & undo files currently use */
 uint64_t CalculateCurrentUsage();
+
+/**
+ *  Mark one block file as pruned.
+ */
+void PruneOneBlockFile(const int fileNumber);
 
 /**
  *  Mark one block file as pruned.
@@ -321,11 +350,89 @@ BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::D
 /** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
 int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
+/** 
+ * Count ECDSA signature operations the old-fashioned (pre-0.6) way
+ * @return number of sigops this transaction's outputs will produce when spent
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetLegacySigOpCount(const CTransaction& tx);
+
+/**
+ * Count ECDSA signature operations in pay-to-script-hash inputs.
+ * 
+ * @param[in] mapInputs Map of previous transactions that have outputs we're spending
+ * @return maximum number of sigops required to validate this transaction's inputs
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+
+/**
+ * Compute total signature operation cost of a transaction.
+ * @param[in] tx     Transaction for which we are computing the cost
+ * @param[in] inputs Map of previous transactions that have outputs we're spending
+ * @param[out] flags Script verification flags
+ * @return Total signature operation cost of tx
+ */
+int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
+
+/**
+ * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
+ * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
+ * instead of being performed inline.
+ */
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
+                 unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, std::set<std::pair<uint256, COutPoint> >& setPeginsSpent,
+                 std::vector<CCheck*> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
 
 /** Transaction validation functions */
+
+/** Context-independent validity checks */
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
+
+namespace Consensus {
+
+/**
+ * Check whether all inputs of this transaction are valid (no double spends and amounts)
+ * This does not modify the UTXO set. This does not check scripts and sigs.
+ * Preconditions: tx.IsCoinBase() is false.
+ */
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, std::set<std::pair<uint256, COutPoint> >& setPeginsSpent, std::vector<CCheck*> *pvChecks, const bool cacheStore, bool fScriptChecks);
+
+} // namespace Consensus
+
+/**
+ * Verify the transaction's outputs spend exactly what its inputs provide, plus some excess amount.
+ *
+ * This also checks rangeproofs, surjection proofs, and issuances of assets and re-issuance tokens.
+ * The function assumes that IsValidPeginWitness() returns true on all peg-in inputs.
+ *
+ * @param[in] view   CCoinsViewCache to find necessary outputs
+ * @param[in] tx     transaction for which we are checking totals
+ * @param[in] pvChecks  multithreaded rangeproof, surjection proof and commitment checker
+ * @param[in] cacheStore signal if rangeproof and surjection proof verification should be cached
+ * @return  True if verification was not aborted and totals are identical
+*/
+bool VerifyAmounts(const CCoinsViewCache& cache, const CTransaction& tx, std::vector<CCheck*>* pvChecks = NULL, const bool cacheStore = false);
+
+/**
+ * Verify the amounts of coinbase transactions. It will fail for any blinded amount or type.
+ * Each output must be explicit in both nValue and nAsset.
+*/
+bool VerifyCoinbaseAmount(const CTransaction& tx, const CAmountMap& mapFees);
+
+/* Counts the number of non-null issuances, one for asset themselves
+ * and one for the reissuance tokens.
+ */
+size_t GetNumIssuances(const CTransaction& tx);
+
+/**
+ * Check if transaction is final and can be included in a block with the
+ * specified height and time. Consensus critical.
+ */
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
 
 /**
  * Check if transaction will be final in the next block to be created.
@@ -358,15 +465,32 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = null
  * Closure representing one script verification
  * Note that this stores references to the spending transaction 
  */
-class CScriptCheck
+class CCheck
+ {
+ protected:
+     ScriptError error;
+     bool fAmountError;
+
+ public:
+     CCheck() : error(SCRIPT_ERR_UNKNOWN_ERROR), fAmountError(false) {}
+     virtual ~CCheck() {}
+
+     virtual bool operator()() = 0;
+
+     ScriptError GetScriptError() const { return error; }
+     bool IsAmountError() const { return fAmountError; }
+};
+
+class CScriptCheck : public CCheck
 {
 private:
     CTxOut m_tx_out;
+    CScript scriptPubKey;
+    CConfidentialValue amount;
     const CTransaction *ptxTo;
     unsigned int nIn;
     unsigned int nFlags;
     bool cacheStore;
-    ScriptError error;
     PrecomputedTransactionData *txdata;
 
 public:
@@ -387,6 +511,10 @@ public:
     }
 
     ScriptError GetScriptError() const { return error; }
+/*    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, PrecomputedTransactionData* txdataIn) :
+        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey), amount(txFromIn.vout[txToIn.vin[nInIn].prevout.n].nValue),
+        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), txdata(txdataIn) { }
+*/
 };
 
 /** Initializes the script-execution cache */
@@ -402,6 +530,24 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 /** Context-independent validity checks */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
+/** Context-dependent validity checks.
+ *  By "context", we mean only the previous block headers, but not the UTXO
+ *  set; UTXO-related validity checks are done in ConnectBlock(). */
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+
+/** Apply the effects of this block (with given index) on the UTXO set represented by coins.
+ *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
+ *  can fail if those validity checks fail (among other reasons). */
+bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins,
+                  const CChainParams& chainparams, std::set<std::pair<uint256, COutPoint> >* setPeginsSpent = NULL, bool fJustCheck = false);
+
+/** Undo the effects of this block (with given index) on the UTXO set represented by coins.
+ *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
+ *  will be true if no problems were found. Otherwise, the return value will be false in case
+ *  of problems. Note that in any case, coins may be modified. */
+bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
+
 /** Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held) */
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
@@ -416,6 +562,9 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
 
 /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+
+/** Calculates script necessary for p2ch peg-in transactions */
+CScript calculate_contract(const CScript& federationRedeemScript, const CScript& witnessProgram);
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB {
@@ -473,6 +622,9 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
 static const unsigned int REJECT_INTERNAL = 0x100;
 /** Too high fee. Can not be triggered by P2P transactions */
 static const unsigned int REJECT_HIGHFEE = 0x100;
+
+/** Get block file info entry for one block file */
+CBlockFileInfo* GetBlockFileInfo(size_t n);
 
 /** Get block file info entry for one block file */
 CBlockFileInfo* GetBlockFileInfo(size_t n);

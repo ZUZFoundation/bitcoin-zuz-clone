@@ -23,7 +23,7 @@ CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool f
     prefilledtxn[0] = {0, block.vtx[0]};
     for (size_t i = 1; i < block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
-        shorttxids[i - 1] = GetShortID(fUseWTXID ? tx.GetWitnessHash() : tx.GetHash());
+        shorttxids[i - 1] = GetShortID(fUseWTXID ? tx.GetHashWithWitness() : tx.GetHash());
     }
 }
 
@@ -154,7 +154,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // Note that we don't want duplication between extra_txn and mempool to
                 // trigger this case, so we compare witness hashes first
                 if (txn_available[idit->second] &&
-                        txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
+                        txn_available[idit->second]->GetHashWithWitness() != extra_txn[i].second->GetHashWithWitness()) {
                     txn_available[idit->second].reset();
                     mempool_count--;
                     extra_count--;

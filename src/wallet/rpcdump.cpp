@@ -184,6 +184,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
         pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
     }
 
+    AuditLogPrintf("%s : importprivkey %s\n", getUser(), pubkey.GetHash().GetHex());
+
     return NullUniValue;
 }
 
@@ -322,6 +324,8 @@ UniValue importaddress(const JSONRPCRequest& request)
         pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
         pwallet->ReacceptWalletTransactions();
     }
+
+    AuditLogPrintf("%s : importaddress %s\n", getUser(), request.params[0].get_str());
 
     return NullUniValue;
 }
@@ -491,6 +495,8 @@ UniValue importpubkey(const JSONRPCRequest& request)
         pwallet->ReacceptWalletTransactions();
     }
 
+    AuditLogPrintf("%s : importpubkey %s\n", getUser(), request.params[0].get_str());
+
     return NullUniValue;
 }
 
@@ -617,6 +623,8 @@ UniValue importwallet(const JSONRPCRequest& request)
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys/scripts to wallet");
 
+    AuditLogPrintf("%s : importwallet %s\n", getUser(), request.params[0].get_str());
+
     return NullUniValue;
 }
 
@@ -659,6 +667,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     if (!pwallet->GetKey(keyid, vchSecret)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     }
+    AuditLogPrintf("%s : dumpprivkey %s\n", getUser(), strAddress);
     return CZuzcoinSecret(vchSecret).ToString();
 }
 
@@ -792,6 +801,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     UniValue reply(UniValue::VOBJ);
     reply.push_back(Pair("filename", filepath.string()));
 
+    AuditLogPrintf("%s : dumpwallet %s\n", getUser(), request.params[0].get_str());
     return reply;
 }
 
@@ -1268,8 +1278,269 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 }
                 ++i;
             }
+//=======
+//    if (fRescan && fRunScan && requests.size()) {
+//        CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindEarliestAtLeast(std::max<int64_t>(nLowestTimestamp - 7200, 0)) : chainActive.Genesis();
+//        CBlockIndex* scannedRange = nullptr;
+//        if (pindex) {
+//            scannedRange = pwalletMain->ScanForWalletTransactions(pindex, true);
+//            pwalletMain->ReacceptWalletTransactions();
+//>>>>>>> elements/elements-0.14.1
+        }
+
+        if (!scannedRange || scannedRange->nHeight > pindex->nHeight) {
+            std::vector<UniValue> results = response.getValues();
+            response.clear();
+            response.setArray();
+            size_t i = 0;
+            for (const UniValue& request : requests.getValues()) {
+                // If key creation date is within the successfully scanned
+                // range, or if the import result already has an error set, let
+                // the result stand unmodified. Otherwise replace the result
+                // with an error message.
+                if (GetImportTimestamp(request, now) - 7200 >= scannedRange->GetBlockTimeMax() || results.at(i).exists("error")) {
+                    response.push_back(results.at(i));
+                } else {
+                    UniValue result = UniValue(UniValue::VOBJ);
+                    result.pushKV("success", UniValue(false));
+                    result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to rescan before time %d, transactions may be missing.", scannedRange->GetBlockTimeMax())));
+                    response.push_back(std::move(result));
+                }
+                ++i;
+            }
         }
     }
 
     return response;
+}
+
+UniValue dumpblindingkey(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp, false))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+        throw runtime_error(
+            "dumpblindingkey \"address\"\n"
+            "\nDumps the private blinding key for a CT address in hex."
+            "\nArguments:\n"
+            "1. \"address\"          (string, required) The CT address\n"
+            "\nExample:\n"
+            + HelpExampleCli("dumpblindingkey", "\"my address\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    CBitcoinAddress address(request.params[0].get_str());
+    if (!address.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+    }
+    if (!address.IsBlinded()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a CT address");
+    }
+
+    CTxDestination dest = address.Get();
+    CScript script = GetScriptForDestination(dest);
+    CKey key;
+    key = pwalletMain->GetBlindingKey(&script);
+    if (key.IsValid()) {
+        CPubKey pubkey = key.GetPubKey();
+        if (pubkey == address.GetBlindingKey()) {
+            AuditLogPrintf("%s : dumpblindingkey %s\n", getUser(), address.ToString());
+            return HexStr(key.begin(), key.end());
+        }
+    }
+    // Just for backward compatibility
+    key = pwalletMain->GetBlindingKey(NULL);
+    if (key.IsValid()) {
+        CPubKey pubkey = key.GetPubKey();
+        if (pubkey == address.GetBlindingKey()) {
+            AuditLogPrintf("%s : dumpblindingkey %s\n", getUser(), address.ToString());
+            return HexStr(key.begin(), key.end());
+        }
+    }
+    throw JSONRPCError(RPC_WALLET_ERROR, "Blinding key for address is unknown");
+}
+
+UniValue dumpissuanceblindingkey(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 2)
+        throw runtime_error(
+            "dumpissuanceblindingkey \"txid\" vin\n"
+            "\nDumps the private blinding key for an asset issuance in wallet."
+            "\nArguments:\n"
+            "1. \"txid\"          (string, required) The transaction id of the issuance\n"
+            "2. \"vin\"           (numeric, required) The input number of the issuance in the transaction.\n"
+            "\nResult:\n"
+            "\"blindingkey\"      (string) The blinding key\n"
+            "\nExample:\n"
+            + HelpExampleCli("dumpissuanceblindingkey", "\"<txid>\", 0")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    if (!request.params[0].isStr() || !IsHex(request.params[0].get_str()) || request.params[0].get_str().size() != 64) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "First argument must be a txid string");
+    }
+    std::string txidstr = request.params[0].get_str();
+    uint256 txid;
+    txid.SetHex(txidstr);
+
+    uint32_t vindex;
+    if (!request.params[1].isNum()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "vin must be an integer");
+    }
+    vindex = request.params[1].get_int();
+
+    // Process as issuance key dump
+    for (map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it) {
+        const CWalletTx* pcoin = &(*it).second;
+        if (pcoin->tx->GetHash() != txid) {
+            continue;
+        }
+        if (pcoin->tx->vin.size() <= vindex) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Transaction is in wallet but vin does not exist");
+        }
+        if (pcoin->tx->vin[vindex].assetIssuance.IsNull()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Transaction input has no issuance");
+        }
+        // We can actually deblinds the input
+        if (pcoin->GetIssuanceAmount(vindex, false) != -1 ) {
+            CScript blindingScript(CScript() << OP_RETURN << std::vector<unsigned char>(pcoin->tx->vin[vindex].prevout.hash.begin(), pcoin->tx->vin[vindex].prevout.hash.end()) << pcoin->tx->vin[vindex].prevout.n);
+            CKey key;
+            key = pwalletMain->GetBlindingKey(&blindingScript);
+            AuditLogPrintf("%s : dumpissuanceblindingkey %s %s\n", getUser(), txid.GetHex(), request.params[1].getValStr());
+            return HexStr(key.begin(), key.end());
+        } else {
+            // We don't know how to deblind this using our wallet
+            throw JSONRPCError(RPC_WALLET_ERROR, "Unable to unblind issuance with wallet blinding key.");
+        }
+    }
+    throw JSONRPCError(RPC_WALLET_ERROR, "Transaction is unknown to wallet.");
+}
+
+
+UniValue importblindingkey(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
+        throw runtime_error(
+            "importblindingkey \"address\" \"blindinghex\"\n"
+            "\nImports a private blinding key in hex for a CT address."
+            "\nArguments:\n"
+            "1. \"address\"          (string, required) The CT address\n"
+            "2. \"hexkey\"           (string, required) The blinding key in hex\n"
+            "\nExample:\n"
+            + HelpExampleCli("importblindingkey", "\"my blinded CT address\" <blindinghex>")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    CBitcoinAddress address(request.params[0].get_str());
+    if (!address.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+    }
+    if (!address.IsBlinded()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a CT address");
+    }
+
+    if (!IsHex(request.params[1].get_str())) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid hexadecimal for key");
+    }
+    std::vector<unsigned char> keydata = ParseHex(request.params[1].get_str());
+    if (keydata.size() != 32) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid hexadecimal key length");
+    }
+
+    CKey key;
+    key.Set(keydata.begin(), keydata.end(), true);
+    if (!key.IsValid() || key.GetPubKey() != address.GetBlindingKey()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Address and key do not match");
+    }
+
+    uint256 keyval;
+    memcpy(keyval.begin(), &keydata[0], 32);
+    if (!pwalletMain->AddSpecificBlindingKey(CScriptID(GetScriptForDestination(address.Get())), keyval)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Failed to import blinding key");
+    }
+    pwalletMain->MarkDirty();
+
+    return NullUniValue;
+}
+
+UniValue importissuanceblindingkey(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 3)
+        throw runtime_error(
+            "importissuanceblindingkey \"txid\" vin \"blindingkey\"\n"
+            "\nImports a private blinding key in hex for an asset issuance."
+            "\nArguments:\n"
+
+            "1. \"txid\"          (string, required) The transaction id of the issuance\n"
+            "2. \"vin\"           (numeric, required) The input number of the issuance in the transaction.\n"
+            "3. \"blindingkey\"           (string, required) The blinding key in hex\n"
+            "\nExample:\n"
+            + HelpExampleCli("importblindingkey", "\"my blinded CT address\" <blindinghex>")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    if (!request.params[0].isStr() || !IsHex(request.params[0].get_str()) || request.params[0].get_str().size() != 64) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "First argument must be a txid string");
+    }
+    std::string txidstr = request.params[0].get_str();
+    uint256 txid;
+    txid.SetHex(txidstr);
+
+    uint32_t vindex;
+    if (!request.params[1].isNum()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "vin must be an integer");
+    }
+    vindex = request.params[1].get_int();
+
+    if (!request.params[2].isStr() || !IsHex(request.params[2].get_str()) || request.params[2].get_str().size() != 64) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "blinding key must be a hex string of length 64");
+    }
+
+    std::vector<unsigned char> keydata = ParseHex(request.params[2].get_str());
+    if (keydata.size() != 32) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid hexadecimal key length");
+    }
+    CKey key;
+    key.Set(keydata.begin(), keydata.end(), true);
+
+    // Process as issuance key dump
+    for (map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it) {
+        const CWalletTx* pcoin = &(*it).second;
+        if (pcoin->GetHash() != txid) {
+            continue;
+        }
+        if (pcoin->tx->vin.size() <= vindex) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Transaction is in wallet but vin does not exist");
+        }
+        if (pcoin->tx->vin[vindex].assetIssuance.IsNull()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Transaction input has no issuance");
+        }
+
+        // Import the key in that slot
+        uint256 keyval;
+        memcpy(keyval.begin(), &keydata[0], 32);
+        CScript blindingScript(CScript() << OP_RETURN << std::vector<unsigned char>(pcoin->tx->vin[vindex].prevout.hash.begin(), pcoin->tx->vin[vindex].prevout.hash.end()) << pcoin->tx->vin[vindex].prevout.n);
+        if (!pwalletMain->AddSpecificBlindingKey(CScriptID(blindingScript), keyval)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Failed to import blinding key");
+        }
+        pwalletMain->MarkDirty();
+        AuditLogPrintf("%s : importissuanceblindingkey %s %s\n", getUser(), txid.GetHex(), request.params[1].getValStr());
+        return NullUniValue;
+    }
+
+    throw JSONRPCError(RPC_WALLET_ERROR, "Transaction is unknown to wallet.");
 }

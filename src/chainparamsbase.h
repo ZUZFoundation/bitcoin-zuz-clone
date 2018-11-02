@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 
+#define CHAINPARAMS_OLD_MAIN "___old_main"
+#define CHAINPARAMS_REGTEST "elementsregtest"
+
 /**
  * CBaseChainParams defines the base parameters (shared between zuzcoin-cli and zuzcoind)
  * of a given instance of the Zuzcoin system.
@@ -16,18 +19,19 @@
 class CBaseChainParams
 {
 public:
-    /** BIP70 chain name strings (main, test or regtest) */
     static const std::string MAIN;
-    static const std::string TESTNET;
     static const std::string REGTEST;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
+    int MainchainRPCPort() const { return nMainchainRPCPort; }
+    CBaseChainParams() = delete;
+    CBaseChainParams(const std::string& data_dir, int rpc_port, int mainchain_rpc_port) :
+        nRPCPort(rpc_port), nMainchainRPCPort(mainchain_rpc_port), strDataDir(data_dir) {}
 
-protected:
-    CBaseChainParams() {}
-
+private:
     int nRPCPort;
+    int nMainchainRPCPort;
     std::string strDataDir;
 };
 

@@ -10,17 +10,21 @@
 
 #include <assert.h>
 
-const std::string CBaseChainParams::MAIN = "main";
-const std::string CBaseChainParams::TESTNET = "test";
-const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::MAIN = CHAINPARAMS_OLD_MAIN;
+const std::string CBaseChainParams::REGTEST = CHAINPARAMS_REGTEST;
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
-    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    strUsage += HelpMessageOpt("-chain=<chain>", strprintf(_("Use the chain <chain> (default: %s). Anything except main is allowed. Note that this affects where \"network specific\" files will be searched for, such as cookie files when using -cli."), CHAINPARAMS_REGTEST));
     if (debugHelp) {
-        strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
-                                   "This is intended for regression testing tools and app development.");
+        strUsage += HelpMessageOpt("-regtest", strprintf(_("Equivalent to -chain=%s"), CHAINPARAMS_REGTEST));
+        strUsage += HelpMessageOpt("-pubkeyprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 pubkey address. (default: %d)"), 235));
+        strUsage += HelpMessageOpt("-scriptprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 script address. (default: %d)"), 75));
+        strUsage += HelpMessageOpt("-secretprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 secret key encoding. (default: %d)"), 239));
+        strUsage += HelpMessageOpt("-extpubkeyprefix", strprintf(_("The 4-byte prefix, in hex, of the chain's base58 extended public key encoding. (default: %s)"), "043587CF"));
+        strUsage += HelpMessageOpt("-extprvkeyprefix", strprintf(_("The 4-byte prefix, in hex, of the chain's base58 extended private key encoding. (default: %s)"), "04358394"));
+        strUsage += HelpMessageOpt("-blindedprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 script address. (default: %d)"), 4));
     }
 }
 

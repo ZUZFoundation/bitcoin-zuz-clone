@@ -39,6 +39,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (unsigned int i = 0; i < 128; i++)
         garbage.push_back('X');
     CMutableTransaction tx;
+    std::set<std::pair<uint256, COutPoint> > dummyWithdraws;
     tx.vin.resize(1);
     tx.vin[0].scriptSig = garbage;
     tx.vout.resize(1);
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 txHashes[9-h].pop_back();
             }
         }
-        mpool.removeForBlock(block, ++blocknum);
+        mpool.removeForBlock(block, ++blocknum, dummyWithdraws);
         block.clear();
         // Check after just a few txs that combining buckets works as expected
         if (blocknum == 3) {
@@ -112,7 +113,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // Mine 50 more blocks with no transactions happening, estimates shouldn't change
     // We haven't decayed the moving average enough so we still have enough data points in every bucket
     while (blocknum < 250)
-        mpool.removeForBlock(block, ++blocknum);
+        mpool.removeForBlock(block, ++blocknum, dummyWithdraws);
 
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
@@ -132,7 +133,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 txHashes[j].push_back(hash);
             }
         }
-        mpool.removeForBlock(block, ++blocknum);
+        mpool.removeForBlock(block, ++blocknum, dummyWithdraws);
     }
 
     for (int i = 1; i < 10;i++) {
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             txHashes[j].pop_back();
         }
     }
-    mpool.removeForBlock(block, 266);
+    mpool.removeForBlock(block, 265, dummyWithdraws);
     block.clear();
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
@@ -170,7 +171,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
             }
         }
-        mpool.removeForBlock(block, ++blocknum);
+        mpool.removeForBlock(block, ++blocknum, dummyWithdraws);
         block.clear();
     }
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));

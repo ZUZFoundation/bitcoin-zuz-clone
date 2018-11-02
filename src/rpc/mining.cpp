@@ -25,6 +25,13 @@
 #include <utilstrencodings.h>
 #include <validationinterface.h>
 #include <warnings.h>
+#include "pow.h"
+#include "script/standard.h"
+#include "policy/policy.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
 
 #include <memory>
 #include <stdint.h>
@@ -148,7 +155,6 @@ UniValue setgenerate(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-
 UniValue getgenerate(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -167,7 +173,6 @@ UniValue getgenerate(const JSONRPCRequest& request)
     LOCK(cs_main);
     return gArgs.GetBoolArg("-gen", DEFAULT_GENERATE);
 }
-
 
 UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
@@ -217,6 +222,64 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
     return blockHashes;
 }
 
+UniValue generate(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+        throw runtime_error(
+            "generate numblocks\n"
+            "\nMine blocks immediately (before the RPC call returns)\n"
+            "\nNote: this function can only be used on the regtest network\n"
+            "\nArguments:\n"
+            "1. numblocks    (numeric, required) How many blocks are generated immediately.\n"
+            "\nResult\n"
+            "[ blockhashes ]     (array) hashes of blocks generated\n"
+            "\nExamples:\n"
+            "\nGenerate 11 blocks\n"
+            + HelpExampleCli("generate", "11")
+        );
+
+    LOCK(cs_main);
+
+    CScript coinbaseDest(Params().GetConsensus().mandatory_coinbase_destination);
+    if (coinbaseDest == CScript()) {
+        coinbaseDest = CScript() << OP_TRUE;
+#ifdef ENABLE_WALLET
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+
+        if (!pwalletMain->IsLocked())
+            pwalletMain->TopUpKeyPool();
+
+        // Generate a new key that is added to wallet
+        CPubKey newKey;
+        if (!pwalletMain->GetKeyFromPool(newKey))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        CKeyID keyID = newKey.GetID();
+
+        pwalletMain->SetAddressBook(keyID, "", "receive");
+
+        coinbaseDest = GetScriptForDestination(CTxDestination(keyID));
+#endif
+    }
+
+    UniValue arr(UniValue::VARR);
+    for (int i = 0; i < request.params[0].get_int(); i++) {
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseDest));
+        if (!pblocktemplate.get())
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
+        unsigned int nExtraNonce = 0;
+        IncrementExtraNonce(&pblocktemplate->block, chainActive.Tip(), nExtraNonce);
+        if (!CheckProof(pblocktemplate->block, Params().GetConsensus()))
+            throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This method cannot be used with a block-signature-required chain");
+        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(pblocktemplate->block);
+        bool ret;
+        ret = ProcessNewBlock(Params(), shared_pblock, true, NULL);
+        assert(ret);
+        assert(chainActive.Tip()->GetBlockHash() == pblocktemplate->block.GetHash());
+        arr.push_back(pblocktemplate->block.GetHash().ToString());
+    }
+    return arr;
+}
+
 UniValue generatetoaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
@@ -249,6 +312,89 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
     coinbaseScript->reserveScript = GetScriptForDestination(destination);
 
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
+}
+
+UniValue getnewblockhex(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+            "getnewblockhex\n"
+            "\nGets hex representation of a proposed, unmined new block\n"
+            "\nArguments:\n"
+            "1. required_age    (numeric, optional, default=0) How many seconds a transaction must have been in the mempool to be inluded in the block proposal. This may help with faster block convergence among functionaries using compact blocks.\n"
+            "\nResult\n"
+            "blockhex      (hex) The block hex\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnewblockhex", "")
+        );
+
+    int required_wait = !request.params[0].isNull() ? request.params[0].get_int() : 0;
+    if (required_wait < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "required_wait must be non-negative.");
+    }
+
+    CScript feeDestinationScript = Params().GetConsensus().mandatory_coinbase_destination;
+    if (feeDestinationScript == CScript()) feeDestinationScript = CScript() << OP_TRUE;
+    std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(feeDestinationScript, true, required_wait));
+    if (!pblocktemplate.get())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
+    {
+        // IncrementExtraNonce sets coinbase flags and builds merkle tree
+        LOCK(cs_main);
+        unsigned int nExtraNonce = 0;
+        IncrementExtraNonce(&pblocktemplate->block, chainActive.Tip(), nExtraNonce);
+    }
+
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    ssBlock << pblocktemplate->block;
+    return HexStr(ssBlock.begin(), ssBlock.end());
+}
+
+UniValue combineblocksigs(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        throw runtime_error(
+            "combineblocksigs \"blockhex\" [\"signature\",...]\n"
+            "\nMerges signatures on a block proposal\n"
+            "\nArguments:\n"
+            "1. \"blockhex\"       (string, required) The hex-encoded block from getnewblockhex\n"
+            "2. \"signatures\"     (string) A json array of signatures\n"
+            "    [\n"
+            "      \"signature\"   (string) A signature (in the form of a hex-encoded scriptSig)\n"
+            "      ,...\n"
+            "    ]\n"
+            "\nResult\n"
+            "{\n"
+            "  \"hex\": \"value\",   (string) The signed block\n"
+            "  \"complete\": n       (numeric) if block is complete \n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("combineblocksigs", "<hex> [\"signature1\", \"signature2\", ...]")
+        );
+
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+    UniValue result(UniValue::VOBJ);
+    const Consensus::Params& params = Params().GetConsensus();
+    const UniValue& sigs = request.params[1].get_array();
+    for (unsigned int i = 0; i < sigs.size(); i++) {
+        const std::string& sig = sigs[i].get_str();
+        if (!IsHex(sig))
+            continue;
+        std::vector<unsigned char> vchScript = ParseHex(sig);
+        block.proof.solution = CombineBlockSignatures(params, block, block.proof.solution, CScript(vchScript.begin(), vchScript.end()));
+        if (CheckProof(block, params)) {
+            result.push_back(Pair("hex", EncodeHexBlock(block)));
+            result.push_back(Pair("complete", true));
+            return result;
+        }
+    }
+
+    result.push_back(Pair("hex", EncodeHexBlock(block)));
+    result.push_back(Pair("complete", false));
+    return result;
 }
 
 UniValue getmininginfo(const JSONRPCRequest& request)
@@ -359,6 +505,59 @@ std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
         s.insert(s.begin(), '!');
     }
     return s;
+}
+
+UniValue testproposedblock(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "testproposedblock \"blockhex\"\n"
+            "\nChecks a block proposal for validity, and that it extends chaintip\n"
+            "\nArguments:\n"
+            "1. \"blockhex\"    (string, required) The hex-encoded block from getnewblockhex\n"
+            "2. \"acceptnonstd\" (bool, optional) If set false, returns error if block contains non-standard transaction. Default is set via `-acceptnonstdtxn`\n"
+            "\nResult\n"
+            "\nExamples:\n"
+            + HelpExampleCli("testproposedblock", "<hex>")
+        );
+
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+    LOCK(cs_main);
+
+    uint256 hash = block.GetHash();
+    BlockMap::iterator mi = mapBlockIndex.find(hash);
+    if (mi != mapBlockIndex.end())
+        throw JSONRPCError(RPC_VERIFY_ERROR, "already have block");
+
+    CBlockIndex* const pindexPrev = chainActive.Tip();
+    // TestBlockValidity only supports blocks built on the current Tip
+    if (block.hashPrevBlock != pindexPrev->GetBlockHash())
+        throw JSONRPCError(RPC_VERIFY_ERROR, "proposal was not based on our best chain");
+
+    CValidationState state;
+    if (!TestBlockValidity(state, Params(), block, pindexPrev, false, true) || !state.IsValid()) {
+        std::string strRejectReason = state.GetRejectReason();
+        if (strRejectReason.empty())
+            throw JSONRPCError(RPC_VERIFY_ERROR, state.IsInvalid() ? "Block proposal was invalid" : "Error checking block proposal");
+        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
+    }
+
+    const CChainParams& chainparams = Params();
+    if ((!request.params[1].isNull() && !request.params[1].get_bool()) ||
+            (request.params[1].isNull() && !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard()))) {
+        for (auto& transaction : block.vtx) {
+            if (transaction->IsCoinBase()) continue;
+            std::string reason;
+            if (!IsStandardTx(*transaction, reason)) {
+                throw JSONRPCError(RPC_VERIFY_ERROR, "Block proposal included a non-standard transaction: " + reason);
+            }
+        }
+    }
+
+    return NullUniValue;
 }
 
 UniValue getblocktemplate(const JSONRPCRequest& request)
@@ -605,10 +804,13 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     // Update nTime
     UpdateTime(pblock, consensusParams, pindexPrev);
-    pblock->nNonce = 0;
+    ResetProof(*pblock);
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = (THRESHOLD_ACTIVE != VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache));
+
+    // Update height in header
+    pblock->nHeight = pindexPrev->nHeight+1;
 
     UniValue aCaps(UniValue::VARR); aCaps.push_back("proposal");
 
@@ -627,7 +829,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
         entry.push_back(Pair("data", EncodeHexTx(tx)));
         entry.push_back(Pair("txid", txHash.GetHex()));
-        entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
+        entry.push_back(Pair("hash", tx.GetHashWithWitness().GetHex()));
+        entry.push_back(Pair("withash", tx.ComputeWitnessHash().GetHex()));
 
         UniValue deps(UniValue::VARR);
         for (const CTxIn &in : tx.vin)
@@ -652,8 +855,6 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue aux(UniValue::VOBJ);
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
-
-    arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
     UniValue aMutable(UniValue::VARR);
     aMutable.push_back("time");
@@ -721,9 +922,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));
-    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue));
+    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue.GetAmount()));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
-    result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));
     result.push_back(Pair("noncerange", "00000000ffffffff"));
@@ -736,12 +936,15 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         nSizeLimit /= WITNESS_SCALE_FACTOR;
     }
     result.push_back(Pair("sigoplimit", nSigOpLimit));
-    result.push_back(Pair("sizelimit", nSizeLimit));
-    if (!fPreSegWit) {
+    if (fPreSegWit) {
+        result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_BASE_SIZE));
+    } else {
+        result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SERIALIZED_SIZE));
         result.push_back(Pair("weightlimit", (int64_t)MAX_BLOCK_WEIGHT));
     }
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
-    result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
+    result.push_back(Pair("signblock_asm", ScriptToAsmStr(consensusParams.signblockscript)));
+    result.push_back(Pair("signblock_hex", HexStr(consensusParams.signblockscript.begin(), consensusParams.signblockscript.end())));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
     if (!pblocktemplate->vchCoinbaseCommitment.empty() && fSupportsSegwit) {
@@ -792,6 +995,10 @@ UniValue submitblock(const JSONRPCRequest& request)
     CBlock& block = *blockptr;
     if (!DecodeHexBlk(block, request.params[0].get_str())) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block does not start with a coinbase");
     }
 
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
@@ -1052,16 +1259,25 @@ static const CRPCCommand commands[] =
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
+    { "mining",             "testproposedblock",      &testproposedblock,      {"blockhex", "acceptnonstd"} },
 
     /* Coin generation */
     { "generating",         "getgenerate",            &getgenerate,            {}  },
     { "generating",         "setgenerate",            &setgenerate,            {}  },
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
+    { "generating",         "generate",               &generate,               {"nblocks","maxtries"} },
+    { "generating",         "combineblocksigs",       &combineblocksigs,       {"blockhex","signatures"} },
+    { "generating",         "getnewblockhex",         &getnewblockhex,         {"required_age"} },
 
     { "util",               "estimatefee",            &estimatefee,            {"nblocks"} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
+    { "util",               "estimatepriority",       &estimatepriority,       {"nblocks"} },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"nblocks"} },
+    { "util",               "estimatesmartpriority",  &estimatesmartpriority,  {"nblocks"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
+
+
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)

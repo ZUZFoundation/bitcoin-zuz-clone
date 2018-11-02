@@ -19,10 +19,13 @@
 #include <boost/thread.hpp>
 
 static const char DB_COIN = 'C';
-static const char DB_COINS = 'c';
+static const char DB_COINS = DB_COIN;
 static const char DB_BLOCK_FILES = 'f';
 static const char DB_TXINDEX = 't';
+static const char DB_LOCKS = 'k';
 static const char DB_BLOCK_INDEX = 'b';
+static const char DB_WITHDRAW_FLAG = 'w';
+static const char DB_INVALID_BLOCK_Q = 'q';
 
 static const char DB_BEST_BLOCK = 'B';
 static const char DB_HEAD_BLOCKS = 'H';
@@ -35,7 +38,7 @@ namespace {
 struct CoinEntry {
     COutPoint* outpoint;
     char key;
-    explicit CoinEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN)  {}
+    explicit CoinEntry(const COutPoint* ptr, const char k = DB_COIN) : outpoint(const_cast<COutPoint*>(ptr)), key(k)  {}
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -64,6 +67,10 @@ bool CCoinsViewDB::GetCoin(const COutPoint &outpoint, Coin &coin) const {
 
 bool CCoinsViewDB::HaveCoin(const COutPoint &outpoint) const {
     return db.Exists(CoinEntry(&outpoint));
+}
+
+bool CCoinsViewDB::IsWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const {
+    return db.Exists(std::make_pair(DB_WITHDRAW_FLAG, outpoint));
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {
@@ -108,11 +115,17 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
 
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
-            CoinEntry entry(&it->first);
-            if (it->second.coin.IsSpent())
-                batch.Erase(entry);
-            else
-                batch.Write(entry, it->second.coin);
+            if (it->second.flags & CCoinsCacheEntry::WITHDRAW) {
+                if (!it->second.withdrawSpent)
+                    batch.Erase(CoinEntry(&it->first, DB_WITHDRAW_FLAG));
+                else
+                    batch.Write(CoinEntry(&it->first, DB_WITHDRAW_FLAG), '1');
+            } else {
+                if (it->second.coins.IsPruned())
+                    batch.Erase(CoinEntry(&it->first, DB_COINS));
+                else
+                    batch.Write(CoinEntry(&it->first, DB_COINS), it->second.coins);
+            }
             changed++;
         }
         count++;
@@ -259,6 +272,14 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
+bool CBlockTreeDB::ReadInvalidBlockQueue(std::vector<uint256> &vBlocks) {
+    return Read(std::make_pair(DB_INVALID_BLOCK_Q, uint256S("0")), vBlocks);//FIXME: why uint256 and not ""
+}
+
+bool CBlockTreeDB::WriteInvalidBlockQueue(const std::vector<uint256> &vBlocks) {
+    return Write(std::make_pair(DB_INVALID_BLOCK_Q, uint256S("0")), vBlocks);
+}
+
 bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
 {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
@@ -282,8 +303,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nVersion       = diskindex.nVersion;
                 pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
                 pindexNew->nTime          = diskindex.nTime;
-                pindexNew->nBits          = diskindex.nBits;
-                pindexNew->nNonce         = diskindex.nNonce;
+                pindexNew->proof          = diskindex.proof;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 

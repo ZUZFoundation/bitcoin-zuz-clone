@@ -13,7 +13,8 @@
 #include <stdint.h>
 #include <string>
 
-#include <univalue.h>
+#include "univalue/include/univalue.h"
+//#include <univalue.h>
 
 //! HTTP status codes
 enum HTTPStatusCode
@@ -96,6 +97,8 @@ UniValue JSONRPCError(int code, const std::string& message);
 bool GenerateAuthCookie(std::string *cookie_out);
 /** Read the RPC authentication cookie from disk */
 bool GetAuthCookie(std::string *cookie_out);
+/** Needs to know cookiedir path info -cli doesn't require*/
+bool GetMainchainAuthCookie(std::string *cookie_out);
 /** Delete RPC authentication cookie from disk */
 void DeleteAuthCookie();
 /** Parse JSON-RPC batch reply into a vector */

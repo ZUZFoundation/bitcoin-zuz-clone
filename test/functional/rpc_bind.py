@@ -32,10 +32,10 @@ class RPCBindTest(ZuzcoinTestFramework):
             base_args += ['-rpcallowip=' + x for x in allow_ips]
         binds = ['-rpcbind='+addr for addr in addresses]
         self.nodes[0].rpchost = connect_to
-        self.start_node(0, base_args + binds)
-        pid = self.nodes[0].process.pid
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [base_args + binds], connect_to)
+        pid = bitcoind_processes[0].pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
-        self.stop_nodes()
+        stop_nodes(self.nodes)
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''
@@ -45,16 +45,23 @@ class RPCBindTest(ZuzcoinTestFramework):
         self.log.info("Allow IP test for %s:%d" % (rpchost, rpcport))
         base_args = ['-disablewallet', '-nolisten'] + ['-rpcallowip='+x for x in allow_ips]
         self.nodes[0].rpchost = None
-        self.start_nodes([base_args])
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [base_args])
         # connect to node through non-loopback interface
         node = get_rpc_proxy(rpc_url(get_datadir_path(self.options.tmpdir, 0), 0, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
         node.getnetworkinfo()
-        self.stop_nodes()
+        # connect to node through non-loopback interface
+        node.getnetworkinfo()
+        stop_nodes(self.nodes)
 
     def run_test(self):
         # due to OS-specific network stats queries, this test works only on Linux
         if not sys.platform.startswith('linux'):
             raise SkipTest("This test can only be run on linux.")
+
+    def run_test(self):
+        # due to OS-specific network stats queries, this test works only on Linux
+    return #TODO
+        assert(sys.platform.startswith('linux'))
         # find the first non-loopback interface for testing
         non_loopback_ip = None
         for name,ip in all_interfaces():

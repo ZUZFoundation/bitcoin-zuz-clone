@@ -26,6 +26,9 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <utilstrencodings.h>
+#include "blind.h"
+#include "issuance.h"
+#include "util.h"
 #ifdef ENABLE_WALLET
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
@@ -33,8 +36,78 @@
 
 #include <future>
 #include <stdint.h>
+#include <boost/assign/list_of.hpp>
+#include <secp256k1_rangeproof.h>
 
 #include <univalue.h>
+
+using namespace std;
+
+static secp256k1_context* secp256k1_blind_context = NULL;
+
+class RPCRawTransaction_ECC_Init {
+public:
+    RPCRawTransaction_ECC_Init() {
+        assert(secp256k1_blind_context == NULL);
+
+        secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+        assert(ctx != NULL);
+
+        secp256k1_blind_context = ctx;
+    }
+
+    ~RPCRawTransaction_ECC_Init() {
+        secp256k1_context *ctx = secp256k1_blind_context;
+        secp256k1_blind_context = NULL;
+
+        if (ctx) {
+            secp256k1_context_destroy(ctx);
+        }
+    }
+};
+static RPCRawTransaction_ECC_Init ecc_init_on_load;
+
+static void SidehainScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool is_parent_chain)
+{
+    const std::string prefix = is_parent_chain ? "pegout_" : "";
+    txnouttype type;
+    vector<CTxDestination> addresses;
+    int nRequired;
+
+    out.push_back(Pair(prefix + "asm", ScriptToAsmStr(scriptPubKey)));
+    if (fIncludeHex)
+        out.push_back(Pair(prefix + "hex", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
+
+    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired)) {
+        out.push_back(Pair(prefix + "type", GetTxnOutputType(type)));
+        return;
+    }
+
+    out.push_back(Pair(prefix + "reqSigs", nRequired));
+    out.push_back(Pair(prefix + "type", GetTxnOutputType(type)));
+
+    UniValue a(UniValue::VARR);
+    if (is_parent_chain) {
+        BOOST_FOREACH(const CTxDestination& addr, addresses)
+            a.push_back(CParentBitcoinAddress(addr).ToString());
+    } else {
+        BOOST_FOREACH(const CTxDestination& addr, addresses)
+            a.push_back(CBitcoinAddress(addr).ToString());
+    }
+    out.push_back(Pair(prefix + "addresses", a));
+}
+
+void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
+{
+    SidehainScriptPubKeyToJSON(scriptPubKey, out, fIncludeHex, false);
+
+    uint256 pegout_chain;
+    CScript pegout_scriptpubkey;
+    if (scriptPubKey.IsPegoutScript(pegout_chain, pegout_scriptpubkey)) {
+        out.push_back(Pair("pegout_chain", pegout_chain.GetHex()));
+        SidehainScriptPubKeyToJSON(pegout_scriptpubkey, out, fIncludeHex, true);
+    }
+}
 
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
@@ -107,13 +180,18 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "       },\n"
             "       \"sequence\": n      (numeric) The script sequence number\n"
             "       \"txinwitness\": [\"hex\", ...] (array of string) hex-encoded witness data (if any)\n"
+            "       \"issuance\"         (object) Info on issuance\n"
             "     }\n"
             "     ,...\n"
             "  ],\n"
             "  \"vout\" : [              (array of json objects)\n"
             "     {\n"
             "       \"value\" : x.xxx,            (numeric) The value in " + CURRENCY_UNIT + "\n"
+            "       \"amountcommitment\": \"hex\",     (string) the output's value commitment, if blinded\n"
+            "       \"fee_value\" : x.xxx,        (numeric) The fee value in " + CURRENCY_UNIT + "\n"
             "       \"n\" : n,                    (numeric) index\n"
+            "       \"asset\" : \"hex\"           (string) the asset id, if unblinded\n"
+            "       \"assetcommitment\" : \"hex\" (string) the asset tag, if blinded\n"
             "       \"scriptPubKey\" : {          (json object)\n"
             "         \"asm\" : \"asm\",          (string) the asm\n"
             "         \"hex\" : \"hex\",          (string) the hex\n"
@@ -121,6 +199,15 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
             "         \"addresses\" : [           (json array of string)\n"
             "           \"address\"        (string) zuzcoin address\n"
+            "           ,...\n"
+            "         ]\n"
+            "         \"pegout_chain\" : \"hex\", (string) (only pegout) Hash of genesis block of parent chain'\n"
+            "         \"pegout_asm\":\"asm\",     (string) (only pegout) pegout scriptpubkey (asm)'\n"
+            "         \"pegout_hex\":\"hex\",     (string) (only pegout) pegout scriptpubkey (hex)'\n"
+            "         \"pegout_reqSigs\" : n,     (numeric) (only pegout) pegout required sigs\n"
+            "         \"pegout_type\" : \"pubkeyhash\", (string) (only pegout) The pegout type, eg 'pubkeyhash'\n"
+            "         \"pegout_addresses\" : [    (json array of string) (only pegout)\n"
+            "           \"address\"        (string) bitcoin address\n"
             "           ,...\n"
             "         ]\n"
             "       }\n"
@@ -319,6 +406,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
             "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] {\"address\":amount,\"data\":\"hex\",...} ( locktime ) ( replaceable )\n"
+            //"createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] {\"address\":amount,\"data\":\"hex\",...} ( locktime {\"address\":asset} )\n"
             "\nCreate a transaction spending the given inputs and creating new outputs.\n"
             "Outputs can be addresses or data.\n"
             "Returns hex-encoded raw transaction.\n"
@@ -331,6 +419,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "       {\n"
             "         \"txid\":\"id\",    (string, required) The transaction id\n"
             "         \"vout\":n,         (numeric, required) The output number\n"
+            "         \"asset\": \"string\"   (string, optional, default=bitcoin) The asset of the input, as a tag string or a hex value\n"
             "         \"sequence\":n      (numeric, optional) The sequence number\n"
             "       } \n"
             "       ,...\n"
@@ -344,13 +433,21 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
             "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
             "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
+            "5. \"output_assets\"           (strings, optional, default=bitcoin) A json object of assets to addresses\n"
+            "   {\n"
+            "       \"address\": \"hex\" \n"
+            "        \"fee\": \"hex\" \n"
+            "       ...\n"
+            "   }\n"
             "\nResult:\n"
             "\"transaction\"              (string) hex string of the transaction\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":0.01}\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":2.41}\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0\\\"asset\\\":\\\"myasset\\\"}]\" \"{\\\"address\\\":2.41}\" 0 \"{\\\"address\\\":\\\"myasset\\\"}\"")
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"data\\\":\\\"00010203\\\"}\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"address\\\":0.01}\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"address\\\":2.41}\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0\\\"asset\\\":\\\"myasset\\\"}]\", \"{\\\"address\\\":2.41}\", 0, \"{\\\"address\\\":\\\"myasset\\\"}\"")
             + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"data\\\":\\\"00010203\\\"}\"")
         );
 
@@ -371,13 +468,16 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     }
 
     bool rbfOptIn = request.params[3].isTrue();
+    UniValue assets;
+    if (request.params.size() > 3 && !request.params[3].isNull()) {
+        assets = request.params[3].get_obj();
+    }
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
         const UniValue& input = inputs[idx];
         const UniValue& o = input.get_obj();
 
         uint256 txid = ParseHashO(o, "txid");
-
         const UniValue& vout_v = find_value(o, "vout");
         if (!vout_v.isNum())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
@@ -407,17 +507,43 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
         CTxIn in(COutPoint(txid, nOutput), CScript(), nSequence);
 
+        CAsset asset(policyAsset);
+        const UniValue& asset_val = find_value(o, "asset");
+        if (asset_val.isStr()) {
+            asset = CAsset(ParseHashO(o, "asset"));
+        }
+
         rawTx.vin.push_back(in);
     }
 
     std::set<CTxDestination> destinations;
     std::vector<std::string> addrList = sendTo.getKeys();
     for (const std::string& name_ : addrList) {
-
+        // Defaults to policyAsset
+        CAsset asset(policyAsset);
+        if (!assets.isNull()) {
+            if (!find_value(assets, name_).isNull()) {
+                asset = CAsset(ParseHashO(assets, name_));
+            }
+        }
         if (name_ == "data") {
             std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
 
-            CTxOut out(0, CScript() << OP_RETURN << data);
+            CTxOut out(asset, 0, CScript() << OP_RETURN << data);
+            rawTx.vout.push_back(out);
+        } else if (name_ == "vdata") {
+            UniValue vdata = sendTo[name_].get_array();
+            CScript datascript = CScript() << OP_RETURN;
+            for (size_t i = 0; i < vdata.size(); i++) {
+                std::vector<unsigned char> data = ParseHexV(vdata[i].get_str(), "Data");
+                datascript << data;
+            }
+
+            CTxOut out(asset, 0, datascript);
+            rawTx.vout.push_back(out);
+        } else if (name_ == "fee") {
+            CAmount nAmount = AmountFromValue(sendTo[name_]);
+            CTxOut out(asset, nAmount, CScript());
             rawTx.vout.push_back(out);
         } else {
             CTxDestination destination = DecodeDestination(name_);
@@ -432,7 +558,13 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             CScript scriptPubKey = GetScriptForDestination(destination);
             CAmount nAmount = AmountFromValue(sendTo[name_]);
 
-            CTxOut out(nAmount, scriptPubKey);
+            CTxOut out(asset, nAmount, scriptPubKey);
+            if (address.IsBlinded()) {
+                CPubKey confidentiality_pubkey = address.GetBlindingKey();
+                if (!confidentiality_pubkey.IsValid())
+                     throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: invalid confidentiality public key given"));
+                out.nNonce.vchCommitment = std::vector<unsigned char>(confidentiality_pubkey.begin(), confidentiality_pubkey.end());
+            }
             rawTx.vout.push_back(out);
         }
     }
@@ -443,6 +575,423 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
     return EncodeHexTx(rawTx);
 }
+
+// Rewind the outputs to unblinded, and push placeholders for blinding info
+void FillBlinds(CMutableTransaction& tx, bool fUseWallet, std::vector<uint256>& output_value_blinds, std::vector<uint256>& output_asset_blinds, std::vector<CPubKey>& output_pubkeys, std::vector<CKey>& asset_keys, std::vector<CKey>& token_keys) {
+    for (size_t nOut = 0; nOut < tx.vout.size(); nOut++) {
+        if (!tx.vout[nOut].nValue.IsExplicit()) {
+#ifdef ENABLE_WALLET
+            CTxOutWitness* ptxoutwit = tx.wit.vtxoutwit.size() <= nOut? NULL: &tx.wit.vtxoutwit[nOut];
+            uint256 blinding_factor;
+            uint256 asset_blinding_factor;
+            CAsset asset;
+            CAmount amount;
+            // This can only be used to recover things like change addresses and self-sends.
+            if (fUseWallet && ptxoutwit && UnblindConfidentialPair(pwalletMain->GetBlindingKey(&tx.vout[nOut].scriptPubKey), tx.vout[nOut].nValue, tx.vout[nOut].nAsset, tx.vout[nOut].nNonce, tx.vout[nOut].scriptPubKey, ptxoutwit->vchRangeproof, amount, blinding_factor, asset, asset_blinding_factor) != 0) {
+                // Wipe out confidential info from output and output witness
+                CScript scriptPubKey = tx.vout[nOut].scriptPubKey;
+                CTxOut newOut(asset, amount, scriptPubKey);
+                tx.vout[nOut] = newOut;
+                ptxoutwit->SetNull();
+
+                // Mark for re-blinding with same key that deblinded it
+                CPubKey pubkey(pwalletMain->GetBlindingKey(&tx.vout[nOut].scriptPubKey).GetPubKey());
+                output_pubkeys.push_back(pubkey);
+                output_value_blinds.push_back(uint256());
+                output_asset_blinds.push_back(uint256());
+                continue;
+            }
+#endif
+            // If no wallet, or unable to unblind, leave it alone in next blinding step
+            output_pubkeys.push_back(CPubKey());
+            output_value_blinds.push_back(uint256());
+            output_asset_blinds.push_back(uint256());
+        } else if (tx.vout[nOut].nNonce.IsNull()) {
+            output_pubkeys.push_back(CPubKey());
+            output_value_blinds.push_back(uint256());
+            output_asset_blinds.push_back(uint256());
+        } else {
+            CPubKey pubkey(tx.vout[nOut].nNonce.vchCommitment);
+            if (!pubkey.IsValid()) {
+                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: invalid confidentiality public key given"));
+            }
+            output_pubkeys.push_back(pubkey);
+            output_value_blinds.push_back(uint256());
+            output_asset_blinds.push_back(uint256());
+        }
+    }
+
+    // Fill out issuance blinding keys to be used directly as nonce for rangeproof
+    for (size_t nIn = 0; nIn < tx.vin.size(); nIn++) {
+        CAssetIssuance& issuance = tx.vin[nIn].assetIssuance;
+        if (issuance.IsNull()) {
+            asset_keys.push_back(CKey());
+            token_keys.push_back(CKey());
+            continue;
+        }
+
+        // Calculate underlying asset for use as blinding key script
+        CAsset asset;
+        // New issuance, compute the asset ids
+        if (issuance.assetBlindingNonce.IsNull()) {
+            uint256 entropy;
+            GenerateAssetEntropy(entropy, tx.vin[nIn].prevout, issuance.assetEntropy);
+            CalculateAsset(asset, entropy);
+        }
+        // Re-issuance
+        else {
+            // TODO Give option to skip blinding when the reissuance token was derived without blinding ability. For now we assume blinded
+            // hashAssetIdentifier doubles as the entropy on reissuance
+            CalculateAsset(asset, issuance.assetEntropy);
+        }
+
+        // Special format for issuance blinding keys, unique for each transaction
+        CScript blindingScript = CScript() << OP_RETURN << std::vector<unsigned char>(tx.vin[nIn].prevout.hash.begin(), tx.vin[nIn].prevout.hash.end()) << tx.vin[nIn].prevout.n;
+
+        for (size_t nPseudo = 0; nPseudo < 2; nPseudo++) {
+            CConfidentialValue& confValue = (nPseudo == 0) ? issuance.nAmount : issuance.nInflationKeys;
+            if (confValue.IsCommitment()) {
+                // Rangeproof must exist
+                if (tx.wit.vtxinwit.size() <= nIn) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, string("Transaction issuance is already blinded but has no attached rangeproof."));
+                }
+                CTxInWitness& txinwit = tx.wit.vtxinwit[nIn];
+                std::vector<unsigned char>& vchRangeproof = (nPseudo == 0) ? txinwit.vchIssuanceAmountRangeproof : txinwit.vchInflationKeysRangeproof;
+                uint256 blinding_factor;
+                uint256 asset_blinding_factor;
+                CAmount amount;
+#ifdef ENABLE_WALLET
+                if (fUseWallet && UnblindConfidentialPair(pwalletMain->GetBlindingKey(&blindingScript), confValue, CConfidentialAsset(asset), CConfidentialNonce(), CScript(), vchRangeproof, amount, blinding_factor, asset, asset_blinding_factor) != 0) {
+                    // Wipe out confidential info from issuance
+                    vchRangeproof.clear();
+                    confValue = CConfidentialValue(amount);
+                    // One key both blinded values, single key needed for issuance reveal
+                    asset_keys.push_back(pwalletMain->GetBlindingKey(&blindingScript));
+                    token_keys.push_back(pwalletMain->GetBlindingKey(&blindingScript));
+                    continue;
+                }
+#endif
+                // If no wallet, or unable to unblind, leave it alone in next blinding step
+                asset_keys.push_back(CKey());
+                token_keys.push_back(CKey());
+            } else {
+                // Without wallet, nothing to be done.
+                asset_keys.push_back(CKey());
+                token_keys.push_back(CKey());
+#ifdef ENABLE_WALLET
+                // Use wallet to generate blindingkey used directly as nonce
+                // as user is not "sending" to anyone.
+                // Always assumed we want to blind here.
+                // TODO Signal intent for all blinding via API including replacing nonce commitment
+                if (fUseWallet) {
+                    asset_keys[asset_keys.size()-1] = pwalletMain->GetBlindingKey(&blindingScript);
+                    token_keys[token_keys.size()-1] = pwalletMain->GetBlindingKey(&blindingScript);
+                }
+#endif
+            }
+        }
+    }
+}
+
+UniValue rawblindrawtransaction(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() < 5 || request.params.size() > 7))
+        throw std::runtime_error(
+            "rawblindrawtransaction \"hexstring\" [\"inputblinder\",...] [\"inputamount\",...] [\"inputasset\",...] [\"inputassetblinder\",...] ( totalblinder, ignoreblindfail )\n"
+            "\nConvert one or more outputs of a raw transaction into confidential ones.\n"
+            "Returns the hex-encoded raw transaction.\n"
+            "The input raw transaction cannot have already-blinded outputs.\n"
+            "The output keys used can be specified by using a confidential address in createrawtransaction.\n"
+            "If an additional blinded output is required to make a balanced blinding, a 0-value unspendable output will be added. Since there is no access to the wallet the blinding pubkey from the last output with blinding key will be repeated.\n"
+
+            "\nArguments:\n"
+            "1. \"hexstring\",          (string, required) A hex-encoded raw transaction.\n"
+            "2. [                     (array, required) An array with one entry per transaction input.\n"
+            "    \"inputblinder\"       (string, required) A hex-encoded blinding factor, one for each input.\n"
+            "                         Blinding factors can be found in the \"blinder\" output of listunspent.\n"
+            "   ],\n"
+            "3. [                     (array, required) An array with one entry per transaction input.\n"
+            "   \"inputamount\"       (numeric, required) An amount for each input.\n"
+            "   ],\n"
+            "4. [                     (array, required) An array with one entry per transaction input.\n"
+            "   \"inputasset\"        (string, required) A hex-encoded asset id, one for each input.\n"
+            "   ],\n"
+            "5. [                     (array, required) An array with one entry per transaction input.\n"
+            "   \"inputassetblinder\" (string, required) A hex-encoded asset blinding factor, one for each input.\n"
+            "   ],\n"
+            "6. \"totalblinder\"        (string, optional) Ignored for now.\n"
+            "7. \"ignoreblindfail\"\"   (bool, optional, default=true) Return a transaction even when a blinding attempt fails due to number of blinded inputs/outputs.\n"
+
+            "\nResult:\n"
+            "\"transaction\"              (string) hex string of the transaction\n"
+        );
+
+    if (request.params.size() == 5) {
+        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VARR)(UniValue::VARR)(UniValue::VARR)(UniValue::VARR));
+    } else if (request.params.size() == 6) {
+        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VARR)(UniValue::VARR)(UniValue::VARR)(UniValue::VARR)(UniValue::VSTR));
+    } else {
+        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VARR)(UniValue::VARR)(UniValue::VARR)(UniValue::VARR)(UniValue::VSTR)(UniValue::VBOOL));
+    }
+
+    vector<unsigned char> txData(ParseHexV(request.params[0], "argument 1"));
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    CMutableTransaction tx;
+    try {
+        ssData >> tx;
+    } catch (const std::exception &) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    UniValue inputBlinds = request.params[1].get_array();
+    UniValue inputAmounts = request.params[2].get_array();
+    UniValue inputAssets = request.params[3].get_array();
+    UniValue inputAssetBlinds = request.params[4].get_array();
+
+    bool fIgnoreBlindFail = true;
+    if (request.params.size() > 6) {
+        fIgnoreBlindFail = request.params[6].get_bool();
+    }
+
+    int n_blinded_ins = 0;
+
+    if (inputBlinds.size() != tx.vin.size()) throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: one (potentially empty) input blind for each input must be provided"));
+    if (inputAmounts.size() != tx.vin.size()) throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: one (potentially empty) input blind for each input must be provided"));
+    if (inputAssets.size() != tx.vin.size()) throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: one (potentially empty) input asset id for each input must be provided"));
+    if (inputAssetBlinds.size() != tx.vin.size()) throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: one (potentially empty) input asset blind for each input must be provided"));
+
+    std::vector<CAmount> input_amounts;
+    std::vector<uint256> input_blinds;
+    std::vector<uint256> input_asset_blinds;
+    std::vector<CAsset> input_assets;
+    std::vector<uint256> output_value_blinds;
+    std::vector<uint256> output_asset_blinds;
+    std::vector<CAsset> output_assets;
+    std::vector<CPubKey> output_pubkeys;
+    for (size_t nIn = 0; nIn < tx.vin.size(); nIn++) {
+        if (!inputBlinds[nIn].isStr())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "input blinds must be an array of hex strings");
+        if (!inputAssetBlinds[nIn].isStr())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "input asset blinds must be an array of hex strings");
+        if (!inputAssets[nIn].isStr())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "input asset ids must be an array of hex strings");
+
+        std::string blind(inputBlinds[nIn].get_str());
+        std::string assetblind(inputAssetBlinds[nIn].get_str());
+        std::string asset(inputAssets[nIn].get_str());
+        if (!IsHex(blind) || blind.length() != 32*2)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "input blinds must be an array of 32-byte hex-encoded strings");
+        if (!IsHex(assetblind) || assetblind.length() != 32*2)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "input asset blinds must be an array of 32-byte hex-encoded strings");
+        if (!IsHex(asset) || asset.length() != 32*2)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "input asset blinds must be an array of 32-byte hex-encoded strings");
+
+        input_blinds.push_back(uint256S(blind));
+        input_asset_blinds.push_back(uint256S(assetblind));
+        input_assets.push_back(CAsset(uint256S(asset)));
+        input_amounts.push_back(AmountFromValue(inputAmounts[nIn]));
+
+        if (!input_blinds.back().IsNull()) {
+            n_blinded_ins++;
+        }
+    }
+
+    std::vector<CKey> asset_keys;
+    std::vector<CKey> token_keys;
+    FillBlinds(tx, false, output_value_blinds, output_asset_blinds, output_pubkeys, asset_keys, token_keys);
+
+    // How many are we trying to blind?
+    int numPubKeys = 0;
+    unsigned int keyIndex = -1;
+    for (unsigned int i = 0; i < output_pubkeys.size(); i++) {
+        const CPubKey& key = output_pubkeys[i];
+        if (key.IsValid()) {
+            numPubKeys++;
+            keyIndex = i;
+        }
+    }
+
+    if (numPubKeys == 0 && n_blinded_ins == 0) {
+        // Vacuous, just return the transaction
+        return EncodeHexTx(tx);
+    } else if (n_blinded_ins > 0 && numPubKeys == 0) {
+        // No notion of wallet, cannot complete this blinding without passed-in pubkey
+        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Unable to blind transaction: Add another output to blind in order to complete the blinding."));
+    } else if (n_blinded_ins == 0 && numPubKeys == 1) {
+        if (fIgnoreBlindFail) {
+            // Just get rid of the ECDH key in the nonce field and return
+            tx.vout[keyIndex].nNonce.SetNull();
+            return EncodeHexTx(tx);
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Unable to blind transaction: Add another output to blind in order to complete the blinding."));
+        }
+    }
+
+    int ret = BlindTransaction(input_blinds, input_asset_blinds, input_assets, input_amounts, output_value_blinds, output_asset_blinds, output_pubkeys, std::vector<CKey>(), std::vector<CKey>(), tx);
+    if (ret != numPubKeys) {
+        // TODO Have more rich return values, communicating to user what has been blinded
+        // User may be ok not blinding something that for instance has no corresponding type on input
+        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Unable to blind transaction: Are you sure each asset type to blind is represented in the inputs?"));
+    }
+
+    return EncodeHexTx(tx);
+}
+
+#ifdef ENABLE_WALLET
+UniValue blindrawtransaction(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() < 1 || request.params.size() > 4))
+        throw runtime_error(
+            "blindrawtransaction \"hexstring\" ( ignoreblindfail [\"assetcommitment,...\"] totalblinder )\n"
+            "\nConvert one or more outputs of a raw transaction into confidential ones using only wallet inputs.\n"
+            "Returns the hex-encoded raw transaction.\n"
+            "The output keys used can be specified by using a confidential address in createrawtransaction.\n"
+            "This call may add an additional 0-value unspendable output in order to balance the blinders.\n"
+
+            "\nArguments:\n"
+            "1. \"hexstring\",          (string, required) A hex-encoded raw transaction.\n"
+            "2. \"ignoreblindfail\"\"   (bool, optional, default=true) Return a transaction even when a blinding attempt fails due to number of blinded inputs/outputs.\n"
+            "3. [                       (array, optional) An array of input asset generators. If provided, this list must be empty, or match the final input commitment list, including ordering, to make a valid surjection proof. This list does not include generators for issuances, as these assets are inherently unblinded.\n"
+            "    \"assetcommitment\"   (string, optional) A hex-encoded asset commitment, one for each input.\n"
+            "                        Null commitments must be \"\".\n"
+            "   ],\n"
+            "4. \"totalblinder\"        (string, optional) Ignored for now.\n"
+
+            "\nResult:\n"
+            "\"transaction\"              (string) hex string of the transaction\n"
+        );
+
+    if (request.params.size() == 1) {
+        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR));
+    } else if (request.params.size() == 2){
+        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VBOOL));
+    } else if (request.params.size() == 3){
+        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VBOOL)(UniValue::VARR));
+    } else {
+        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VBOOL)(UniValue::VARR)(UniValue::VSTR));
+    }
+
+    vector<unsigned char> txData(ParseHexV(request.params[0], "argument 1"));
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    CMutableTransaction tx;
+    try {
+        ssData >> tx;
+    } catch (const std::exception &) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    bool fIgnoreBlindFail = true;
+    if (request.params.size() > 1) {
+        fIgnoreBlindFail = request.params[1].get_bool();
+    }
+
+    std::vector<std::vector<unsigned char> > auxiliary_generators;
+    if (request.params.size() > 2) {
+        UniValue assetCommitments = request.params[2].get_array();
+        if (assetCommitments.size() != 0 && assetCommitments.size() < tx.vin.size()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Asset commitment array must have at least as many entries as transaction inputs.");
+        }
+        for (size_t nIn = 0; nIn < assetCommitments.size(); nIn++) {
+            if (assetCommitments[nIn].isStr()) {
+                std::string assetcommitment = assetCommitments[nIn].get_str();
+                if (IsHex(assetcommitment) && assetcommitment.size() == 66) {
+                    auxiliary_generators.push_back(ParseHex(assetcommitment));
+                    continue;
+                }
+            }
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Asset commitments must be a hex encoded string of length 66.");
+        }
+    }
+
+    LOCK(pwalletMain->cs_wallet);
+
+    std::vector<uint256> input_blinds;
+    std::vector<uint256> input_asset_blinds;
+    std::vector<CAsset> input_assets;
+    std::vector<CAmount> input_amounts;
+    std::vector<uint256> output_blinds;
+    std::vector<uint256> output_asset_blinds;
+    std::vector<CAsset> output_assets;
+    std::vector<CPubKey> output_pubkeys;
+    int n_blinded_ins = 0;
+    for (size_t nIn = 0; nIn < tx.vin.size(); nIn++) {
+
+        std::map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.find(tx.vin[nIn].prevout.hash);
+        if (it == pwalletMain->mapWallet.end()) {
+            // For inputs we don't own input assetcommitments for the surjection must be supplied
+            if (auxiliary_generators.size() > 0) {
+                input_blinds.push_back(uint256());
+                input_asset_blinds.push_back(uint256());
+                input_assets.push_back(CAsset());
+                input_amounts.push_back(-1);
+                continue;
+            }
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: transaction spends from non-wallet output and no assetcommitment list was given."));
+        }
+        if (tx.vin[nIn].prevout.n >= it->second.tx->vout.size()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter: transaction spends non-existing output"));
+        }
+        input_blinds.push_back(it->second.GetOutputBlindingFactor(tx.vin[nIn].prevout.n));
+        input_asset_blinds.push_back(it->second.GetOutputAssetBlindingFactor(tx.vin[nIn].prevout.n));
+        // These cases unneeded? If value is explicit we can still get via GetOutputX calls.
+        if (it->second.tx->vout[tx.vin[nIn].prevout.n].nAsset.IsExplicit()) {
+            input_assets.push_back(it->second.tx->vout[tx.vin[nIn].prevout.n].nAsset.GetAsset());
+        }
+        else {
+            input_assets.push_back(it->second.GetOutputAsset(tx.vin[nIn].prevout.n));
+        }
+        if (it->second.tx->vout[tx.vin[nIn].prevout.n].nValue.IsExplicit()) {
+            input_amounts.push_back(it->second.tx->vout[tx.vin[nIn].prevout.n].nValue.GetAmount());
+        }
+        else {
+            input_amounts.push_back(it->second.GetOutputValueOut(tx.vin[nIn].prevout.n));
+            n_blinded_ins += 1;
+        }
+    }
+
+    std::vector<CKey> asset_keys;
+    std::vector<CKey> token_keys;
+    FillBlinds(tx, true, output_blinds, output_asset_blinds, output_pubkeys, asset_keys, token_keys);
+
+    // How many are we trying to blind?
+    int numPubKeys = 0;
+    unsigned int keyIndex = 0;
+    for (unsigned int i = 0; i < output_pubkeys.size(); i++) {
+        const CPubKey& key = output_pubkeys[i];
+        if (key.IsValid()) {
+            numPubKeys++;
+            keyIndex = i;
+        }
+    }
+
+    if (numPubKeys == 0 && n_blinded_ins == 0) {
+        // Vacuous, just return the transaction
+        return EncodeHexTx(tx);
+    } else if (n_blinded_ins > 0 && numPubKeys == 0) {
+        // Blinded inputs need to balanced with something to be valid, make a dummy.
+        CTxOut newTxOut(tx.vout.back().nAsset.GetAsset(), 0, CScript() << OP_RETURN);
+        tx.vout.push_back(newTxOut);
+        numPubKeys++;
+        output_pubkeys.push_back(pwalletMain->GetBlindingPubKey(newTxOut.scriptPubKey));
+    } else if (n_blinded_ins == 0 && numPubKeys == 1) {
+        if (fIgnoreBlindFail) {
+            // Just get rid of the ECDH key in the nonce field and return
+            tx.vout[keyIndex].nNonce.SetNull();
+            return EncodeHexTx(tx);
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Unable to blind transaction: Add another output to blind in order to complete the blinding."));
+        }
+    }
+
+    if (BlindTransaction(input_blinds, input_asset_blinds, input_assets, input_amounts, output_blinds, output_asset_blinds, output_pubkeys, std::vector<CKey>(), std::vector<CKey>(), tx, (auxiliary_generators.size() ? &auxiliary_generators : NULL)) != numPubKeys) {
+        // TODO Have more rich return values, communicating to user what has been blinded
+        // User may be ok not blinding something that for instance has no corresponding type on input
+        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Unable to blind transaction: Are you sure each asset type to blind is represented in the inputs?"));
+    }
+
+    return EncodeHexTx(tx);
+}
+#endif
 
 UniValue decoderawtransaction(const JSONRPCRequest& request)
 {
@@ -464,6 +1013,7 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
             "  \"vsize\" : n,            (numeric) The virtual transaction size (differs from size for witness transactions)\n"
             "  \"version\" : n,          (numeric) The version\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"fee\" : x.xxx,          (numeric) The transaction fee in " + CURRENCY_UNIT + "\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"
             "       \"txid\": \"id\",    (string) The transaction id\n"
@@ -474,6 +1024,7 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
             "       },\n"
             "       \"txinwitness\": [\"hex\", ...] (array of string) hex-encoded witness data (if any)\n"
             "       \"sequence\": n     (numeric) The script sequence number\n"
+            "       \"issuance\"         (object) Info on issuance\n"
             "     }\n"
             "     ,...\n"
             "  ],\n"
@@ -481,6 +1032,8 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
             "     {\n"
             "       \"value\" : x.xxx,            (numeric) The value in " + CURRENCY_UNIT + "\n"
             "       \"n\" : n,                    (numeric) index\n"
+            "       \"asset\" : \"hex\"           (string) the asset id, if unblinded\n"
+            "       \"assetcommitment\" : \"hex\" (string) the asset tag, if blinded\n"
             "       \"scriptPubKey\" : {          (json object)\n"
             "         \"asm\" : \"asm\",          (string) the asm\n"
             "         \"hex\" : \"hex\",          (string) the hex\n"
@@ -890,12 +1443,15 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     for (unsigned int i = 0; i < mtx.vin.size(); i++) {
         CTxIn& txin = mtx.vin[i];
         const Coin& coin = view.AccessCoin(txin.prevout);
-        if (coin.IsSpent()) {
+        if (!txin.m_is_pegin && (coin.IsSpent() )) {
             TxInErrorToJSON(txin, vErrors, "Input not found or already spent");
             continue;
+        } else if (txin.m_is_pegin && (txConst.wit.vtxinwit.size() <= i || !IsValidPeginWitness(txConst.wit.vtxinwit[i].m_pegin_witness, txin.prevout))) {
+            TxInErrorToJSON(txin, vErrors, "Peg-in input has invalid proof.");
+            continue;
         }
-        const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CScript& prevPubKey = txin.m_is_pegin ? GetPeginOutputFromWitness(txConst.wit.vtxinwit[i].m_pegin_witness).scriptPubKey : coins->vout[txin.prevout.n].scriptPubKey;
+        const CConfidentialValue& amount = txin.m_is_pegin ? GetPeginOutputFromWitness(txConst.wit.vtxinwit[i].m_pegin_witness).nValue : coins->vout[txin.prevout.n].nValue;
 
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
@@ -913,6 +1469,10 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             } else {
                 TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
             }
+        /*
+         if (!VerifyScript(txin.scriptSig, prevPubKey, (mergedTx.wit.vtxinwit.size() > i) ? &mergedTx.wit.vtxinwit[i].scriptWitness : NULL, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
+            TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
+            */
         }
     }
     bool fComplete = vErrors.empty();
@@ -924,19 +1484,22 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         result.push_back(Pair("errors", vErrors));
     }
 
+    AuditLogPrintf("%s : signrawtransaction %s\n", getUser(), EncodeHexTx(mergedTx));
+
     return result;
 }
 
 UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "sendrawtransaction \"hexstring\" ( allowhighfees )\n"
+            "sendrawtransaction \"hexstring\" ( allowhighfees ) ( allowunblindfails )\n"
             "\nSubmits raw transaction (serialized, hex-encoded) to local node and network.\n"
             "\nAlso see createrawtransaction and signrawtransaction calls.\n"
             "\nArguments:\n"
             "1. \"hexstring\"    (string, required) The hex string of the raw transaction)\n"
             "2. allowhighfees    (boolean, optional, default=false) Allow high fees\n"
+            "3. allowblindfails  (boolean, optional, default=false) Allow outputs which have a pubkey attached (ie are blindable), which are unblinded\n"
             "\nResult:\n"
             "\"hex\"             (string) The transaction hash in hex\n"
             "\nExamples:\n"
@@ -969,6 +1532,17 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     { // cs_main scope
     LOCK(cs_main);
+    bool fOverrideBlindable = false;
+    if (request.params.size() > 2)
+        fOverrideBlindable = request.params[2].get_bool();
+
+    if (!fOverrideBlindable) {
+        for (unsigned i = 0; i < tx->vout.size(); i++) {
+            const CTxOut& txout = tx->vout[i];
+            if (txout.nValue.IsExplicit() && txout.nNonce.vchCommitment.size() != 0)
+                throw JSONRPCError(RPC_TRANSACTION_ERROR, strprintf("Output %u is unblinded, but has blinding pubkey attached, please use [raw]blindrawtransaction", i));
+        }
+    }
     CCoinsViewCache &view = *pcoinsTip;
     bool fHaveChain = false;
     for (size_t o = 0; !fHaveChain && o < tx->vout.size(); o++) {
@@ -1014,6 +1588,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    AuditLogPrintf("%s : sendrawtransaction %s\n", getUser(), hashTx.GetHex());
 
     CInv inv(MSG_TX, hashTx);
     g_connman->ForEachNode([&inv](CNode* pnode)
@@ -1029,11 +1604,16 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      {"txid","verbose","blockhash"} },
     { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   {"inputs","outputs","locktime","replaceable"} },
+    //{ "rawtransactions",    "createrawtransaction",   &createrawtransaction, {"inputs","outputs","locktime","output_assets"} },
     { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   {"hexstring","iswitness"} },
     { "rawtransactions",    "decodescript",           &decodescript,           {"hexstring"} },
     { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     {"hexstring","allowhighfees"} },
     { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  {"txs"} },
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+    { "rawtransactions",    "rawblindrawtransaction", &rawblindrawtransaction, {}},
+#ifdef ENABLE_WALLET
+    { "rawtransactions",    "blindrawtransaction",    &blindrawtransaction,    {}},
+#endif
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       {"proof"} },

@@ -36,6 +36,11 @@ class BumpFeeTest(ZuzcoinTestFramework):
         self.extra_args = [["-prematurewitness", "-walletprematurewitness", "-deprecatedrpc=addwitnessaddress", "-walletrbf={}".format(i)]
                            for i in range(self.num_nodes)]
 
+    def setup_network(self, split=False):
+        extra_args = [["-debug", "-prematurewitness", "-walletprematurewitness"]
+                      for i in range(self.num_nodes)]
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+
     def run_test(self):
         # Encrypt wallet for test_locked_wallet_fails test
         self.nodes[1].node_encrypt_wallet(WALLET_PASSPHRASE)
@@ -47,20 +52,26 @@ class BumpFeeTest(ZuzcoinTestFramework):
 
         peer_node, rbf_node = self.nodes
         rbf_node_address = rbf_node.getnewaddress()
+        rbf_node_address = rbf_node.validateaddress(rbf_node_address)["unconfidential"]
 
         # fund rbf node with 10 coins of 0.001 btc (100,000 satoshis)
         self.log.info("Mining blocks...")
         peer_node.generate(110)
+        peer_node.sendtoaddress(peer_node.getnewaddress(), 21000000, "", "", True)
+        peer_node.generate(101)
         self.sync_all()
         for i in range(25):
             peer_node.sendtoaddress(rbf_node_address, 0.001)
         self.sync_all()
         peer_node.generate(1)
         self.sync_all()
-        assert_equal(rbf_node.getbalance(), Decimal("0.025"))
+        assert_equal(rbf_node.getbalance()['bitcoin'], Decimal("0.025"))
 
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
+        dest_address = peer_node.validateaddress(dest_address)["unconfidential"]
+        test_small_output_fails(rbf_node, dest_address)
+        test_dust_to_fee(rbf_node, dest_address)
         test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(peer_node, dest_address)
@@ -105,7 +116,7 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
 
     segwit_in = next(u for u in rbf_node.listunspent() if u["amount"] == Decimal("0.001"))
     segwit_out = rbf_node.validateaddress(rbf_node.getnewaddress())
-    rbf_node.addwitnessaddress(segwit_out["address"])
+    rbf_node.addwitnessaddress(segwit_out["unconfidential"])
     segwitid = send_to_witness(
         use_p2wsh=False,
         node=rbf_node,
@@ -277,6 +288,22 @@ def spend_one_input(node, dest_address):
     signedtx = node.signrawtransaction(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
+
+
+def get_change_address(node):
+    """Get a wallet change address.
+
+    There is no wallet RPC to access unused change addresses, so this creates a
+    dummy transaction, calls fundrawtransaction to give add an input and change
+    output, then returns the change address."""
+    dest_address = node.getnewaddress()
+    unblinded_dest_address = node.validateaddress(dest_address)["unconfidential"]
+    dest_amount = Decimal("0.00012345")
+    rawtx = node.createrawtransaction([], {unblinded_dest_address: dest_amount})
+    fundtx = node.fundrawtransaction(rawtx)
+    info = node.decoderawtransaction(fundtx["hex"])
+    return next(address for out in info["vout"]
+                if out["value"] != dest_amount for address in out["scriptPubKey"]["addresses"])
 
 
 def submit_block_with_tx(node, tx):

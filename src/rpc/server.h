@@ -15,7 +15,14 @@
 #include <stdint.h>
 #include <string>
 
+#include <boost/function.hpp>
+
+#include <boost/thread/tss.hpp>
+
 #include <univalue.h>
+
+//Thread-local rpc user name for logging purposes
+extern boost::thread_specific_ptr<std::string> userInstance;
 
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 
@@ -190,6 +197,11 @@ extern std::string HelpExampleRpc(const std::string& methodname, const std::stri
 
 //extern UniValue getgenerate(const UniValue& params, bool fHelp); // in rpc/mining.cpp
 //extern UniValue setgenerate(const UniValue& params, bool fHelp);
+extern UniValue ValueFromAmount(const CAmount& amount);
+extern std::string HelpRequiringPassphrase();
+extern std::string getUser();
+
+extern void EnsureWalletIsUnlocked();
 
 bool StartRPC();
 void InterruptRPC();

@@ -73,7 +73,7 @@ static void VerifyScriptBench(benchmark::State& state)
     CScript witScriptPubkey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkeyHash) << OP_EQUALVERIFY << OP_CHECKSIG;
     CTransaction txCredit = BuildCreditingTransaction(scriptPubKey);
     CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, txCredit);
-    CScriptWitness& witness = txSpend.vin[0].scriptWitness;
+    CScriptWitness& witness = txSpend.wit.vtxinwit[0].scriptWitness;
     witness.stack.emplace_back();
     key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].nValue, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
@@ -85,7 +85,7 @@ static void VerifyScriptBench(benchmark::State& state)
         bool success = VerifyScript(
             txSpend.vin[0].scriptSig,
             txCredit.vout[0].scriptPubKey,
-            &txSpend.vin[0].scriptWitness,
+            &txSpend.wit.vtxinwit[0].scriptWitness,
             flags,
             MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].nValue),
             &err);
@@ -95,10 +95,17 @@ static void VerifyScriptBench(benchmark::State& state)
 #if defined(HAVE_CONSENSUS_LIB)
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << txSpend;
-        int csuccess = zuzcoinconsensus_verify_script_with_amount(
+        CDataStream streamVal1(SER_NETWORK, PROTOCOL_VERSION);
+        streamVal1 << txCredit.vout[0].nValue;
+        CDataStream streamVal2(SER_NETWORK, PROTOCOL_VERSION);
+        streamVal2 << CTxOutValue(0);
+        int csuccess = bitcoinconsensus_verify_script_with_amount(
             txCredit.vout[0].scriptPubKey.data(),
             txCredit.vout[0].scriptPubKey.size(),
-            txCredit.vout[0].nValue,
+            (const unsigned char*)&streamVal1[0],
+            streamVal1.size(),
+            (const unsigned char*)&streamVal2[0],
+            streamVal2.size(),
             (const unsigned char*)stream.data(), stream.size(), 0, flags, nullptr);
         assert(csuccess == 1);
 #endif

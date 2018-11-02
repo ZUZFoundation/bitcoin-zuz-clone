@@ -11,7 +11,7 @@
 """
 
 from test_framework.test_framework import ZuzcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, sync_blocks
 
 class GetChainTipsTest (ZuzcoinTestFramework):
     def set_test_params(self):
@@ -27,6 +27,8 @@ class GetChainTipsTest (ZuzcoinTestFramework):
         # Split the network and build two chains of different lengths.
         self.split_network ()
         self.nodes[0].generate(10)
+        # Need a send to split the chains since empty blocks are identical
+        self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), 1)
         self.nodes[2].generate(20)
         self.sync_all([self.nodes[:2], self.nodes[2:]])
 
@@ -44,19 +46,12 @@ class GetChainTipsTest (ZuzcoinTestFramework):
         assert_equal (longTip['height'], 220)
         assert_equal (tips[0]['status'], 'active')
 
-        # Join the network halves and check that we now have two tips
-        # (at least at the nodes that previously had the short chain).
+        # Join the network halves and check that we now have one tip
         self.join_network ()
 
         tips = self.nodes[0].getchaintips ()
         assert_equal (len (tips), 2)
         assert_equal (tips[0], longTip)
-
-        assert_equal (tips[1]['branchlen'], 10)
-        assert_equal (tips[1]['status'], 'valid-fork')
-        tips[1]['branchlen'] = 0
-        tips[1]['status'] = 'active'
-        assert_equal (tips[1], shortTip)
 
 if __name__ == '__main__':
     GetChainTipsTest ().main ()

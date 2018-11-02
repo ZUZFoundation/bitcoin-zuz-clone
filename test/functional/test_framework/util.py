@@ -15,6 +15,8 @@ import random
 import re
 from subprocess import CalledProcessError
 import time
+import errno
+from pathlib import Path
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -225,8 +227,12 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
 # RPC/P2P connection constants and functions
 ############################################
 
+BITCOIN_ASSET = bytearray.fromhex("b2e15d0d7a0c94e4e2ce0fe6e8691b9e451377f6e46e8045a86f7c4b5d4f0f23")
+BITCOIN_ASSET.reverse()
+BITCOIN_ASSET_OUT = b"\x01"+BITCOIN_ASSET
+
 # The maximum number of nodes a single test can spawn
-MAX_NODES = 8
+MAX_NODES = 9
 # Don't assign rpc or p2p ports lower than this
 PORT_MIN = 11000
 # The number of ports to "reserve" for p2p and rpc, each
@@ -417,6 +423,245 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
 
 # Transaction/Block functions
 #############################
+bitcoind_processes = {}
+
+def initialize_datadir(dirname, n):
+    datadir = os.path.join(dirname, "node"+str(n))
+    if not os.path.isdir(datadir):
+        os.makedirs(datadir)
+    rpc_u, rpc_p = rpc_auth_pair(n)
+    with open(os.path.join(datadir, "elements.conf"), 'w', encoding='utf8') as f:
+        f.write("rpcuser=" + rpc_u + "\n")
+        f.write("rpcpassword=" + rpc_p + "\n")
+        f.write("port="+str(p2p_port(n))+"\n")
+        f.write("rpcport="+str(rpc_port(n))+"\n")
+        f.write("listenonion=0\n")
+        f.write("initialfreecoins=2100000000000000\n")
+    return datadir
+
+def rpc_auth_pair(n):
+    return 'rpcuser💻' + str(n), 'rpcpass🔑' + str(n)
+
+def rpc_url(i, rpchost=None, cookie_file=None):
+    if cookie_file:
+        with open(cookie_file, 'r') as f:
+            rpc_auth = f.readline()
+    else:
+        rpc_u, rpc_p = rpc_auth_pair(i)
+        rpc_auth = rpc_u+":"+rpc_p
+    host = '127.0.0.1'
+    port = rpc_port(i)
+    if rpchost:
+        parts = rpchost.split(':')
+        if len(parts) == 2:
+            host, port = parts
+        else:
+            host = rpchost
+    return "http://%s@%s:%d" % (rpc_auth, host, int(port))
+
+def wait_for_bitcoind_start(process, url, i):
+    '''
+    Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
+    Raise an exception if bitcoind exits during initialization.
+    '''
+    while True:
+        if process.poll() is not None:
+            raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
+        try:
+            rpc = get_rpc_proxy(url, i)
+            blocks = rpc.getblockcount()
+            break # break out of loop on success
+        except IOError as e:
+            if e.errno != errno.ECONNREFUSED: # Port not yet open?
+                raise # unknown IO error
+        except JSONRPCException as e: # Initialization phase
+            if e.error['code'] != -28: # RPC in warmup?
+                raise # unknown JSON RPC exception
+        time.sleep(0.25)
+
+def initialize_chain(test_dir, num_nodes, cachedir):
+    """
+    Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
+    Afterward, create num_nodes copies from the cache
+    """
+
+    assert num_nodes <= MAX_NODES
+    create_cache = False
+    for i in range(MAX_NODES):
+        if not os.path.isdir(os.path.join(cachedir, 'node'+str(i))):
+            create_cache = True
+            break
+
+    if create_cache:
+
+        #find and delete old cache directories if any exist
+        for i in range(MAX_NODES):
+            if os.path.isdir(os.path.join(cachedir,"node"+str(i))):
+                shutil.rmtree(os.path.join(cachedir,"node"+str(i)))
+
+        # Create cache directories, run bitcoinds:
+        for i in range(MAX_NODES):
+            datadir=initialize_datadir(cachedir, i)
+            args = [ os.getenv("ELEMENTSD", "elementsd"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            if i > 0:
+                args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
+            bitcoind_processes[i] = subprocess.Popen(args)
+            if os.getenv("PYTHON_DEBUG", ""):
+                print("initialize_chain: bitcoind started, waiting for RPC to come up")
+            wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
+            if os.getenv("PYTHON_DEBUG", ""):
+                print("initialize_chain: RPC successfully started")
+
+        rpcs = []
+        for i in range(MAX_NODES):
+            try:
+                rpcs.append(get_rpc_proxy(rpc_url(i), i))
+            except:
+                sys.stderr.write("Error connecting to "+url+"\n")
+                sys.exit(1)
+
+        # Create a 200-block-long chain; each of the 4 first nodes
+        # gets 25 mature blocks and 25 immature.
+        # Note: To preserve compatibility with older versions of
+        # initialize_chain, only 4 nodes will generate coins.
+        #
+        # blocks are created with timestamps 10 minutes apart
+        # starting from 2010 minutes in the past
+        enable_mocktime()
+        block_time = get_mocktime() - (201 * 10 * 60)
+        for i in range(2):
+            for peer in range(4):
+                for j in range(25):
+                    set_node_times(rpcs, block_time)
+                    rpcs[peer].generate(1)
+                    block_time += 10*60
+                # Must sync before next peer starts generating blocks
+                sync_blocks(rpcs)
+
+        # Shut them down, and clean up cache directories:
+        stop_nodes(rpcs)
+        disable_mocktime()
+        for i in range(MAX_NODES):
+            os.remove(log_filename(cachedir, i, "debug.log"))
+            os.remove(log_filename(cachedir, i, "db.log"))
+            os.remove(log_filename(cachedir, i, "peers.dat"))
+            os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
+
+    for i in range(num_nodes):
+        from_dir = os.path.join(cachedir, "node"+str(i))
+        to_dir = os.path.join(test_dir,  "node"+str(i))
+        shutil.copytree(from_dir, to_dir)
+        initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
+
+def initialize_chain_clean(test_dir, num_nodes):
+    """
+    Create an empty blockchain and num_nodes wallets.
+    Useful if a test case wants complete control over initialization.
+    """
+    for i in range(num_nodes):
+        datadir=initialize_datadir(test_dir, i)
+
+
+def _rpchost_to_args(rpchost):
+    '''Convert optional IP:port spec to rpcconnect/rpcport args'''
+    if rpchost is None:
+        return []
+
+    match = re.match('(\[[0-9a-fA-f:]+\]|[^:]+)(?::([0-9]+))?$', rpchost)
+    if not match:
+        raise ValueError('Invalid RPC host spec ' + rpchost)
+
+    rpcconnect = match.group(1)
+    rpcport = match.group(2)
+
+    if rpcconnect.startswith('['): # remove IPv6 [...] wrapping
+        rpcconnect = rpcconnect[1:-1]
+
+    rv = ['-rpcconnect=' + rpcconnect]
+    if rpcport:
+        rv += ['-rpcport=' + rpcport]
+    return rv
+
+def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, chain='elementsregtest', cookie_auth=False):
+    """
+    Start a bitcoind and return RPC connection to it
+    """
+    datadir = os.path.join(dirname, "node"+str(i))
+    cookie_file = datadir+"/"+chain+"/.cookie"
+    if binary is None:
+        binary = os.getenv("ELEMENTSD", "elementsd")
+    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-mocktime="+str(get_mocktime()) ]
+    args.append('-regtest' if chain == 'regtest' else '-chain=' + chain)
+    if extra_args is not None: args.extend(extra_args)
+    bitcoind_processes[i] = subprocess.Popen(args)
+    if os.getenv("PYTHON_DEBUG", ""):
+        print("start_node: bitcoind started, waiting for RPC to come up")
+
+    # We need to make sure the cookie auth file is created before reading it
+    wait_for_cookie_time = 10
+    cookie_file_handle = Path(cookie_file)
+    while cookie_auth and wait_for_cookie_time > 0 and not cookie_file_handle.is_file():
+        wait_for_cookie_time -= 1
+        time.sleep(1)
+
+    url = rpc_url(i, rpchost, cookie_file if cookie_auth else None)
+    wait_for_bitcoind_start(bitcoind_processes[i], url, i)
+    if os.getenv("PYTHON_DEBUG", ""):
+        print("start_node: RPC successfully started")
+    proxy = get_rpc_proxy(url, i, timeout=timewait)
+
+    if COVERAGE_DIR:
+        coverage.write_all_rpc_commands(COVERAGE_DIR, proxy)
+
+    return proxy
+
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, chain='elementsregtest'):
+    """
+    Start multiple bitcoinds, return RPC connections to them
+    """
+    if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
+    if binary is None: binary = [ None for _ in range(num_nodes) ]
+    rpcs = []
+    try:
+        for i in range(num_nodes):
+            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], chain=chain))
+    except: # If one node failed to start, stop the others
+        stop_nodes(rpcs)
+        raise
+    return rpcs
+
+def log_filename(dirname, n_node, logname):
+    return os.path.join(dirname, "node"+str(n_node), "elementsregtest", logname)
+
+def stop_node(node, i):
+    try:
+        node.stop()
+    except http.client.CannotSendRequest as e:
+        print("WARN: Unable to stop node: " + repr(e))
+    return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+    assert_equal(return_code, 0)
+    del bitcoind_processes[i]
+
+def stop_nodes(nodes):
+    for i, node in enumerate(nodes):
+        stop_node(node, i)
+    assert not bitcoind_processes.values() # All connections must be gone now
+
+def set_node_times(nodes, t):
+    for node in nodes:
+        node.setmocktime(t)
+
+def connect_nodes(from_connection, node_num):
+    ip_port = "127.0.0.1:"+str(p2p_port(node_num))
+    from_connection.addnode(ip_port, "onetry")
+    # poll until version handshake complete to avoid race conditions
+    # with transaction relaying
+    while any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
+        time.sleep(0.1)
+
+def connect_nodes_bi(nodes, a, b):
+    connect_nodes(nodes[a], b)
+    connect_nodes(nodes[b], a)
 
 def find_output(node, txid, amount):
     """
@@ -498,7 +743,7 @@ def create_confirmed_utxos(fee, node, count):
     for i in range(iterations):
         t = utxos.pop()
         inputs = []
-        inputs.append({"txid": t["txid"], "vout": t["vout"]})
+        inputs.append({ "txid" : t["txid"], "vout" : t["vout"], "nValue" : t["amount"]})
         outputs = {}
         send_value = t['amount'] - fee
         outputs[addr1] = satoshi_round(send_value / 2)
@@ -549,7 +794,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     txids = []
     for _ in range(num):
         t = utxos.pop()
-        inputs = [{"txid": t["txid"], "vout": t["vout"]}]
+        inputs=[{ "txid" : t["txid"], "vout" : t["vout"], "nValue" : t["amount"]}]
         outputs = {}
         change = t['amount'] - fee
         outputs[addr] = satoshi_round(change)

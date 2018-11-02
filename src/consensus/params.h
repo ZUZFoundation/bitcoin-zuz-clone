@@ -8,6 +8,8 @@
 
 #include <uint256.h>
 #include <limits>
+#include "script/script.h"
+#include "amount.h"
 #include <map>
 #include <string>
 
@@ -68,12 +70,16 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Proof of work parameters */
     uint256 powLimit;
+    uint256 parentChainPowLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
+    // The redeemscript that the peg uses. Uses p2sh-p2wsh
+    CScript fedpegScript;
+    CAsset pegged_asset;
     uint256 defaultAssumeValid;
 
     /**
@@ -93,6 +99,13 @@ struct Params {
     int zuzPowDGWHeight;
 
     bool zuzPremineEnforcePubKeys;
+    uint32_t pegin_min_depth;
+    CScript mandatory_coinbase_destination;
+    CScript signblockscript;
+    bool has_parent_chain;
+    CScript parent_chain_signblockscript;
+    CAsset parent_pegged_asset;
+    bool ParentChainHasPow() const { return parent_chain_signblockscript == CScript();}
 };
 } // namespace Consensus
 

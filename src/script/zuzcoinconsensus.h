@@ -29,6 +29,8 @@
   #define EXPORT_SYMBOL
 #endif
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,6 +57,7 @@ enum
     zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9), // enable CHECKLOCKTIMEVERIFY (BIP65)
     zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CHECKSEQUENCEVERIFY (BIP112)
     zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
+    bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITHDRAWS           = (1U << 13), // evaluate withdrawproof opcodes
     zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL                 = zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH | zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG |
                                                                zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY | zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY |
                                                                zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY | zuzcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS
@@ -68,7 +71,8 @@ EXPORT_SYMBOL int zuzcoinconsensus_verify_script(const unsigned char *scriptPubK
                                                  const unsigned char *txTo        , unsigned int txToLen,
                                                  unsigned int nIn, unsigned int flags, zuzcoinconsensus_error* err);
 
-EXPORT_SYMBOL int zuzcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
+EXPORT_SYMBOL int zuzcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
+                                    const unsigned char* amount,              unsigned int amountLen,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, zuzcoinconsensus_error* err);
 

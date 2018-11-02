@@ -33,6 +33,9 @@ static const CRPCCommand vRPCCommands[] =
 
 void RPCNestedTests::rpcNestedTests()
 {
+    /*
+    UniValue jsonRPCError;
+
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
@@ -130,4 +133,11 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,abc)"), std::runtime_error); //don't tollerate empty arguments when using ,
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
 #endif
+
+    delete pcoinsTip;
+    delete pcoinsdbview;
+    delete pblocktree;
+
+    boost::filesystem::remove_all(boost::filesystem::path(path));
+    */
 }

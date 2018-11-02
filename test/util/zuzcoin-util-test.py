@@ -79,6 +79,7 @@ def bctest(testDir, testObj, buildenv):
     # Get the exec names and arguments
     execprog = os.path.join(buildenv["BUILDDIR"], "src", testObj["exec"] + buildenv["EXEEXT"])
     execargs = testObj['args']
+    execargs[:0] = ["-chain=main"]
     execrun = [execprog] + execargs
 
     # Read the input data (if there is any)
@@ -164,6 +165,14 @@ def bctest(testDir, testObj, buildenv):
         if want_error not in outs[1]:
             logging.error("Error mismatch:\n" + "Expected: " + want_error + "\nReceived: " + outs[1].rstrip())
             raise Exception
+
+def bctester(testDir, input_basename, buildenv):
+    """ Loads and parses the input file, runs all tests and reports results"""
+    input_filename = testDir + "/" + input_basename
+    raw_data = open(input_filename).read()
+    input_data = json.loads(raw_data)
+
+    failed_testcases = []
 
 def parse_output(a, fmt):
     """Parse the output according to specified format.

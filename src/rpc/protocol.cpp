@@ -11,6 +11,7 @@
 #include <utilstrencodings.h>
 #include <utiltime.h>
 #include <version.h>
+#include "chainparamsbase.h"
 
 #include <fstream>
 
@@ -64,6 +65,7 @@ UniValue JSONRPCError(int code, const std::string& message)
 static const std::string COOKIEAUTH_USER = "__cookie__";
 /** Default name for auth cookie file */
 static const std::string COOKIEAUTH_FILE = ".cookie";
+static const std::string MAINCHAIN_COOKIEAUTH_FILE = "regtest/.cookie";
 
 /** Get name of RPC authentication cookie file */
 static fs::path GetAuthCookieFile(bool temp=false)
@@ -74,6 +76,13 @@ static fs::path GetAuthCookieFile(bool temp=false)
     }
     fs::path path(arg);
     if (!path.is_complete()) path = GetDataDir() / path;
+    return path;
+}
+
+boost::filesystem::path GetMainchainAuthCookieFile()
+{
+    boost::filesystem::path path(GetArg("-mainchainrpccookiefile", MAINCHAIN_COOKIEAUTH_FILE));
+    if (!path.is_complete()) path = GetDataDir(false) / path;
     return path;
 }
 
@@ -114,6 +123,23 @@ bool GetAuthCookie(std::string *cookie_out)
     std::ifstream file;
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
+    file.open(filepath.string().c_str());
+    if (!file.is_open())
+        return false;
+    std::getline(file, cookie);
+    file.close();
+
+    if (cookie_out)
+        *cookie_out = cookie;
+    return true;
+}
+
+bool GetMainchainAuthCookie(std::string *cookie_out)
+{
+    std::ifstream file;
+    std::string cookie;
+
+    boost::filesystem::path filepath = GetMainchainAuthCookieFile();
     file.open(filepath.string().c_str());
     if (!file.is_open())
         return false;

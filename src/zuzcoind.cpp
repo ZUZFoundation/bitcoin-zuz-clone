@@ -100,7 +100,7 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
-        // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(ChainNameFromCommandLine());
         } catch (const std::exception& e) {
@@ -108,12 +108,16 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // Error out when loose non-argument tokens are encountered on command line
-        for (int i = 1; i < argc; i++) {
-            if (!IsSwitchChar(argv[i][0])) {
-                fprintf(stderr, "Error: Command line contains unexpected token '%s', see zuzcoind -h for a list of options.\n", argv[i]);
-                return false;
-            }
+        // Command-line RPC
+        bool fCommandLine = false;
+        for (int i = 1; i < argc; i++)
+            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+                fCommandLine = true;
+
+        if (fCommandLine)
+        {
+            fprintf(stderr, "Error: There is no RPC client functionality in zuzcoinsd anymore. Use the zuzcoin-cli utility instead.\n");
+            exit(EXIT_FAILURE);
         }
 
         // -server defaults to true for zuzcoind but not for the GUI so do this here
@@ -139,6 +143,7 @@ bool AppInit(int argc, char* argv[])
         if (gArgs.GetBoolArg("-daemon", false))
         {
 #if HAVE_DECL_DAEMON
+
             fprintf(stdout, "Zuzcoin server starting\n");
 
             // Daemonize

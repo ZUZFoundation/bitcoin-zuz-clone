@@ -7,6 +7,15 @@
 
 #include <tinyformat.h>
 #include <utilstrencodings.h>
+#include <list>
+
+#include "hash.h"
+#include "primitives/transaction.h"
+#include "primitives/bitcoin/transaction.h"
+#include "streams.h"
+#include "version.h"
+
+using namespace std;
 
 const char* GetOpName(opcodetype opcode)
 {
@@ -72,6 +81,7 @@ const char* GetOpName(opcodetype opcode)
     // splice ops
     case OP_CAT                    : return "OP_CAT";
     case OP_SUBSTR                 : return "OP_SUBSTR";
+    case OP_SUBSTR_LAZY            : return "OP_SUBSTR_LAZY";
     case OP_LEFT                   : return "OP_LEFT";
     case OP_RIGHT                  : return "OP_RIGHT";
     case OP_SIZE                   : return "OP_SIZE";
@@ -126,18 +136,23 @@ const char* GetOpName(opcodetype opcode)
     case OP_CHECKSIGVERIFY         : return "OP_CHECKSIGVERIFY";
     case OP_CHECKMULTISIG          : return "OP_CHECKMULTISIG";
     case OP_CHECKMULTISIGVERIFY    : return "OP_CHECKMULTISIGVERIFY";
+    case OP_DETERMINISTICRANDOM    : return "OP_DETERMINISTICRANDOM";
+    case OP_CHECKSIGFROMSTACK      : return "OP_CHECKSIGFROMSTACK";
+    case OP_CHECKSIGFROMSTACKVERIFY: return "OP_CHECKSIGFROMSTACKVERIFY";
 
     // expansion
     case OP_NOP1                   : return "OP_NOP1";
     case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
     case OP_CHECKSEQUENCEVERIFY    : return "OP_CHECKSEQUENCEVERIFY";
-    case OP_NOP4                   : return "OP_NOP4";
     case OP_NOP5                   : return "OP_NOP5";
     case OP_NOP6                   : return "OP_NOP6";
     case OP_NOP7                   : return "OP_NOP7";
     case OP_NOP8                   : return "OP_NOP8";
     case OP_NOP9                   : return "OP_NOP9";
     case OP_NOP10                  : return "OP_NOP10";
+
+    // sidechains/withdraw-proofs
+    case OP_WITHDRAWPROOFVERIFY    : return "OP_WITHDRAWPROOFVERIFY";
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
@@ -161,7 +176,8 @@ unsigned int CScript::GetSigOpCount(bool fAccurate) const
         opcodetype opcode;
         if (!GetOp(pc, opcode))
             break;
-        if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
+        if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY ||
+            opcode == OP_CHECKSIGFROMSTACK || opcode == OP_CHECKSIGFROMSTACKVERIFY)
             n++;
         else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
         {
@@ -197,6 +213,43 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     /// ... and return its opcount:
     CScript subscript(vData.begin(), vData.end());
     return subscript.GetSigOpCount(true);
+}
+
+bool CScript::IsPegoutScript(uint256& genesis_hash, CScript& pegout_scriptpubkey) const
+{
+    const_iterator pc = begin();
+    std::vector<unsigned char> data;
+    opcodetype opcode;
+
+    // OP_RETURN
+    if (!GetOp(pc, opcode, data) || opcode != OP_RETURN) {
+        return false;
+    }
+
+    if (!GetOp(pc, opcode, data) || data.size() != 32 ) {
+        return false;
+    }
+    genesis_hash = uint256(data);
+  
+    // Read in parent chain destination scriptpubkey
+    if (!GetOp(pc, opcode, data) || data.size() == 0 ) {
+        return false;
+    }
+    pegout_scriptpubkey = CScript(data.begin(), data.end());
+
+    return true;
+}
+
+bool CScript::IsPegoutScript(const uint256& genesis_hash_check) const
+{
+    uint256 genesis_hash;
+    CScript pegout_scriptpubkey;
+    // Ensure hash matches parent chain genesis block
+    if (this->IsPegoutScript(genesis_hash, pegout_scriptpubkey) &&
+        genesis_hash_check == genesis_hash) {
+        return true;
+    }
+    return false;
 }
 
 bool CScript::IsPayToScriptHash() const

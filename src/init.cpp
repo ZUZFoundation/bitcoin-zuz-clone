@@ -8,7 +8,6 @@
 #endif
 
 #include <init.h>
-
 #include <addrman.h>
 #include <amount.h>
 #include <chain.h>
@@ -43,6 +42,8 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validationinterface.h>
+#include "callrpc.h"
+#include "global/common.h"
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
 #endif
@@ -450,6 +451,8 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-limitdescendantcount=<n>", strprintf("Do not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u)", DEFAULT_DESCENDANT_LIMIT));
         strUsage += HelpMessageOpt("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT));
         strUsage += HelpMessageOpt("-vbparams=deployment:start:end", "Use given start/end times for specified version bits deployment (regtest-only)");
+        strUsage += HelpMessageOpt("-bip9params=deployment:start:end", "Use given start/end times for specified BIP9 deployment (regtest-only)");
+        strUsage += HelpMessageOpt("-assetdir=hexidstr:label", "For naming known assets");
     }
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
         _("If <category> is not supplied or if <category> = 1, output all debugging information.") + " " + _("<category> can be:") + " " + ListLogCategories() + ".");
@@ -468,6 +471,9 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit sum of signature cache and script execution cache sizes to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE));
         strUsage += HelpMessageOpt("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE));
     }
+    strUsage += HelpMessageOpt("-feeasset=<hex>", strprintf(_("Asset ID (hex) for mempool/relay fees (default: %s)"), defaultChainParams->GetConsensus().pegged_asset.GetHex()));
+    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
+        CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)));
     strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)"),
         CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MAXFEE)));
     strUsage += HelpMessageOpt("-printtoconsole", _("Send trace/debug info to console instead of debug.log file"));
@@ -517,6 +523,30 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
 
+    strUsage += HelpMessageGroup(_("Federated peg options:"));
+    if (showDebug) {
+        strUsage += HelpMessageOpt("-fedpegscript=<hex>", _("Change federated peg to use a different script.") +
+            " " + _("This creates a new chain with a different genesis block."));
+        strUsage += HelpMessageOpt("-signblockscript=<hex>", _("Change chain to be signed and validated with a different script.") +
+            " " + _(" This creates a new chain with a different genesis block."));
+        strUsage += HelpMessageOpt("-peginconfirmationdepth", strprintf(_("Pegin claims must be this deep to be considered valid. (default: %d)"), DEFAULT_PEGIN_CONFIRMATION_DEPTH));
+        strUsage += HelpMessageOpt("-initialreissuancetokens", strprintf(_("The amount of reissuance tokens created in the genesis block. (default: %d)"), 0));
+        strUsage += HelpMessageOpt("-initialfreecoins", strprintf(_("The amount of OP_TRUE coins created in the genesis block. Primarily for testing. (default: %d)"), 0));
+        strUsage += HelpMessageOpt("-defaultpeggedassetname", strprintf("The name of the default asset created in the genesis block. (default: bitcoin)"));
+        strUsage += HelpMessageOpt("-parentpubkeyprefix", strprintf(_("The byte prefix, in decimal, of the parent chain's base58 pubkey address. (default: %d)"), 111));
+        strUsage += HelpMessageOpt("-parentscriptprefix", strprintf(_("The byte prefix, in decimal, of the parent chain's base58 script address. (default: %d)"), 196));
+        strUsage += HelpMessageOpt("-con_parent_chain_signblockscript", _("Whether parent chain uses pow or signed blocks. If the parent chain uses signed blocks, the challenge (scriptPubKey) script. If not, an empty string. (default: empty script [ie parent uses pow])"));
+        strUsage += HelpMessageOpt("-con_parent_pegged_asset=<hex>", _("Asset ID (hex) for pegged asset for when parent chain has CA. (default: 0x00)"));
+        strUsage += HelpMessageOpt("-recheckpeginblockinterval", strprintf(_("The interval in seconds at which a peg-in witness failing block is re-evaluated in case of intermittant peg-in witness failure. 0 means never. (default: %u)"), 120));
+    }
+    strUsage += HelpMessageOpt("-validatepegin", strprintf(_("Validate peg-in claims. An RPC connection will be attempted to the trusted bitcoind using the `mainchain*` settings below. All functionaries must run this enabled. (default: %u)"), DEFAULT_VALIDATE_PEGIN));
+    strUsage += HelpMessageOpt("-mainchainrpchost=<addr>", strprintf("The address which the daemon will try to connect to the trusted bitcoind to validate peg-ins, if enabled. (default: cookie auth)"));
+    strUsage += HelpMessageOpt("-mainchainrpcport=<port>", strprintf("The port which the daemon will try to connect to the trusted bitcoind to validate peg-ins, if enabled. (default: cookie auth)"));
+    strUsage += HelpMessageOpt("-mainchainrpcuser=<username>", strprintf("The rpc username that the daemon will use to connect to the trusted bitcoind to validate peg-ins, if enabled. (default: cookie auth)"));
+    strUsage += HelpMessageOpt("-mainchainrpcpassword=<password>", strprintf("The rpc password which the daemon will use to connect to the trusted bitcoind to validate peg-ins, if enabled. (default: cookie auth)"));
+    strUsage += HelpMessageOpt("-mainchainrpccookiefile=<path>", strprintf("The bitcoind cookie auth path which the daemon will use to connect to the trusted bitcoind to validate peg-ins. (default: `<datadir>/regtest/.cookie`)"));
+
+
     return strUsage;
 }
 
@@ -525,7 +555,7 @@ std::string LicenseInfo()
     const std::string URL_SOURCE_CODE = "<https://github.com/zuzcoin/zuzcoin>";
     const std::string URL_WEBSITE = "<https://zuzcoincore.org>";
 
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2015, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                        "Visit %s for further information about the software."),
@@ -845,6 +875,19 @@ ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
     std::terminate();
 };
 
+[[noreturn]] static void new_handler_terminate()
+{
+    // Rather than throwing std::bad-alloc if allocation fails, terminate
+    // immediately to (try to) avoid chain corruption.
+    // Since LogPrintf may itself allocate memory, set the handler directly
+    // to terminate first.
+    std::set_new_handler(std::terminate);
+    LogPrintf("Error: Out of memory. Terminating.\n");
+
+    // The log was successful, terminate now.
+    std::terminate();
+};
+
 bool AppInitBasicSetup()
 {
     // ********************************************************* Step 1: setup
@@ -1048,7 +1091,16 @@ bool AppInitParameterInteraction()
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
+    policyAsset = CAsset(uint256S(GetArg("-feeasset", chainparams.GetConsensus().pegged_asset.GetHex())));
+
+    // Fee-per-kilobyte amount considered the same as "free"
+    // If you are mining, be careful setting this:
+    // if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
     if (gArgs.IsArgSet("-minrelaytxfee")) {
+    {
         CAmount n = 0;
         if (!ParseMoney(gArgs.GetArg("-minrelaytxfee", ""), n)) {
             return InitError(AmountErrMsg("minrelaytxfee", gArgs.GetArg("-minrelaytxfee", "")));
@@ -1117,6 +1169,13 @@ bool AppInitParameterInteraction()
         fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "fee") != vstrReplacementModes.end());
     }
 
+    try {
+        const std::string default_asset_name = GetArg("-defaultpeggedassetname", "bitcoin");
+        InitGlobalAssetDir(mapMultiArgs.count("-assetdir") > 0 ? mapMultiArgs.at("-assetdir") : std::vector<std::string>(), default_asset_name);
+    } catch (const std::exception& e) {
+        return InitError(strprintf("Error in -assetdir: %s\n", e.what()));
+    }
+
     if (gArgs.IsArgSet("-vbparams")) {
         // Allow overriding version bits parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
@@ -1140,6 +1199,7 @@ bool AppInitParameterInteraction()
             {
                 if (vDeploymentParams[0].compare(VersionBitsDeploymentInfo[j].name) == 0) {
                     UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                    UpdateBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
                     found = true;
                     LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
                     break;
@@ -1215,6 +1275,9 @@ bool AppInitMain()
         }
     }
 
+    if (fPrintToAuditLog)
+        OpenAuditLog();
+
     if (!fLogTimestamps)
         LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
@@ -1233,6 +1296,8 @@ bool AppInitMain()
 
     InitSignatureCache();
     InitScriptExecutionCache();
+    InitRangeproofCache();
+    InitSurjectionproofCache();
 
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
     if (nScriptCheckThreads) {
@@ -1450,7 +1515,7 @@ bool AppInitMain()
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
-                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+                    return InitError(_("Incorrect or no genesis block found. Wrong `-fedpegscript`, `-signblockscript`, or datadir for network?"));
 
                 // Check for changed -txindex state
                 if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -1595,6 +1660,7 @@ bool AppInitMain()
     if (!OpenWallets())
         return false;
 #else
+
     LogPrintf("No wallet support compiled in!\n");
 #endif
 
@@ -1657,6 +1723,12 @@ bool AppInitMain()
 
     if (ShutdownRequested()) {
         return false;
+    }
+
+    CBlockIndex *genesis = chainActive.Genesis();
+    const CBlock &genesisBlock = Params().GenesisBlock();
+    for (unsigned int i = 0; i<genesis->nTx ; i++) {
+        GetMainSignals().SyncTransaction(*(genesisBlock.vtx[i]), genesis, (int)i);
     }
 
     // ********************************************************* Step 11: start node
@@ -1741,6 +1813,19 @@ bool AppInitMain()
     // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
+
+    CScheduler::Function f2 = boost::bind(&BitcoindRPCCheck, false);
+    unsigned int check_rpc_every = GetArg("-recheckpeginblockinterval", 120);
+    if (check_rpc_every) {
+        scheduler.scheduleEvery(f2, check_rpc_every);
+    }
+
+    uiInterface.InitMessage(_("Awaiting bitcoind RPC warmup"));
+
+    if (!BitcoindRPCCheck(true)) { //Initial check, fail immediately
+        return InitError(_("ERROR: elementsd is set to verify pegins but cannot get valid response from bitcoind. Please check debug.log for more information."));
+    }
+
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET

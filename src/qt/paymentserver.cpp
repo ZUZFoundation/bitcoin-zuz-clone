@@ -218,14 +218,13 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             SendCoinsRecipient r;
             if (GUIUtil::parseZuzcoinURI(arg, &r) && !r.address.isEmpty())
             {
-                auto tempChainParams = CreateChainParams(CBaseChainParams::MAIN);
-
-                if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
-                    SelectParams(CBaseChainParams::MAIN);
-                } else {
-                    tempChainParams = CreateChainParams(CBaseChainParams::TESTNET);
-                    if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
-                        SelectParams(CBaseChainParams::TESTNET);
+                CBitcoinAddress address(r.address.toStdString());
+                std::vector<std::string>::const_iterator iter;
+                for (iter = CChainParams::supportedChains.begin(); iter != CChainParams::supportedChains.end(); ++iter) {
+                    auto tempChainParams = CreateChainParams(*iter);
+                    if (address.IsValid(*tempChainParams)) {
+                        SelectParams(*iter);
+                        break;
                     }
                 }
             }
@@ -236,16 +235,7 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
 
             PaymentRequestPlus request;
             if (readPaymentRequestFromFile(arg, request))
-            {
-                if (request.getDetails().network() == "main")
-                {
-                    SelectParams(CBaseChainParams::MAIN);
-                }
-                else if (request.getDetails().network() == "test")
-                {
-                    SelectParams(CBaseChainParams::TESTNET);
-                }
-            }
+                SelectParams(request.getDetails().network());
         }
         else
         {
@@ -577,8 +567,8 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
         }
 
         // Extract and check amounts
-        CTxOut txOut(sendingTo.second, sendingTo.first);
-        if (IsDust(txOut, ::dustRelayFee)) {
+        CTxOut txOut(Params().GetConsensus().pegged_asset, sendingTo.second, sendingTo.first);
+        if (txOut.IsDust(dustRelayFee)) {
             Q_EMIT message(tr("Payment request error"), tr("Requested payment amount of %1 is too small (considered dust).")
                 .arg(ZuzcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
                 CClientUIInterface::MSG_ERROR);

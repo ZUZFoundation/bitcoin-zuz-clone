@@ -52,5 +52,15 @@ inline raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* b
         throw std::runtime_error("create connection failed");
     return result;
 }
+/*raii_event_base obtain_event_base();
+
+raii_event obtain_event(struct event_base* base, evutil_socket_t s, short events, event_callback_fn cb, void* arg);
+
+raii_evhttp obtain_evhttp(struct event_base* base);
+
+raii_evhttp_request obtain_evhttp_request(void(*cb)(struct evhttp_request *, void *), void *arg);
+
+raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* base, std::string host, uint16_t port);
+*/
 
 #endif // BITCOIN_SUPPORT_EVENTS_H
