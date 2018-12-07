@@ -67,6 +67,8 @@
 #include <zmq/zmqnotificationinterface.h>
 #endif
 
+#include <blind.h>
+
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -276,7 +278,9 @@ void Shutdown()
     CloseWallets();
 #endif
     globalVerifyHandle.reset();
+    ECC_Blinding_Stop();
     ECC_Stop();
+    ECC_Verify_Stop();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -515,6 +519,14 @@ std::string HelpMessage(HelpMessageMode mode)
     if (showDebug) {
         strUsage += HelpMessageOpt("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE));
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
+    }
+
+    strUsage += HelpMessageGroup(_("Federated peg options:"));
+    if (showDebug) {
+        strUsage += HelpMessageOpt("-fedpegscript=<hex>", _("Change federated peg to use a different script.") +
+            " " + _("This creates a new chain with a different genesis block."));
+        strUsage += HelpMessageOpt("-signblockscript=<hex>", _("Change chain to be signed and validated with a different script.") +
+            " " + _(" This creates a new chain with a different genesis block."));
     }
 
     return strUsage;
@@ -1150,6 +1162,30 @@ bool AppInitParameterInteraction()
             }
         }
     }
+
+    if (gArgs.IsArgSet("-tracksidechain"))
+    {
+        if (!gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
+            return InitError(_("Cannot -tracksidechain without keeping a -txindex"));
+
+        for(const std::string& str : gArgs.GetArgs("-tracksidechain"))
+        {
+            if (str == "all")
+            {
+                sidechainWithdrawsTracked.clear();
+                sidechainWithdrawsTracked.insert(ArithToUint256(0));
+                break;
+            }
+            else if (IsHex(str) && str.length() == 64)
+                sidechainWithdrawsTracked.insert(uint256S(str));
+            else
+                return InitError(strprintf(_("Invalid value to -tracksidechain: '%s' (must be a hex-encoded genesis block hash)"),
+                                           str));
+        }
+    }
+
+
+
     return true;
 }
 
@@ -1171,6 +1207,8 @@ bool AppInitSanityChecks()
     std::string sha256_algo = SHA256AutoDetect();
     LogPrintf("Using the '%s' SHA256 implementation\n", sha256_algo);
     RandomInit();
+    ECC_Blinding_Start();
+    ECC_Verify_Start();
     ECC_Start();
     globalVerifyHandle.reset(new ECCVerifyHandle());
 
@@ -1450,7 +1488,7 @@ bool AppInitMain()
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
-                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+                    return InitError(_("Incorrect or no genesis block found. Wrong `-fedpegscript`, `-signblockscript` or datadir for network?"));
 
                 // Check for changed -txindex state
                 if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {

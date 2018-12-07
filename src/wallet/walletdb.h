@@ -133,6 +133,7 @@ public:
     }
 };
 
+class CScriptID;
 /** Access to the wallet database.
  * This should really be named CWalletDBBatch, as it represents a single transaction at the
  * database. It will be committed when the object goes out of scope.
@@ -204,6 +205,9 @@ public:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
+
+    bool WriteSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
+    bool WriteBlindingDerivationKey(const uint256& key);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);

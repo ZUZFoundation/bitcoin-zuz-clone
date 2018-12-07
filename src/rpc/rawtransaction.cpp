@@ -36,6 +36,31 @@
 
 #include <univalue.h>
 
+//HIM_REVISIT_4
+//void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
+//{
+//    txnouttype type;
+//    std::vector<CTxDestination> addresses;
+//    int nRequired;
+
+//    out.push_back(Pair("asm", scriptPubKey.ToString()));
+//    if (fIncludeHex)
+//        out.push_back(Pair("hex", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
+
+//    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired)) {
+//        out.push_back(Pair("type", GetTxnOutputType(type)));
+//        return;
+//    }
+
+//    out.push_back(Pair("reqSigs", nRequired));
+//    out.push_back(Pair("type", GetTxnOutputType(type)));
+
+//    Array a;
+//    for(const CTxDestination& addr: addresses)
+//        a.push_back(CBitcoinAddress(addr).ToString());
+
+//    out.push_back(Pair("addresses", a));
+//}
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -580,6 +605,7 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
     }
     entry.push_back(Pair("witness", witness));
     entry.push_back(Pair("scriptSig", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+    //entry.push_back(Pair("asm", txin.scriptSig.ToString()));
     entry.push_back(Pair("sequence", (uint64_t)txin.nSequence));
     entry.push_back(Pair("error", strMessage));
     vErrorsRet.push_back(entry);
@@ -655,14 +681,14 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_VERIFY_ERROR, "Input not found or already spent");
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.nValue.GetAmount();
 
         SignatureData sigdata;
 
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount), sigdata, DataFromTransaction(txv, i));
+                sigdata = CombineSignatures(prevPubKey, TransactionNoWithdrawsSignatureChecker(&txConst, i, amount), sigdata, DataFromTransaction(txv, i));
             }
         }
 
@@ -825,9 +851,9 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = 0;
+                newcoin.out.nValue.SetToAmount(0);
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
+                    newcoin.out.nValue.SetToAmount(AmountFromValue(find_value(prevOut, "amount")));
                 }
                 newcoin.nHeight = 1;
                 view.AddCoin(out, std::move(newcoin), true);
@@ -895,18 +921,18 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.nValue.GetAmount();
 
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size()))
             ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mtx, i, amount, nHashType), prevPubKey, sigdata);
-        sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount), sigdata, DataFromTransaction(mtx, i));
+        sigdata = CombineSignatures(prevPubKey, TransactionNoWithdrawsSignatureChecker(&txConst, i, coin.out.nValue), sigdata, DataFromTransaction(mtx, i));
 
         UpdateTransaction(mtx, i, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionNoWithdrawsSignatureChecker(&txConst, i, coin.out.nValue), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");
@@ -980,7 +1006,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         // push to local node and sync with wallets
         CValidationState state;
         bool fMissingInputs;
-        if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
+        if (!AcceptToMemoryPool(mempool, state, tx, &fMissingInputs,
                                 nullptr /* plTxnReplaced */, false /* bypass_limits */, nMaxRawTxFee)) {
             if (state.IsInvalid()) {
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
@@ -1015,6 +1041,8 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
+    //    CConnman & conn = *g_connman;
+    //    conn.RelayTransaction(*tx);
     CInv inv(MSG_TX, hashTx);
     g_connman->ForEachNode([&inv](CNode* pnode)
     {

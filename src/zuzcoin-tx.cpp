@@ -25,6 +25,7 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
+#include <blind.h>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
@@ -615,9 +616,9 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = 0;
+                newcoin.out.nValue.SetToAmount(0);
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
+                    newcoin.out.nValue.SetToAmount(AmountFromValue(prevOut["amount"]));
                 }
                 newcoin.nHeight = 1;
                 view.AddCoin(out, std::move(newcoin), true);
@@ -648,7 +649,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.nValue.GetAmount();
 
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
@@ -658,6 +659,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         // ... and merge in other signatures:
         for (const CTransaction& txv : txVariants)
             sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), sigdata, DataFromTransaction(txv, i));
+
         UpdateTransaction(mergedTx, i, sigdata);
 
         if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, amount)))
@@ -679,9 +681,11 @@ class Secp256k1Init
 public:
     Secp256k1Init() {
         ECC_Start();
+        ECC_Blinding_Start();
     }
     ~Secp256k1Init() {
         ECC_Stop();
+        ECC_Blinding_Stop();
     }
 };
 

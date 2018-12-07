@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <queue>
 #include <utility>
+#include "pubkey.h"
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -55,7 +56,10 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
+    {
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+        ResetChallenge(*pblock, *pindexPrev, consensusParams);
+    }
 
     return nNewTime - nOldTime;
 }
@@ -104,7 +108,7 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx, int requiredAgeInSecs)
 {
     int64_t nTimeStart = GetTimeMicros();
 
@@ -124,6 +128,31 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     LOCK2(cs_main, mempool.cs);
     CBlockIndex* pindexPrev = chainActive.Tip();
     assert(pindexPrev != nullptr);
+
+    // Reset proof here, for weight calculations since header
+    // is not fixed size.
+    ResetProof(*pblock);
+    ResetChallenge(*pblock, *pindexPrev, chainparams.GetConsensus());
+
+    // Pad weight for challenge
+    // We won't bother with serialization byte(s), we have room
+    nBlockWeight += chainparams.GetConsensus().signblockscript.size() * WITNESS_SCALE_FACTOR;
+
+    // Pad weight for proof
+    // Note: Assumes "naked" script template with pubkeys
+    txnouttype dummy_type;
+    std::vector<CTxDestination> dummy_addresses;
+    int required_sigs = -1;
+    if (!ExtractDestinations(chainparams.GetConsensus().signblockscript, dummy_type, dummy_addresses, required_sigs))
+    {
+        // No idea how to sign this... log error but return block.
+        LogPrintf("CreateNewBlock: Can not extract destinations from signblockscript");
+    } else {
+        assert(required_sigs > 0);
+        nBlockWeight += required_sigs * 74 * WITNESS_SCALE_FACTOR;
+    }
+
+
     nHeight = pindexPrev->nHeight + 1;
 
     pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
@@ -149,11 +178,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+    addPackageTxs(nPackagesSelected, nDescendantsUpdated, requiredAgeInSecs);
 
     int64_t nTime1 = GetTimeMicros();
 
     nLastBlockTx = nBlockTx;
+    //HIM_REVISIT nLastBlockSize = nBlockSize;
     nLastBlockWeight = nBlockWeight;
 
     // Create coinbase transaction.
@@ -161,7 +191,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
-    
+
     if( chainActive.Tip()->nHeight <= chainparams.GetConsensus().zuzPremineChainHeight &&
             chainparams.GetConsensus().zuzPremineEnforcePubKeys)
     {
@@ -169,7 +199,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 //        std::cout << " HIM : coinbaseTx.vout[0].scriptPubKey = chainparams.zuzMultiSigScript() height : " << chainActive.Tip()->nHeight << std::endl;
 
 //#endif
-        coinbaseTx.vout[0].scriptPubKey = chainparams.zuzMultiSigScript();
+        coinbaseTx.vout[0].scriptPubKey = nFees ? chainparams.zuzMultiSigScript() : CScript() << OP_RETURN;
     }
     else
     {
@@ -177,16 +207,18 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 //        std::cout << " HIM : coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn height : " << chainActive.Tip()->nHeight << std::endl;
 //#endif
 
-            coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+            coinbaseTx.vout[0].scriptPubKey = nFees ? scriptPubKeyIn : CScript() << OP_RETURN;
     }
 
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].nValue = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nFees);
+    //HIM_REVISIT coinbaseTx.vout[0].nAsset = policyAsset;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
 
-    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    uint64_t nSerializeSize = GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
+    LogPrintf("CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize,  GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -331,7 +363,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, int requiredAgeInSec)
 {
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -385,6 +417,11 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                 // Increment mi for the next loop iteration.
                 ++mi;
             }
+        }
+
+        // Skip transactions that are under X seconds in mempool
+        if (iter->GetTime() > GetTime() - requiredAgeInSec) {
+            continue;
         }
 
         // We skip mapTx entries that are inBlock, and mapModifiedTx shouldn't
@@ -493,14 +530,32 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 // nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
 // zero.
 //
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
+bool static ScanHash(CBlockHeader *pblock, uint32_t& nNonce, uint256 &phash)
 {
     // Write the first 76 bytes of the block header to a double-SHA256 state.
-    CHash256 hasher;
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+
+    nNonce++;
+    //    if ((nNonce & 0xfff) == 0)
+    //        return false;
+
+    pblock->nNonce = nNonce;
     ss << *pblock;
-    assert(ss.size() == 80);
-    hasher.Write((unsigned char*)&ss[0], 76);
+
+    phash = ss.GetHash();
+/*
+    CHash256 hasher;
+    CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << *pblock;
+    std::cout << "HIM ss.size() :" << ss.size()
+              << "  CBlockHeader : " << sizeof(CBlockHeader)
+              << "  CProof: " << sizeof(CProof)
+              << "  CBitcoinProof: " << sizeof(CBitcoinProof)
+              << "  CScript: " << sizeof(CScript)
+              << std::endl;
+    assert(ss.size() == 82);
+    hasher.Write((unsigned char*)&ss[0], 78);
 
     while (true) {
         nNonce++;
@@ -508,16 +563,22 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
         // Write the last 4 bytes of the block header (the nonce) to a copy of
         // the double-SHA256 state, and compute the result.
         CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
+//        pblock->nNonce = nNonce;
+//        phash = pblock->GetHash();
 
         // Return the nonce if the hash has at least some zero bits,
         // caller will check if it has enough to reach the target
         if (((uint16_t*)phash)[15] == 0)
+        {
+            std::cout << "HIM scanHash nNonce : " << nNonce << std::endl;
             return true;
+        }
 
         // If nothing found after trying for a while, return -1
         if ((nNonce & 0xfff) == 0)
             return false;
     }
+    */
 }
 
 static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainparams)
@@ -526,7 +587,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 
     LogPrintf("ProcessBlockFound  :  %s\n", pblock->ToString());
     //CTransaction *tx = pblock->vtx[0].get();
-    //LogPrintf("generated %s\n", FormatMoney(tx->vout[0].nValue));
+    //LogPrintf("generated %s\n", FormatMoney(tx->vout[0].nValue.GetAmount()));
 
     // Found a solution
     {
@@ -557,7 +618,7 @@ void static ZuzcoinMiner(const CChainParams& chainparams)
     boost::shared_ptr<CReserveScript> coinbaseScript;
     GetMainSignals().ScriptForMining(coinbaseScript);
 
-    try 
+    try
     {
         // Throw an error if no script was provided.  This can happen
         // due to some internal error but also if the keypool is empty.
@@ -633,12 +694,16 @@ void static ZuzcoinMiner(const CChainParams& chainparams)
             uint32_t nNonce = 0;
             while (true) {
                 // Check if something found
-                if (ScanHash(pblock, nNonce, &hash))
+                if (ScanHash(pblock, nNonce, hash))
                 {
                     if (UintToArith256(hash) <= hashTarget)
                     {
                         // Found a solution
                         pblock->nNonce = nNonce;
+                        //                        std::cout << "HIM hash              : " << hash.ToString() << std::endl;
+                        //                        std::cout << "HIM pblock->GetHash() : " << pblock->GetHash().ToString() << std::endl;
+                        //                        std::cout << "HIM nNonce    : " << nNonce << std::endl << std::endl ;
+
                         assert(hash == pblock->GetHash());
 
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);

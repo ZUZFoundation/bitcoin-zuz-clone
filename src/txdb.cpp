@@ -29,6 +29,7 @@ static const char DB_HEAD_BLOCKS = 'H';
 static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
+static const char DB_WITHDRAW = 'w';
 
 namespace {
 
@@ -36,6 +37,7 @@ struct CoinEntry {
     COutPoint* outpoint;
     char key;
     explicit CoinEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN)  {}
+    explicit CoinEntry(const COutPoint* ptr, const char key) : outpoint(const_cast<COutPoint*>(ptr)), key(key)  {}
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -81,6 +83,15 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
     return vhashHeadBlocks;
 }
 
+
+COutPoint CCoinsViewDB::GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const {
+    COutPoint spender;
+    CoinEntry entry(&outpoint.second, DB_WITHDRAW);
+    if (!db.Read(entry, spender))
+        return COutPoint();
+    return spender;
+}
+
 bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     CDBBatch batch(db);
     size_t count = 0;
@@ -107,12 +118,24 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     batch.Write(DB_HEAD_BLOCKS, std::vector<uint256>{hashBlock, old_tip});
 
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
-        if (it->second.flags & CCoinsCacheEntry::DIRTY) {
-            CoinEntry entry(&it->first);
-            if (it->second.coin.IsSpent())
-                batch.Erase(entry);
+        if (it->second.flags & CCoinsCacheEntry::DIRTY)
+        {
+            CoinEntry entry(&it->first, DB_WITHDRAW);
+            if (it->second.flags & CCoinsCacheEntry::WITHDRAW)
+            {
+                if (!it->second.withdrawSpent.IsNull())
+                    batch.Write(entry, it->second.withdrawSpent);
+                else
+                    batch.Erase(entry);
+            }
             else
-                batch.Write(entry, it->second.coin);
+            {
+                CoinEntry entry(&it->first);
+                if (it->second.coin.IsSpent())
+                    batch.Erase(entry);
+                else
+                    batch.Write(entry, it->second.coin);
+            }
             changed++;
         }
         count++;
@@ -286,6 +309,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
+                pindexNew->proof          = diskindex.proof;
 
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams))
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());

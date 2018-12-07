@@ -18,6 +18,7 @@
 class CBlockIndex;
 class CChainParams;
 class CScript;
+class CReserveKey;
 
 namespace Consensus { struct Params; };
 
@@ -167,7 +168,8 @@ public:
     BlockAssembler(const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true, int requiredAgeInSecs=0);
+    //    CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
 
 private:
     // utility functions
@@ -180,7 +182,7 @@ private:
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated);
+    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, int requiredAgeInSec = 0);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

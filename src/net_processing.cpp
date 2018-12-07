@@ -995,6 +995,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 static void RelayTransaction(const CTransaction& tx, CConnman* connman)
 {
+    //connman->RelayTransaction(tx);
+
     CInv inv(MSG_TX, tx.GetHash());
     connman->ForEachNode([&inv](CNode* pnode)
     {

@@ -61,6 +61,8 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
     case TX_WITNESS_UNKNOWN:
+    case TX_WITHDRAW_LOCK:
+    case TX_WITHDRAW_OUT:
         break;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
@@ -144,6 +146,8 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             return ISMINE_SPENDABLE;
         break;
     }
+    case TX_TRUE:
+        return ISMINE_SPENDABLE;
     }
 
     if (keystore.HaveWatchOnly(scriptPubKey)) {

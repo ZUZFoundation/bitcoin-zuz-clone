@@ -69,7 +69,7 @@ if BUILD_BITCOIND
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += zuzcoin-cli zuzcoin-tx
+  bin_PROGRAMS += zuzcoin-cli zuzcoin-merged-cli zuzcoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -174,7 +174,8 @@ BITCOIN_CORE_H = \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h
+  zmq/zmqpublishnotifier.h \
+	blind.h
 
 
 obj/build.h: FORCE
@@ -254,6 +255,9 @@ libzuzcoin_wallet_a_SOURCES = \
   wallet/walletutil.cpp \
   $(BITCOIN_CORE_H)
 
+#libzuzcoin_wallet_a_LIBADD = $(LIBSECP256K1) 
+
+
 # crypto primitives library
 crypto_libzuzcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libzuzcoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -313,7 +317,15 @@ libzuzcoin_consensus_a_SOURCES = \
   uint256.h \
   utilstrencodings.cpp \
   utilstrencodings.h \
-  version.h
+  version.h \
+  pow.cpp\
+	merkleblock.cpp \
+	bloom.cpp \
+	chain.cpp \
+	callrpc.h \
+	callrpc.cpp \
+  rpc/protocol.cpp 
+	
 
 # common: shared between zuzcoind, and zuzcoin-qt and non-server tools
 libzuzcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -336,6 +348,7 @@ libzuzcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
+	blind.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -422,6 +435,23 @@ zuzcoin_cli_LDADD = \
 zuzcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
+
+# zuzcoin-cli binary #
+zuzcoin_merged_cli_SOURCES = zuzcoin-merged-cli.cpp
+zuzcoin_merged_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+zuzcoin_merged_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+zuzcoin_merged_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+zuzcoin_merged_cli_LDADD = \
+  $(LIBBITCOIN_CLI) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO)
+
+zuzcoin_merged_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+#
+
+
 # zuzcoin-tx binary #
 zuzcoin_tx_SOURCES = zuzcoin-tx.cpp
 zuzcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -433,20 +463,19 @@ zuzcoin_tx_SOURCES += zuzcoin-tx-res.rc
 endif
 
 zuzcoin_tx_LDADD = \
-  $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-zuzcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+zuzcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(SSL_LIBS) $(LIBUNIVALUE)
 #
 
 # zuzcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/zuzcoinconsensus.h
-libzuzcoinconsensus_la_SOURCES = $(crypto_libzuzcoin_crypto_a_SOURCES) $(libzuzcoin_consensus_a_SOURCES)
+libzuzcoinconsensus_la_SOURCES = $(crypto_libzuzcoin_crypto_a_SOURCES) $(libzuzcoin_consensus_a_SOURCES) 
 
 if GLIBC_BACK_COMPAT
   libzuzcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
@@ -454,7 +483,7 @@ endif
 
 libzuzcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libzuzcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libzuzcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libzuzcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL $(UNIVALUE_CFLAGS)
 libzuzcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif

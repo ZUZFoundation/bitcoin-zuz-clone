@@ -650,6 +650,89 @@ UniValue signmessage(const JSONRPCRequest& request)
     return EncodeBase64(vchSig.data(), vchSig.size());
 }
 
+UniValue getnewblockhex(const JSONRPCRequest& request) //HIM_REVISIT
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getnewblockhex\n"
+            "\nGets hex representation of a proposed, unmined new block\n"
+            "\nResult\n"
+            "blockhex      (hex) The block hex\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnewblockhex", "")
+        );
+
+    CReserveKey reservekey(pwallet);
+
+    //Array blockHashes;
+    //auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+    //if (!pblocktemplate.get())
+    //        throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
+    //    pblocktemplate->block.hashMerkleRoot = pblocktemplate->block.BuildMerkleTree();
+    //    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    //    ssBlock << pblocktemplate->block;
+    //    return HexStr(ssBlock.begin(), ssBlock.end());
+}
+
+UniValue signblock(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "signblock \"blockhex\"\n"
+            "\nSigns a block proposal, checking that it would be accepted first\n"
+            "\nArguments:\n"
+            "1. \"blockhex\"    (string, required) The hex-encoded block from getnewblockhex\n"
+            "\nResult\n"
+            " sig      (hex) The signature\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnewblockhex", "")
+        );
+
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+    uint256 hash = block.GetHash();
+    BlockMap::iterator mi = mapBlockIndex.find(hash);
+    if (mi != mapBlockIndex.end())
+        throw JSONRPCError(RPC_VERIFY_ERROR, "already have block");
+
+    CBlockIndex* const pindexPrev = chainActive.Tip();
+    // TestBlockValidity only supports blocks built on the current Tip
+    if (block.hashPrevBlock != pindexPrev->GetBlockHash())
+        throw JSONRPCError(RPC_VERIFY_ERROR, "proposal was not based on our best chain");
+
+    CValidationState state;
+    if (!TestBlockValidity(state, Params(), block, pindexPrev, false, true) || !state.IsValid())
+    {
+        std::string strRejectReason = state.GetRejectReason();
+        if (strRejectReason.empty())
+            throw JSONRPCError(RPC_VERIFY_ERROR, state.IsInvalid() ? "Block proposal was invalid" : "Error checking block proposal");
+        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
+    }
+
+    block.proof.solution = CScript();
+    GenerateProof(&block, pwallet);
+    return HexStr(block.proof.solution.begin(), block.proof.solution.end());
+}
+
+
+
 UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -710,7 +793,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
         for (const CTxOut& txout : wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.nValue.GetAmount();
     }
 
     return  ValueFromAmount(nAmount);
@@ -773,7 +856,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwallet, address) && setAddress.count(address)) {
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.nValue.GetAmount();
             }
         }
     }
@@ -1433,7 +1516,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
                 continue;
 
             tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
+            item.nAmount += txout.nValue.GetAmount();
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
@@ -3028,7 +3111,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         }
 
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
-        entry.push_back(Pair("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue)));
+        entry.push_back(Pair("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue.GetAmount())));
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
@@ -3588,6 +3671,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "rescanblockchain",         &rescanblockchain,         {"start_height", "stop_height"} },
 
     { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },
+    { "wallet",             "signblock",                &signblock,                {} },
+    { "wallet",             "getnewblockhex",           &getnewblockhex,           {} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

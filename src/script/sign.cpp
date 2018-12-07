@@ -15,7 +15,9 @@
 
 typedef std::vector<unsigned char> valtype;
 
-TransactionSignatureCreator::TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
+TransactionSignatureCreator::TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn,
+                                                         unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) :
+    BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
 
 bool TransactionSignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode, SigVersion sigversion) const
 {
@@ -81,6 +83,22 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     case TX_NULL_DATA:
     case TX_WITNESS_UNKNOWN:
         return false;
+    case TX_WITHDRAW_LOCK:
+        return false;
+    case TX_WITHDRAW_OUT:
+        {
+        scriptRet.clear();
+        CScript scriptPubKey2(scriptPubKey.end() - 2 - 20 - 2, scriptPubKey.end() - 1);
+        assert(Solver(scriptPubKey2, whichTypeRet, vSolutions) && whichTypeRet == TX_SCRIPTHASH);
+        whichTypeRet = TX_WITHDRAW_OUT;
+        if (creator.KeyStore().GetCScript(uint160(vSolutions[0]), scriptRet))
+        {
+             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
+             return true;
+        }
+        return false;
+
+        }
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
         return Sign1(keyID, creator, scriptPubKey, ret, sigversion);
@@ -117,6 +135,8 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
             return true;
         }
         return false;
+    case TX_TRUE:
+        return true;
 
     default:
         return false;
@@ -148,7 +168,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     CScript subscript;
     sigdata.scriptWitness.stack.clear();
 
-    if (solved && whichType == TX_SCRIPTHASH)
+    if (solved && (whichType == TX_SCRIPTHASH || whichType == TX_WITHDRAW_OUT))
     {
         // Solver returns the subscript that needs to be evaluated;
         // the final scriptSig is the signatures from that
@@ -181,6 +201,9 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         result.push_back(std::vector<unsigned char>(subscript.begin(), subscript.end()));
     }
     sigdata.scriptSig = PushAll(result);
+
+    if (whichType == TX_WITHDRAW_OUT)
+        sigdata.scriptSig << OP_0;
 
     // Test solution
     return solved && VerifyScript(sigdata.scriptSig, fromPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker());
@@ -222,7 +245,7 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType);
+    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, txout.nValue.GetAmount(), nHashType);
 }
 
 static std::vector<valtype> CombineMultisig(const CScript& scriptPubKey, const BaseSignatureChecker& checker,
@@ -311,6 +334,8 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
     case TX_WITNESS_UNKNOWN:
+    case TX_WITHDRAW_LOCK:
+    case TX_TRUE:
         // Don't know anything about this, assume bigger one is correct:
         if (sigs1.script.size() >= sigs2.script.size())
             return sigs1;
@@ -327,6 +352,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             return sigs2;
         return sigs1;
     case TX_SCRIPTHASH:
+    case TX_WITHDRAW_OUT:
         if (sigs1.script.empty() || sigs1.script.back().empty())
             return sigs2;
         else if (sigs2.script.empty() || sigs2.script.back().empty())
@@ -334,6 +360,10 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         else
         {
             // Recur to combine:
+            if (txType == TX_WITHDRAW_OUT) {
+                sigs1.script.pop_back();
+                sigs2.script.pop_back();
+            }
             valtype spk = sigs1.script.back();
             CScript pubKey2(spk.begin(), spk.end());
 
@@ -344,6 +374,8 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             sigs2.script.pop_back();
             Stacks result = CombineSignatures(pubKey2, checker, txType2, vSolutions2, sigs1, sigs2, sigversion);
             result.script.push_back(spk);
+            if (txType == TX_WITHDRAW_OUT)
+                result.script.back().push_back( (unsigned char)OP_0);
             return result;
         }
     case TX_MULTISIG:

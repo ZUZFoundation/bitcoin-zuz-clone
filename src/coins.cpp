@@ -6,6 +6,7 @@
 
 #include <consensus/consensus.h>
 #include <random.h>
+#include <arith_uint256.h>
 #ifndef HIM_NDEBUG
 #include <util.h>
 #endif
@@ -15,6 +16,7 @@ uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
 bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return false; }
 CCoinsViewCursor *CCoinsView::Cursor() const { return nullptr; }
+COutPoint CCoinsView::GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const { return COutPoint(); }
 
 bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
 {
@@ -31,6 +33,7 @@ void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
 bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
 CCoinsViewCursor *CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
+COutPoint CCoinsViewBacked::GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const { return base->GetWithdrawSpent(outpoint); }
 
 SaltedOutpointHasher::SaltedOutpointHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
 
@@ -125,6 +128,40 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
+COutPoint CCoinsViewCache::GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const
+{
+    CCoinsMap::iterator it = cacheCoins.find(outpoint.second);
+    if (it == cacheCoins.end())
+    {
+        it = cacheCoins.insert(std::make_pair(outpoint.second, CCoinsCacheEntry())).first;
+        it->second.withdrawSpent = base->GetWithdrawSpent(outpoint);
+        it->second.flags |= CCoinsCacheEntry::WITHDRAW;
+    }
+    return it->second.withdrawSpent;
+}
+
+void CCoinsViewCache::MaybeSetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint, COutPoint spender)
+{
+    CCoinsMap::iterator it = cacheCoins.find(outpoint.second);
+
+    // If its already spent - dont overwrite, unless spender IsNull
+    bool hadSpent;
+    if (it == cacheCoins.end())
+        hadSpent = !base->GetWithdrawSpent(outpoint).IsNull();
+    else
+        hadSpent = !it->second.withdrawSpent.IsNull();
+    if (hadSpent && !spender.IsNull())
+        return;
+
+    if (it == cacheCoins.end()) {
+        it = cacheCoins.insert(std::make_pair(outpoint.second, CCoinsCacheEntry())).first;
+        if (!hadSpent)
+            it->second.flags = CCoinsCacheEntry::FRESH;
+    }
+    it->second.withdrawSpent = spender;
+    it->second.flags |= CCoinsCacheEntry::WITHDRAW | CCoinsCacheEntry::DIRTY;
+}
+
 bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
@@ -148,48 +185,85 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn) {
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = mapCoins.erase(it)) {
         // Ignore non-dirty entries (optimization).
-        if (!(it->second.flags & CCoinsCacheEntry::DIRTY)) {
+        if (!(it->second.flags & CCoinsCacheEntry::DIRTY))
             continue;
-        }
+
+        bool fIsWithdraw = it->second.flags & CCoinsCacheEntry::WITHDRAW;
         CCoinsMap::iterator itUs = cacheCoins.find(it->first);
-        if (itUs == cacheCoins.end()) {
+        if (itUs == cacheCoins.end())
+        {
             // The parent cache does not have an entry, while the child does
             // We can ignore it if it's both FRESH and pruned in the child
-            if (!(it->second.flags & CCoinsCacheEntry::FRESH && it->second.coin.IsSpent())) {
-                // Otherwise we will need to create it in the parent
-                // and move the data up and mark it as dirty
+            if ((fIsWithdraw && !it->second.withdrawSpent.IsNull()) ||
+                    (!fIsWithdraw && !it->second.coin.IsSpent()))
+            {
+                // The parent cache does not have an entry, while the child
+                // cache does have (a non-pruned) one. Move the data up, and
+                // mark it as fresh (if the grandparent did have it, we
+                // would have pulled it in at first GetCoins).
+
+                //assert(it->second.flags & CCoinsCacheEntry::FRESH);
+
                 CCoinsCacheEntry& entry = cacheCoins[it->first];
-                entry.coin = std::move(it->second.coin);
                 cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
                 entry.flags = CCoinsCacheEntry::DIRTY;
-                // We can mark it FRESH in the parent if it was FRESH in the child
-                // Otherwise it might have just been flushed from the parent's cache
-                // and already exist in the grandparent
-                if (it->second.flags & CCoinsCacheEntry::FRESH) {
-                    entry.flags |= CCoinsCacheEntry::FRESH;
+
+                if (fIsWithdraw)
+                {
+                    entry.withdrawSpent = it->second.withdrawSpent;
+                    entry.flags |= CCoinsCacheEntry::WITHDRAW;
+                }
+                else
+                {
+                    // Otherwise we will need to create it in the parent
+                    // and move the data up and mark it as dirty
+                    entry.coin = std::move(it->second.coin);
+
+                    // We can mark it FRESH in the parent if it was FRESH in the child
+                    // Otherwise it might have just been flushed from the parent's cache
+                    // and already exist in the grandparent
+                    if (it->second.flags & CCoinsCacheEntry::FRESH)
+                    {
+                        entry.flags |= CCoinsCacheEntry::FRESH;
+                    }
                 }
             }
-        } else {
+        }
+        else
+            {
             // Assert that the child cache entry was not marked FRESH if the
             // parent cache entry has unspent outputs. If this ever happens,
             // it means the FRESH flag was misapplied and there is a logic
             // error in the calling code.
-            if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coin.IsSpent()) {
+            if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coin.IsSpent())
+            {
                 throw std::logic_error("FRESH flag misapplied to cache entry for base transaction with spendable outputs");
             }
 
             // Found the entry in the parent cache
-            if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coin.IsSpent()) {
+            if ((itUs->second.flags & CCoinsCacheEntry::FRESH) &&
+                    ((fIsWithdraw && it->second.withdrawSpent.IsNull()) || (!fIsWithdraw && it->second.coin.IsSpent())))
+            {
                 // The grandparent does not have an entry, and the child is
                 // modified and being pruned. This means we can just delete
                 // it from the parent.
                 cachedCoinsUsage -= itUs->second.coin.DynamicMemoryUsage();
                 cacheCoins.erase(itUs);
-            } else {
+            }
+            else
+            {
                 // A normal modification.
                 cachedCoinsUsage -= itUs->second.coin.DynamicMemoryUsage();
-                itUs->second.coin = std::move(it->second.coin);
+                if (fIsWithdraw)
+                {
+                    itUs->second.withdrawSpent = it->second.withdrawSpent;
+                }
+                else
+                {
+                    itUs->second.coin = std::move(it->second.coin);
+                }
                 cachedCoinsUsage += itUs->second.coin.DynamicMemoryUsage();
+
                 itUs->second.flags |= CCoinsCacheEntry::DIRTY;
                 // NOTE: It is possible the child has a FRESH flag here in
                 // the event the entry we found in the parent is pruned. But
@@ -230,7 +304,7 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += AccessCoin(tx.vin[i].prevout).out.nValue;
+        nResult += AccessCoin(tx.vin[i].prevout).out.nValue.GetAmount();
 
     return nResult;
 }
@@ -262,4 +336,47 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
         ++iter.n;
     }
     return coinEmpty;
+}
+
+
+
+double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight) const
+{
+    if (tx.IsCoinBase())
+        return 0.0;
+    double dResult = 0.0;
+    for(const CTxIn& txin : tx.vin)
+    {
+        CCoinsMap::const_iterator it = FetchCoin(txin.prevout);
+        assert(it != cacheCoins.end());
+
+        const Coin& coin = it->second.coin;
+
+        if (coin.IsSpent()) continue;
+
+        int nOffset = 0;
+        if (coin.out.scriptPubKey.IsWithdrawOutput() &&
+                txin.scriptSig.IsPushOnly() &&
+                txin.scriptSig.size() > 1 && txin.scriptSig.back() == OP_1)
+        {
+            // Fraud/reorg proofs get a significant priority bump
+            nOffset = 10000;
+        }
+        else if (coin.out.scriptPubKey.IsWithdrawLock(ArithToUint256(0)))
+            // coin moving to this chain get a priority bump
+            nOffset = 100;
+
+        int nCoinsHeight = coin.nHeight == 0x7fffffff ? nHeight + 1 : coin.nHeight;
+        if (nCoinsHeight < nHeight + nOffset)
+        {
+            const CTxOutValue& val = coin.out.nValue;
+            // FIXME: This assumes all blinded values are COIN
+            CAmount nAmount = COIN;
+            if (val.IsAmount())
+                nAmount = val.GetAmount();
+
+            dResult += double(nAmount + nOffset) * double(nHeight - nCoinsHeight + nOffset);
+        }
+    }
+    return tx.ComputePriority(dResult);
 }

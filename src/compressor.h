@@ -105,14 +105,19 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
+#if 0  // TODO: Actually compress numeric values at least
         if (!ser_action.ForRead()) {
-            uint64_t nVal = CompressAmount(txout.nValue);
+            assert(txout.nValue.IsAmount());  // FIXME HIM_REVISIT
+            uint64_t nVal = CompressAmount(txout.nValue.GetAmount());
             READWRITE(VARINT(nVal));
         } else {
             uint64_t nVal = 0;
             READWRITE(VARINT(nVal));
-            txout.nValue = DecompressAmount(nVal);
+            txout.nValue.SetToAmount(DecompressAmount(nVal));
         }
+#else
+        READWRITE(txout.nValue);
+#endif
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
     }

@@ -131,12 +131,17 @@ static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a
     secp256k1_fe *azi;
     size_t i;
     size_t count = 0;
+
+    printf("\n 1 : %d", sizeof(secp256k1_fe));
+    printf("\n 2 : %d", len);
     az = (secp256k1_fe *)checked_malloc(cb, sizeof(secp256k1_fe) * len);
     for (i = 0; i < len; i++) {
         if (!a[i].infinity) {
             az[count++] = a[i].z;
         }
     }
+    printf("\n 3 : %d", sizeof(secp256k1_fe));
+    printf("\n 4 : %d", count);
 
     azi = (secp256k1_fe *)checked_malloc(cb, sizeof(secp256k1_fe) * count);
     secp256k1_fe_inv_all_var(azi, az, count);

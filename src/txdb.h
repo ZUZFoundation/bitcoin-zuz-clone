@@ -81,6 +81,7 @@ public:
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;
+    COutPoint GetWithdrawSpent(const std::pair<uint256, COutPoint> &outpoint) const override;
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */

@@ -12,7 +12,11 @@
 
 class CBlockHeader;
 class CBlockIndex;
+class CProof;
+class CScript;
+class CWallet;
 class uint256;
+
 
 unsigned int GetNextWorkRequiredBTC(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
@@ -20,5 +24,33 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
+
+
+/** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
+bool CheckBitcoinProof(const CBlockHeader& block);
+bool CheckProof(const CBlockHeader& block);
+/** Scans nonces looking for a hash with at least some zero bits */
+//bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, CWallet* pwallet);
+
+void ResetProof(CBlockHeader& block);
+//HIM_REVISIT_4
+//uint256 GetBlockProof(const CBlockIndex& block);
+
+/** Avoid using these functions when possible */
+double GetChallengeDifficulty(const CBlockIndex* blockindex);
+std::string GetChallengeStr(const CBlockIndex& block);
+std::string GetChallengeStrHex(const CBlockIndex& block);
+uint32_t GetNonce(const CBlockHeader& block);
+void SetNonce(CBlockHeader& block, uint32_t nNonce);
+
+#ifdef ENABLE_WALLET
+bool GenerateProof(CBlockHeader* pblock, CWallet* pwallet);
+#endif
+
+bool CheckChallenge(const CBlockHeader& block, const CBlockIndex& indexLast, const Consensus::Params&);
+void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast, const Consensus::Params&);
+
+CScript CombineBlockSignatures(const Consensus::Params& params, const CBlockHeader& header, const CScript& scriptSig1, const CScript& scriptSig2);
+
 
 #endif // BITCOIN_POW_H

@@ -181,11 +181,11 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     CAmount nValueOut = 0;
     for (const auto& txout : tx.vout)
     {
-        if (txout.nValue < 0)
+        if (txout.nValue.GetAmount() < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
+        if (txout.nValue.GetAmount() > MAX_MONEY)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        nValueOut += txout.nValue;
+        nValueOut += txout.nValue.GetAmount();
         if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
@@ -237,8 +237,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         }
 
         // Check for negative or overflow input values
-        nValueIn += coin.out.nValue;
-        if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
+        nValueIn += coin.out.nValue.GetAmount();
+        if (!MoneyRange(coin.out.nValue.GetAmount()) || !MoneyRange(nValueIn)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
     }

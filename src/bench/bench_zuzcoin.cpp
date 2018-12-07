@@ -13,6 +13,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <memory>
+#include <blind.h>
 
 static const int64_t DEFAULT_BENCH_EVALUATIONS = 5;
 static const char* DEFAULT_BENCH_FILTER = ".*";
@@ -44,6 +45,7 @@ main(int argc, char** argv)
 
     SHA256AutoDetect();
     RandomInit();
+    ECC_Blinding_Start();
     ECC_Start();
     SetupEnvironment();
     fPrintToDebugLog = false; // don't want to write to debug.log file

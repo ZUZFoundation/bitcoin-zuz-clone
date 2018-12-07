@@ -51,7 +51,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 
 bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
-    return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
+    return (txout.nValue.GetAmount() < GetDustThreshold(txout, dustRelayFeeIn));
 }
 
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled)
@@ -69,11 +69,13 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
+    }
+    else if (whichType == TX_NULL_DATA &&
+             (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
           return false;
-
     else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
+        return false;
+    else if (whichType == TX_TRUE)
         return false;
 
     return whichType != TX_NONSTANDARD && whichType != TX_WITNESS_UNKNOWN;
@@ -167,6 +169,20 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+
+
+        if (prev.scriptPubKey.IsWithdrawLock(ArithToUint256(0)) || prev.scriptPubKey.IsWithdrawOutput())
+            continue;
+
+        // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
+        // keys. (remember the 520 byte limit on redeemScript size) That works
+        // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)+3=1627
+        // bytes of scriptSig, which we round off to 1650 bytes for some minor
+        // future-proofing. That's also enough to spend a 20-of-20
+        // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
+        // considered standard)
+        if (tx.vin[i].scriptSig.size() > 1650) //HIM_REVISIT_L
+            return false;
 
         std::vector<std::vector<unsigned char> > vSolutions;
         txnouttype whichType;
