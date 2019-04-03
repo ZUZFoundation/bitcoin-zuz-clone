@@ -428,6 +428,8 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  \"localrelay\": true|false,              (bool) true if transaction relay is requested from peers\n"
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
+            "  \"inbound\": xxxxx,                      (numeric) the number of in bound connections\n"
+            "  \"outbound\": xxxxx,                     (numeric) the number of out bound connections\n"
             "  \"networkactive\": true|false,           (bool) whether p2p networking is enabled\n"
             "  \"networks\": [                          (array) information per network\n"
             "  {\n"
@@ -468,6 +470,8 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
     if (g_connman) {
         obj.push_back(Pair("networkactive", g_connman->GetNetworkActive()));
         obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
+        obj.push_back(Pair("inbound",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_IN)));
+        obj.push_back(Pair("outbound",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_OUT)));
     }
     obj.push_back(Pair("networks",      GetNetworksInfo()));
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));

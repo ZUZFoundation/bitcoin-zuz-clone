@@ -170,7 +170,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
 
 
 #ifndef HIM_NDEBUG
-    LogPrintf("HIM : CheckTransaction GetSerializeSize Tx size : %i", ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
+    //LogPrintf("HIM : CheckTransaction GetSerializeSize Tx size : %i", ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
 #endif
 
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
